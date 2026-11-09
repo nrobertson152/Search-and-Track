@@ -96,7 +96,8 @@ def build_world(path_or_id: str, seed: Optional[int] = None) -> World:
                          status=r.get("status", "ok"), az=w.rng.uniform(0, 360), rpm=r.get("rpm", rt.rpm),
                          mti=r.get("mti", rt.mti), pfa_exp=r.get("pfa_exp", 6.0), channel=r.get("channel", 0),
                          link=r.get("link", ""), bias_r=r.get("bias_r", w.rng.uniform(-0.6, 0.6)),
-                         bias_az=r.get("bias_az", w.rng.uniform(-0.3, 0.3)), gci=r.get("gci", False))
+                         bias_az=r.get("bias_az", w.rng.uniform(-0.3, 0.3)), gci=r.get("gci", False),
+                         name_ru=s.get("name_ru", ""))
         w.radars[site.id] = site
         for j, hft in enumerate(r.get("hf", [])):
             hid = f"{site.id}-HF{j + 1}"
@@ -106,7 +107,8 @@ def build_world(path_or_id: str, seed: Optional[int] = None) -> World:
         s = th.site("airbase", b["site"])
         x, y = th.xy(s["lat"], s["lon"])
         w.airbases[b["site"]] = Airbase(b["site"], s["name"], x, y, s.get("elev_m", 50.0), b.get("side", "blue"),
-                                        s.get("kind", "military"), b.get("runway_ok", True), b.get("link", ""))
+                                        s.get("kind", "military"), b.get("runway_ok", True), b.get("link", ""),
+                                        name_ru=s.get("name_ru", ""))
     for q in sc.get("squadron", []):
         at = w.catalog.aircraft[q["type"]]
         w.squadrons[q["id"]] = Squadron(q["id"], q["name"], q["base"], q["type"], q["callsign"],
@@ -125,7 +127,7 @@ def build_world(path_or_id: str, seed: Optional[int] = None) -> World:
                                     t_ready=m.get("readiness_min", 0.0) * 60.0 if m.get("alerted", True) else 1e9,
                                     ready_missiles=m.get("missiles", st.launchers), reloads=m.get("reloads", 6),
                                     salvo_size=m.get("salvo", st.salvo), auto=m.get("auto", False),
-                                    link=m.get("link", ""))
+                                    link=m.get("link", ""), name_ru=s.get("name_ru", ""))
     # scripted flights and flight plans
     for f in sc.get("flight", []):
         if "flight_plan" in f:

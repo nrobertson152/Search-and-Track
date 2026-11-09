@@ -279,19 +279,28 @@ class Scope:
                 screen.blit(s, (cx + rr * math.sin(ra) - s.get_width() / 2, cy - rr * math.cos(ra) - 6))
         unit = "NM" if th.units == "imperial" else "KM"
         rng_val = self.range_km / NM if th.units == "imperial" else self.range_km
-        lines = [f"{site.name.upper()}", f"{rt.name}", f"RANGE {rng_val:.0f} {unit}   {site.rpm:g} RPM   "
-                 f"MTI {'ON' if site.mti else 'OFF'}   Pfa 1E-{site.pfa_exp:.1f}"]
-        if not up:
-            lines.append(f"*** {site.status.upper()} ***")
+        ru = th.faction == "USSR" and getattr(self, "lang_mode", "ru+en") != "en"
+        if ru:
+            unit = "КМ"
+            lines = [f"ИКО · {(site.name_ru or site.name).upper()}", f"{rt.name_ru or rt.name}",
+                     f"ДАЛЬНОСТЬ {rng_val:.0f} {unit}   {site.rpm:g} ОБ/МИН   СДЦ {'ВКЛ' if site.mti else 'ВЫКЛ'}   "
+                     f"ПОРОГ 1E-{site.pfa_exp:.1f}"]
+            if not up:
+                lines.append(f"*** {dict(down='ВЫКЛЮЧЕНА', maint='РЕГЛАМЕНТ', degraded='НЕИСПРАВНОСТЬ').get(site.status, site.status.upper())} ***")
+        else:
+            lines = [f"{site.name.upper()}", f"{rt.name}", f"RANGE {rng_val:.0f} {unit}   {site.rpm:g} RPM   "
+                     f"MTI {'ON' if site.mti else 'OFF'}   Pfa 1E-{site.pfa_exp:.1f}"]
+            if not up:
+                lines.append(f"*** {site.status.upper()} ***")
         for i, ln in enumerate(lines):
-            screen.blit(TEXT.render(ln, 12 if i else 13, th.engraving if i < 3 else th.alert,
-                                    "ui_bold" if i == 0 else "ui"), (self.rect.x + 10, self.rect.y + 8 + i * 16))
+            screen.blit(TEXT.render(ln, 13 if i else 15, th.text if i < 3 else th.alert,
+                                    th.data_font if i else "eng"), (self.rect.x + 14, self.rect.y + 10 + i * 17))
         m = pygame.mouse.get_pos()
         if math.hypot(m[0] - cx, m[1] - cy) < self.R:
             dx, dy = m[0] - cx, cy - m[1]
             rr = math.hypot(dx, dy) / self.R * self.range_km
             brg = math.degrees(math.atan2(dx, dy)) % 360
             rv = rr / NM if th.units == "imperial" else rr
-            txt = f"BRG {brg:03.0f}°  RNG {rv:.0f} {unit}"
-            screen.blit(TEXT.render(txt, 12, th.engraving, "ui"), (self.rect.right - TEXT.width(txt, 12) - 12,
-                                                                   self.rect.y + 8))
+            txt = (f"АЗ {brg:03.0f}°  Д {rv:.0f} {unit}" if ru else f"BRG {brg:03.0f}°  RNG {rv:.0f} {unit}")
+            screen.blit(TEXT.render(txt, 13, th.text, th.data_font), (self.rect.right - TEXT.width(txt, 13, th.data_font)
+                                                                      - 14, self.rect.y + 10))

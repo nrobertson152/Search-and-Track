@@ -1,6 +1,7 @@
 """Application shell: window, main loop, scene stack, save/load."""
 from __future__ import annotations
 
+import json
 import os
 import sys
 from pathlib import Path
@@ -36,8 +37,11 @@ class App:
             self.screen = pygame.display.set_mode((W, H), flags, vsync=0 if headless else 1)
         except pygame.error:
             self.screen = pygame.display.set_mode((W, H), flags)
+        self.settings = self.load_settings()
         self.audio = Audio(enabled=sound and not headless)
+        self.audio.volume = float(self.settings.get("volume", 0.7))
         self.gui = Gui(self.screen, US, self.audio)
+        self.gui.lang_mode = self.settings.get("labels", "ru+en")
         self.scenes: list = []
         self.running = True
         self.clock = pygame.time.Clock()
@@ -82,6 +86,23 @@ class App:
         self.gui.set_theme(theme_for(self.scenes[0].faction))
 
     # ------------------------------------------------------------ persistence
+    DEFAULTS = {"labels": "ru+en", "volume": 0.7, "focus": 2, "film": True, "auto_slow": True}
+
+    def load_settings(self) -> dict:
+        st = dict(self.DEFAULTS)
+        try:
+            st.update(json.loads((data_home() / "settings.json").read_text(encoding="utf-8")))
+        except (OSError, ValueError):
+            pass
+        return st
+
+    def save_settings(self) -> None:
+        try:
+            data_home().mkdir(parents=True, exist_ok=True)
+            (data_home() / "settings.json").write_text(json.dumps(self.settings, indent=1), encoding="utf-8")
+        except OSError:
+            pass
+
     def save_dir(self) -> Path:
         d = data_home() / "saves"
         d.mkdir(parents=True, exist_ok=True)
@@ -121,6 +142,8 @@ class App:
 
     def toggle_sound(self) -> None:
         self.audio.volume = 0.0 if self.audio.volume > 0 else 0.7
+        self.settings["volume"] = self.audio.volume
+        self.save_settings()
 
     # ------------------------------------------------------------ loop
     def frame(self, events, mouse=None) -> None:

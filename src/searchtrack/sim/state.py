@@ -156,6 +156,7 @@ class Airbase:
     kind: str = "military"
     runway_ok: bool = True
     link: str = ""
+    name_ru: str = ""
 
 
 @dataclass
@@ -187,6 +188,7 @@ class RadarSite:
     maint_until: float = -1.0
     company_no: int = 0
     company_tracks: dict[str, "CompanyTrack"] = field(default_factory=dict)
+    name_ru: str = ""
 
     @property
     def h_ant(self) -> float:
@@ -254,6 +256,7 @@ class SamSite:
     link: str = ""
     last_result: str = ""
     fault_t: float = -1.0                # scripted fire-control fault until
+    name_ru: str = ""
 
 
 @dataclass

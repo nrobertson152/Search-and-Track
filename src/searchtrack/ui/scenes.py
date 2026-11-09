@@ -9,14 +9,20 @@ from ..sim import aar, commands, doctrine, scenario, tracking
 from ..sim.world import DT
 from .consoles import (CommsConsole, IntelConsole, MissilesConsole, RadarNetConsole, StatusConsole, TECH_NOTES,
                        TracksConsole, WeaponsConsole)
+from . import fx
 from .fx import scanlines, vignette
 from .mapview import MapView, clock, fmt_alt
+from .netboard import NetBoard
 from .scope import Scope
 from .theme import TEXT, US, USSR, theme_for
 
 R = pygame.Rect
 W, H = 1600, 900
 SPEEDS = [0, 1, 2, 4, 8, 16, 32]
+HOUSING_R = R(4, 56, 990, 808)          # the main display console
+MAP_R = R(22, 70, 954, 690)             # its tube
+CONSOLE_R = R(1000, 94, 596, 770)       # the operator console on the right
+TICKER_R = R(8, 870, 1584, 26)
 
 CONTROLS_HELP = """CONTROLS
 Mouse: left-click selects tracks, flights and sites. On the US display, clicking empty space places the light gun. Right-drag pans the display; the wheel zooms.
@@ -157,6 +163,51 @@ class ManualScene(Scene):
             self.app.pop()
 
 
+# ====================================================================== SETTINGS
+class SettingsScene(Scene):
+    def __init__(self, app, back):
+        super().__init__(app)
+        self.back = back
+        self.theme = getattr(back, "theme", app.gui.theme)
+
+    def draw(self, screen):
+        gui = self.app.gui
+        th = gui.theme
+        st = self.app.settings
+        screen.fill(th.bg)
+        inner = gui.panel(R(W // 2 - 360, 130, 720, 600), "SETTINGS", "stored in your data folder")
+        y = inner.y + 16
+        rows = [
+            ("Soviet panel engraving", "labels", [("ru+en", "RUSSIAN + ENGLISH STRIP"), ("ru", "RUSSIAN ONLY"),
+                                                   ("en", "ENGLISH")],
+             "Cosmetic only: orders, radio, tooltips and the manual are always in English."),
+            ("Phosphor focus (default)", "focus", [(0, "SHARP"), (1, "SOFT"), (2, "GLOW"), (3, "BLOOM")],
+             "How much the display tubes bloom. SHARP is the fastest."),
+            ("Film look on title and briefings", "film", [(True, "FILM GRAIN ON"), (False, "OFF")],
+             "Black-and-white newsreel grain, dust and flicker."),
+            ("Sound volume", "volume", [(0.0, "MUTE"), (0.35, "LOW"), (0.7, "NORMAL"), (1.0, "LOUD")],
+             "Synthesized relays, teleprinters, klaxons and radio."),
+        ]
+        for title, key, opts, note in rows:
+            gui.eng((inner.x + 10, y), title.upper(), 14, strip=False)
+            gui.label((inner.x + 10, y + 22), note, 12, th.engraving_dim, "eng_r")
+            x = inner.x + 10
+            bw = (inner.w - 20) // len(opts) - 6
+            for val, lab in opts:
+                if gui.button(R(x, y + 44, bw, 34), lab, lit=st.get(key) == val, size=11):
+                    st[key] = val
+                    if key == "labels":
+                        gui.lang_mode = val
+                    elif key == "volume":
+                        self.app.audio.volume = val
+                    self.app.save_settings()
+                x += bw + 6
+            y += 112
+        if gui.button(R(inner.right - 180, inner.bottom - 46, 170, 38), "BACK", size=13) or \
+                any(e.key == pygame.K_ESCAPE for e in gui.keys):
+            self.app.pop()
+
+
 # ====================================================================== BRIEFING
 class BriefingScene(Scene):
     def __init__(self, app, sid: str):
@@ -230,9 +281,15 @@ class CommandScene(Scene):
         self.world = world
         self.theme = theme_for(world.faction)
         app.gui.set_theme(self.theme)
-        self.map = MapView(world, self.theme, R(8, 52, 980, 776))
-        self.scope = Scope(world, self.theme, R(8, 52, 980, 776))
+        self.map = MapView(world, self.theme, MAP_R.copy())
+        self.scope = Scope(world, self.theme, MAP_R.copy())
+        self.net = NetBoard(world, self.theme, MAP_R.copy())
         self.mode = "map"
+        st = getattr(app, "settings", {})
+        self.brightness = 1.0
+        self.focus_i = int(st.get("focus", 2))
+        self.bloom = [0, 70, 120, 170][self.focus_i]
+        self.room = fx.room_light((W, H), self.theme.room_tint, 0.9)
         self.consoles = [TracksConsole(), WeaponsConsole(), MissilesConsole(), RadarNetConsole(), CommsConsole(),
                          IntelConsole(), StatusConsole()]
         self.ci = 0
@@ -243,8 +300,6 @@ class CommandScene(Scene):
         self.auto_slow = True
         self.menu = False
         self.ended_t = None
-        self.scan = scanlines((980, 776), 26, 3)
-        self.vig = vignette((980, 776), 140)
         self.audio = app.audio
         self.app = app
         self.fps = 0.0
@@ -308,7 +363,7 @@ class CommandScene(Scene):
             elif k == pygame.K_F9:
                 self.app.load_game()
             elif k == pygame.K_m:
-                self.mode = "scope" if self.mode == "map" else "map"
+                self.mode = {"map": "scope", "scope": "net", "net": "map"}[self.mode]
             elif k == pygame.K_c:
                 self.map.layers["coverage"] = not self.map.layers["coverage"]
             elif k == pygame.K_LEFTBRACKET:
@@ -334,7 +389,23 @@ class CommandScene(Scene):
                 self.scope.cycle_range(1)
         if self.menu:
             return
-        if self.mode == "map":
+        if self.mode == "net":
+            if gui.released and not gui.consumed and self.net.rect.collidepoint(gui.mouse):
+                hit = self.net.pick(gui.mouse)
+                if hit:
+                    gui.consumed = True
+                    kind, oid = hit
+                    if kind == "site":
+                        self.select("site", oid)
+                        self.ci = 3
+                    elif kind == "sam":
+                        self.select("sam", oid)
+                        self.ci = 2
+                    elif kind == "squadron":
+                        self.consoles[1].sq = oid
+                        self.ci = 1
+                    self.audio.play("click")
+        elif self.mode == "map":
             res = self.map.handle(gui, events)
             if res:
                 _, (wx, wy), (sx, sy) = res
@@ -423,166 +494,316 @@ class CommandScene(Scene):
         w = self.world
         th = self.theme
         screen.fill(th.bg)
-        self._new_msgs_scan()
         self._topbar(gui)
+        self._housing(gui)
         mr = self.map.rect
-        gui.glass(mr, (0, 0, 0))
         if self.mode == "map":
             self.map.draw(screen, self.sel, self.render_t)
-            screen.blit(self.scan, mr.topleft)
-            screen.blit(self.vig, mr.topleft)
+            self._finish_display(gui, mr)
             self.map.annotate(screen, self.sel)
-        else:
-            gui.panel(mr, screws=False)
+        elif self.mode == "scope":
+            pygame.draw.rect(screen, (0, 0, 0), mr)
+            self.scope.lang_mode = gui.lang_mode
             self.scope.draw(screen, min(self.render_t, w.t), self.app.dt, self.speed)
+            self._finish_display(gui, mr, scan=False)
+        else:
+            self.net.draw(gui, self.sel, self.app.dt)
+            self._finish_display(gui, mr, scan=True, bloom=90)
         self._display_strip(gui)
-        # console selector
+        # console selector: a row of lamp keys
         names = ["TRACKS F1", "WEAPONS F2", "MISSILES F3", "RADAR F4", "COMMS F6", "INTEL F7", "STATUS F8"]
         bw = 596 // len(names)
         unacked = sum(1 for m in w.messages if m.ack and not m.acked and m.delivered)
         for i, n in enumerate(names):
             lit = i == self.ci
             lab = n if not (i == 4 and unacked) else f"COMMS !{unacked}"
-            if gui.button(R(996 + i * bw, 52, bw - 3, 28), lab, lit=lit, size=10,
+            if gui.button(R(1000 + i * bw, 58, bw - 4, 30), lab, lit=lit, size=11,
                           color=th.lamp_red if (i == 4 and unacked and not lit) else None):
                 self.ci = i
-        self.consoles[self.ci].draw(gui, R(996, 84, 596, 744), self)
+        self.consoles[self.ci].draw(gui, CONSOLE_R, self)
         self._ticker(gui)
+        screen.blit(self.room, (0, 0))
         if self.menu:
             self._menu(gui)
 
-    def _new_msgs_scan(self) -> None:
-        pass
+    def _finish_display(self, gui, r, scan: bool = True, bloom: int | None = None) -> None:
+        g = self.bloom if bloom is None else bloom
+        if self.brightness != 1.0:
+            k = int(255 * max(0.3, min(1.0, self.brightness)))
+            gui.screen.fill((k, k, k), special_flags=pygame.BLEND_MULT, rect=r)
+        if g > 0:
+            fx.bloom(gui.screen, r, gain=int(g * max(0.5, self.brightness)))
+        gui.crt_overlay(r, scan=scan, strength=1.0)
+        # rounded tube corners
+        pygame.draw.rect(gui.screen, (0, 0, 0), r.inflate(8, 8), 6, border_radius=18)
+
+    def _housing(self, gui) -> None:
+        th = self.theme
+        s = gui.screen
+        hr = HOUSING_R
+        mr = self.map.rect
+        surf = gui.cached(("housing", th.name, hr.w, hr.h), lambda: self._housing_surface(gui, hr, mr))
+        s.blit(surf, hr.topleft)
+        pygame.draw.rect(s, (0, 0, 0), mr)
+
+    def _housing_surface(self, gui, hr, mr) -> pygame.Surface:
+        th = self.theme
+        S = pygame.Surface(hr.size, pygame.SRCALPHA)
+        body = R(0, 0, hr.w, hr.h)
+        rad = 16 if th.panel_style == "plastic" else 8
+        pygame.draw.rect(S, th.bezel_lo, body, border_radius=rad)
+        inner = body.inflate(-4, -4)
+        g = pygame.Surface(inner.size, pygame.SRCALPHA)
+        for y in range(inner.h):
+            c = tuple(int(th.bezel_hi[k] + (th.bezel[k] - th.bezel_hi[k]) * min(1.0, y / 120.0)) for k in range(3))
+            if y > inner.h - 90:
+                c = tuple(int(v * (0.92 + 0.08 * (inner.h - y) / 90.0)) for v in c)
+            pygame.draw.line(g, c, (0, y), (inner.w, y))
+        m = pygame.Surface(inner.size, pygame.SRCALPHA)
+        pygame.draw.rect(m, (255, 255, 255, 255), m.get_rect(), border_radius=rad - 2)
+        g.blit(m, (0, 0), special_flags=pygame.BLEND_RGBA_MULT)
+        S.blit(g, inner.topleft)
+        # fine speckle
+        rng = __import__("random").Random(5)
+        for _ in range(hr.w * hr.h // 60):
+            x, y = rng.randrange(4, hr.w - 4), rng.randrange(4, hr.h - 4)
+            v = rng.choice((-10, -6, 6, 10))
+            c = S.get_at((x, y))
+            S.set_at((x, y), (max(0, min(255, c[0] + v)), max(0, min(255, c[1] + v)), max(0, min(255, c[2] + v)), c[3]))
+        # screen recess
+        rec = R(mr.x - hr.x, mr.y - hr.y, mr.w, mr.h)
+        pygame.draw.rect(S, th.bezel_lo, rec.inflate(22, 22), border_radius=20)
+        pygame.draw.rect(S, (14, 14, 12), rec.inflate(12, 12), border_radius=18)
+        pygame.draw.rect(S, (0, 0, 0), rec.inflate(4, 4), border_radius=16)
+        pygame.draw.line(S, th.bezel_hi, (rec.x - 6, rec.bottom + 11), (rec.right + 6, rec.bottom + 11), 1)
+        # control strip below the tube
+        strip = R(10, rec.bottom + 16, hr.w - 20, hr.h - rec.bottom - 24)
+        pygame.draw.rect(S, th.bezel_lo, strip, border_radius=6)
+        pygame.draw.rect(S, tuple(max(0, v - 18) for v in th.bezel), strip.inflate(-4, -4), border_radius=5)
+        # corner screws
+        for cx, cy in ((12, 12), (hr.w - 13, 12), (12, hr.h - 13), (hr.w - 13, hr.h - 13)):
+            pygame.draw.circle(S, (0, 0, 0), (cx + 1, cy + 1), 5)
+            pygame.draw.circle(S, tuple(min(255, v + 30) for v in th.bezel_hi), (cx, cy), 4)
+            pygame.draw.line(S, th.bezel_lo, (cx - 3, cy), (cx + 3, cy), 1)
+        # model plate on the top edge
+        if self.world.faction == "US":
+            txt = "AN/FSQ-7 · SITUATION DISPLAY CONSOLE OA-1008"
+            col_bg, col_fg = (16, 15, 14), (230, 226, 210)
+        else:
+            txt = "ПЛАНШЕТ ОБСТАНОВКИ · ИКО · МНЕМОСХЕМА"
+            col_bg, col_fg = (30, 34, 38), (230, 232, 226)
+        t = __import__("searchtrack.ui.theme", fromlist=["TEXT"]).TEXT.render(txt, 11, col_fg, "eng")
+        pr = R(hr.w // 2 - t.get_width() // 2 - 10, 1, t.get_width() + 20, 9)
+        plate = R(pr.x, 0, pr.w, 10)
+        pygame.draw.rect(S, col_bg, plate.inflate(0, 0).move(0, 0), border_radius=2)
+        S.blit(t, (plate.x + 10, plate.y - 3))
+        return S
 
     def _topbar(self, gui):
         w = self.world
         th = self.theme
-        bar = R(0, 0, W, 46)
+        s = gui.screen
+        bar = R(0, 0, W, 54)
         gui.panel(bar, screws=False)
-        gui.label((14, 5), th.title, 12, th.engraving, "cyr" if w.faction == "USSR" else "ui_bold")
-        gui.label((14, 24), f"{w.title} — {th.subtitle}", 11, th.engraving_dim, "cyr" if w.faction == "USSR" else "ui")
-        # clock (LED style)
+        # unit nameplate
+        if w.faction == "US":
+            plate = R(10, 7, 520, 40)
+            pygame.draw.rect(s, (0, 0, 0), plate.move(1, 2), border_radius=3)
+            pygame.draw.rect(s, th.plate, plate, border_radius=3)
+            pygame.draw.line(s, (74, 70, 64), (plate.x + 3, plate.y + 1), (plate.right - 4, plate.y + 1))
+            gui.label((plate.x + 12, plate.y + 2), th.title, 15, th.plate_text, "eng")
+            gui.label((plate.x + 12, plate.y + 21), f"{w.title.upper()} — {th.subtitle}", 11, (170, 166, 156), "eng_r")
+            for sx in (plate.x + 5, plate.right - 6):
+                pygame.draw.circle(s, (120, 116, 108), (sx, plate.centery), 2)
+        else:
+            gui.label((14, 5), th.title, 17, th.engraving, "eng", shadow=True)
+            gui.label((14, 28), f"{w.title.upper()} — {th.subtitle}", 11, th.engraving_dim, "eng_r")
+        # clock
         hh = clock(w, self.render_t)
         secs = int(self.render_t) % 60
-        cr = R(560, 5, 190, 36)
-        pygame.draw.rect(gui.screen, (0, 0, 0), cr, border_radius=4)
-        led = (255, 70, 40) if w.faction == "USSR" else (255, 150, 50)
-        gui.label((cr.x + 10, cr.y + 2), f"{hh}:{secs:02d}", 26, led, "crt")
-        gui.label((cr.right - 8, cr.y + 4), w.clock_tz, 12, led, align="right")
-        gui.label((cr.right - 8, cr.y + 19), f"T+{int(self.render_t // 60):02d}", 11, led, align="right")
-        # time compression
-        x = 762
-        for i, s in enumerate(SPEEDS):
-            lab = "II" if s == 0 else f"{s}×"
-            if gui.button(R(x, 9, 40, 28), lab, lit=self.speed_i == i, size=11,
-                          tip="Pause" if s == 0 else f"Time compression {s}×"):
+        led = (255, 64, 36) if w.faction == "USSR" else (255, 120, 40)
+        cr = R(542, 8, 196, 38)
+        gui.led(cr, f"{hh}:{secs:02d}", led, 28)
+        tz = "МСК" if (w.faction == "USSR" and gui.lang_mode != "en") else w.clock_tz
+        sub = R(cr.right + 8, cr.y, 40, 38)
+        pygame.draw.rect(gui.screen, (0, 0, 0), sub.inflate(4, 4), border_radius=3)
+        gui.label((sub.centerx, sub.y + 1), tz, 12, led, "eng", "center")
+        gui.label((sub.centerx, sub.y + 19), f"+{int(self.render_t // 60):02d}", 12, tuple(v // 2 for v in led), "crt",
+                  "center")
+        # time compression keys
+        x = 784
+        for i, sp in enumerate(SPEEDS):
+            lab = "II" if sp == 0 else f"{sp}×"
+            if gui.button(R(x, 10, 38, 34), lab, lit=self.speed_i == i, size=12,
+                          tip="Pause" if sp == 0 else f"Time compression {sp}×"):
                 self.speed_i = i
-            x += 42
-        x += 8
+            x += 41
+        x += 10
         hq = w.hq
         unacked = sum(1 for m in w.messages if m.ack and not m.acked and m.delivered)
-        lamps = []
+        tiles = []
         if w.faction == "US":
-            lamps.append((th.lamp_white, hq.readiness, False, "Defense readiness condition"))
+            tiles.append(("DEFCON\n" + hq.readiness.replace("DEFCON", "").strip(), th.lamp_white, True, False,
+                          "Defense readiness condition"))
             adw = {"WHITE": th.lamp_white, "YELLOW": th.lamp_amber, "RED": th.lamp_red}.get(hq.alert, th.lamp_white)
-            lamps.append((adw, f"ADW {hq.alert}", hq.alert == "RED", "Air Defense Warning (set by NORAD Region)"))
+            tiles.append((f"ADW\n{hq.alert}", adw, True, hq.alert == "RED", "Air Defense Warning (set by NORAD Region)"))
         else:
-            lamps.append((th.lamp_red if hq.readiness == "FULL" else th.lamp_amber, f"READY {hq.readiness}", False,
-                          "Combat readiness of the Air Defense Forces"))
-        ws = {"HOLD": th.lamp_green, "TIGHT": th.lamp_amber, "FREE": th.lamp_red}.get(hq.weapons_status, th.lamp_white)
-        lamps.append((ws, f"WPNS {hq.weapons_status}", False, "Weapons control status (set by higher authority)"))
+            rd = {"FULL": "ПОЛНАЯ", "INCREASED": "ПОВЫШ.", "CONSTANT": "ПОСТОЯН."}.get(hq.readiness, hq.readiness)
+            tiles.append((("БГ\n" + rd) if gui.lang_mode != "en" else f"READY\n{hq.readiness}",
+                          th.lamp_red if hq.readiness == "FULL" else th.lamp_amber, True, False,
+                          f"Combat readiness: {hq.readiness}"))
+        ws = hq.weapons_status
+        wcol = {"HOLD": th.lamp_green, "TIGHT": th.lamp_amber, "FREE": th.lamp_red}.get(ws, th.lamp_white)
+        if w.faction == "USSR" and gui.lang_mode != "en":
+            wl = {"HOLD": "ОГОНЬ\nЗАПРЕЩЁН", "TIGHT": "ОГОНЬ\nОГРАНИЧЕН", "FREE": "ОГОНЬ\nРАЗРЕШЁН"}.get(ws, ws)
+        else:
+            wl = f"WEAPONS\n{ws}"
+        tiles.append((wl, wcol, True, ws == "FREE", f"Weapons control status: {ws} (set by higher authority)"))
         if w.faction == "US":
             up = w.c2_up()
-            side = next((s for s, v in w.duplex.items() if v == "active"), "-")
-            lamps.append((th.lamp_green if up else th.lamp_red, f"FSQ-7 {side}" if up else "FSQ-7 OFF", not up,
-                          "AN/FSQ-7 duplex computer (RADAR console)"))
-        lamps.append((th.lamp_red if unacked else (60, 20, 20), f"ACK {unacked}", unacked > 0,
-                      "Messages awaiting acknowledgement (A)"))
-        for col, lab, blink, tip in lamps:
-            gui.lamp((x + 8, 23), col, True, blink=blink, label=lab, tip=tip)
-            x += 30 + TEXT.width(lab, 11)
-        if gui.button(R(W - 86, 9, 76, 28), "MENU", size=11, tip="Esc"):
+            side = next((sd for sd, v in w.duplex.items() if v == "active"), "-")
+            tiles.append((f"FSQ-7\n{side} ON LINE" if up else "FSQ-7\nOFF LINE", th.lamp_green if up else th.lamp_red,
+                          True, not up, "AN/FSQ-7 duplex computer (RADAR console)"))
+        else:
+            down = sum(1 for ln in w.links.values() if not ln.up)
+            tiles.append((("СВЯЗЬ\nНОРМА" if not down else f"ОБРЫВ\nЛИНИЙ {down}") if gui.lang_mode != "en" else
+                          ("LINES\nOK" if not down else f"LINES\nDOWN {down}"),
+                          th.lamp_green if not down else th.lamp_red, True, bool(down), "Telephone and telegraph lines"))
+        ack_l = (f"КВИТ.\n{unacked}" if (w.faction == "USSR" and gui.lang_mode != "en") else f"ACK\n{unacked}")
+        tiles.append((ack_l, th.lamp_red, unacked > 0, unacked > 0, "Messages awaiting acknowledgement (A)"))
+        tw = (W - 96 - x) // len(tiles)
+        for lab, col, on, blink, tip in tiles:
+            gui.annunciator(R(x, 9, tw - 8, 36), lab, col, on, blink, tip=tip, size=11)
+            x += tw
+        if gui.button(R(W - 88, 10, 78, 34), "MENU", size=12, tip="Esc"):
             self.menu = True
 
     def _display_strip(self, gui):
         th = self.theme
-        y = 834
-        x = 8
-        for m, lab in (("map", "SITUATION" if self.world.faction == "US" else "ПЛАНШЕТ BOARD"), ("scope", "RADAR SCOPE")):
-            if gui.button(R(x, y, 128, 28), lab, lit=self.mode == m, size=11, tip="M toggles"):
+        w = self.world
+        mr = self.map.rect
+        y = mr.bottom + 18
+        x = mr.x
+        modes = (("map", "SITUATION" if w.faction == "US" else "BOARD"), ("scope", "RADAR SCOPE"), ("net", "NETWORK"))
+        for m, lab in modes:
+            if gui.button(R(x, y, 112, 30), lab, lit=self.mode == m, size=11,
+                          tip="M cycles the display: situation / radar scope / network board"):
                 self.mode = m
-            x += 130
-        x += 10
+            x += 116
+        x += 14
         if self.mode == "map":
             lay = self.map.layers
             for key, lab, tip in (("coverage", "COVERAGE", "Predicted radar coverage at the selected altitude (C)"),
                                   ("raw", "RAW", "Unassociated radar returns"), ("zones", "ZONES", "ADIZ & defended areas"),
-                                  ("labels", "LABELS", "Names"), ("history", "HISTORY", "Track history"),
+                                  ("labels", "LABELS", "Names on the display"), ("history", "HISTORY", "Track history"),
                                   ("rings", "RINGS", "Range rings of the selected radar and SAM engagement rings")):
-                if key == "raw" and self.world.faction != "US":
+                if key == "raw" and w.faction != "US":
                     continue
-                if gui.button(R(x, y, 72, 28), lab, lit=lay[key], size=10, tip=tip):
+                if gui.button(R(x, y, 76, 30), lab, lit=lay[key], size=10, tip=tip):
                     lay[key] = not lay[key]
                     if key in ("zones", "labels"):
                         self.map._base_key = None
-                x += 74
-            if gui.button(R(x, y, 30, 28), "DN", size=10, tip="Coverage altitude down ([)"):
-                self._cov_alt(-1)
-            gui.label((x + 34, y + 7), fmt_alt(th, self.map.cov_alt, False), 10, th.engraving)
-            if gui.button(R(x + 104, y, 30, 28), "UP", size=10, tip="Coverage altitude up (])"):
-                self._cov_alt(1)
-        else:
-            if gui.button(R(x, y, 34, 28), "<", size=12, tip="Previous radar (,)"):
+                x += 79
+        elif self.mode == "scope":
+            if gui.button(R(x, y, 34, 30), "<", size=12, tip="Previous radar (,)"):
                 self._cycle_radar(-1)
-            site = self.world.radars.get(self.scope.site_id)
-            gui.label((x + 42, y + 6), site.name if site else "—", 12, th.engraving)
-            if gui.button(R(x + 260, y, 34, 28), ">", size=12, tip="Next radar (.)"):
+            site = w.radars.get(self.scope.site_id)
+            nm = (site.name_ru if (site and w.faction == "USSR" and site.name_ru and gui.lang_mode != "en") else
+                  (site.name if site else "—"))
+            win = R(x + 40, y + 2, 230, 26)
+            gui.readout(win, [nm[:30]], 12)
+            if gui.button(R(x + 276, y, 34, 30), ">", size=12, tip="Next radar (.)"):
                 self._cycle_radar(1)
-            if gui.button(R(x + 304, y, 100, 28), "RANGE", size=11, tip="Cycle display range (R)"):
+            if gui.button(R(x + 318, y, 96, 30), "RANGE", size=11, tip="Cycle display range (R)"):
                 self.scope.cycle_range(1)
-        if self.world.faction == "US":
-            if gui.button(R(988 - 124, y, 124, 28), "INITIATE (I)", size=11, lit=self.map.light_gun is not None,
+        else:
+            gui.label((x, y + 6), "click a node to select it on the consoles", 12, th.housing_ink_dim, "eng_r")
+        # second row: power and overload lamps, brightness and focus, coverage altitude, light gun
+        y2 = y + 40
+        x = mr.x + 4
+        gui.lamp((x + 6, y2 + 9), th.lamp_green, True, radius=5)
+        gui.eng((x + 16, y2 + 1), "POWER", 11, color=th.housing_ink, strip=False)
+        nt = sum(1 for t in w.tracks.values() if not t.lost)
+        over = nt > 18 or any(w.active_jammers(st) for st in list(w.radars.values())[:12])
+        gui.lamp((x + 6, y2 + 27), th.lamp_red, over, radius=5, blink=over,
+                 tip="Overload: heavy track load or jamming on the network")
+        gui.eng((x + 16, y2 + 19), "OVERLOAD", 11, color=th.housing_ink, strip=False)
+        x += 110
+        k = gui.knob(R(x, y2, 150, 36), "BRIGHTNESS", f"{self.brightness * 100:.0f}%",
+                     tip="Display brightness", pos=(self.brightness - 0.4) / 0.6, ink=th.housing_ink)
+        if k:
+            self.brightness = max(0.4, min(1.0, self.brightness + 0.1 * k))
+        x += 160
+        k = gui.knob(R(x, y2, 150, 36), "FOCUS", ["SHARP", "SOFT", "GLOW", "BLOOM"][self.focus_i],
+                     tip="Spot focus: how much the phosphor blooms", pos=self.focus_i / 3, ink=th.housing_ink)
+        if k:
+            self.focus_i = max(0, min(3, self.focus_i + k))
+            self.bloom = [0, 70, 120, 170][self.focus_i]
+        x += 170
+        if self.mode == "map":
+            if gui.button(R(x, y2 + 2, 40, 30), "DN", size=10, tip="Coverage altitude down ([)"):
+                self._cov_alt(-1)
+            gui.readout(R(x + 46, y2 + 4, 84, 26), [fmt_alt(th, self.map.cov_alt, False)], 12)
+            if gui.button(R(x + 136, y2 + 2, 40, 30), "UP", size=10, tip="Coverage altitude up (])"):
+                self._cov_alt(1)
+        if w.faction == "US":
+            if gui.button(R(mr.right - 150, y2 + 2, 150, 30), "INITIATE (I)", size=11, lit=self.map.light_gun is not None,
                           tip="Initiate a track on returns at the light gun"):
                 self.initiate()
 
     def _ticker(self, gui):
         th = self.theme
         w = self.world
-        r = R(8, 868, W - 16, 28)
-        gui.glass(r, (0, 0, 0))
-        msgs = [m for m in w.messages if m.delivered][-2:]
-        x = r.x + 8
-        for m in msgs[-1:]:
-            col = th.alert if m.priority >= 2 else th.lamp_blue if m.channel == "radio" else th.text
-            txt = f"{clock(w, m.t_deliver)} {m.sender}: {m.text}"
-            gui.label((x, r.y + 6), txt[:150], 12, col, "cyr" if w.faction == "USSR" else "ui")
+        r = TICKER_R
+        s = gui.screen
+        msgs = [m for m in w.messages if m.delivered][-1:]
+        if w.faction == "US":
+            pygame.draw.rect(s, (0, 0, 0), r.inflate(4, 4).move(0, 1), border_radius=2)
+            pygame.draw.rect(s, (232, 222, 178), r)
+            for xx in range(r.x + 6, r.right, 14):
+                pygame.draw.circle(s, (200, 190, 150), (xx, r.y + 3), 1)
+            for m in msgs:
+                col = (150, 30, 20) if m.priority >= 2 else (40, 34, 26)
+                txt = f"{clock(w, m.t_deliver)}  {m.sender}: {m.text}"
+                gui.label((r.x + 10, r.y + 5), txt[:150].upper(), 13, col, "typewriter")
+        else:
+            gui.glass(r, (4, 4, 3), bezel=False)
+            for m in msgs:
+                col = th.alert if m.priority >= 2 else th.lamp_blue if m.channel == "radio" else th.text
+                txt = f"{clock(w, m.t_deliver)} {m.sender}: {m.text}"
+                gui.label((r.x + 10, r.y + 5), txt[:160], 12, col, "cyr")
+            gui.crt_overlay(r, strength=0.5)
         now = self.app.clock_t
         self.toasts = [t for t in self.toasts if t[0] > now]
         for i, (t_end, msg, col) in enumerate(reversed(self.toasts[-3:])):
-            tr = R(996, 780 - i * 26, 596, 24)
-            pygame.draw.rect(gui.screen, (0, 0, 0), tr, border_radius=3)
-            pygame.draw.rect(gui.screen, col, tr, 1, border_radius=3)
-            gui.label((tr.x + 8, tr.y + 4), msg[:84], 12, col)
-        gui.label((W - 12, r.y + 7), f"{self.fps:3.0f} fps", 10, th.text_dim, align="right")
+            tr = R(1000, CONSOLE_R.bottom - 36 - i * 30, 596, 26)
+            pygame.draw.rect(s, (0, 0, 0), tr.move(2, 3), border_radius=3)
+            pygame.draw.rect(s, (16, 16, 14), tr, border_radius=3)
+            pygame.draw.rect(s, col, tr, 1, border_radius=3)
+            gui.label((tr.x + 10, tr.y + 5), msg[:84], 12, col)
+        gui.label((W - 12, r.y + 7), f"{self.fps:3.0f} fps", 10, (120, 110, 90) if w.faction == "US" else th.text_dim,
+                  align="right")
 
     def _menu(self, gui):
-        th = self.theme
         s = pygame.Surface((W, H), pygame.SRCALPHA)
-        s.fill((0, 0, 0, 160))
+        s.fill((0, 0, 0, 170))
         gui.screen.blit(s, (0, 0))
-        inner = gui.panel(R(W // 2 - 200, 220, 400, 420), "MENU", "simulation paused")
-        y = inner.y + 10
+        inner = gui.panel(R(W // 2 - 210, 190, 420, 480), "MENU", "simulation paused")
+        y = inner.y + 12
         for lab, fn in (("RESUME", lambda: setattr(self, "menu", False)), ("SAVE", self.app.save_game),
-                        ("LOAD", self.app.load_game), ("MANUAL", lambda: self.app.push(ManualScene(self.app, self))),
+                        ("LOAD", self.app.load_game),
+                        ("OPERATOR'S MANUAL", lambda: self.app.push(ManualScene(self.app, self))),
+                        ("SETTINGS", lambda: self.app.push(SettingsScene(self.app, self))),
                         ("AUTO-SLOW ON ALERTS: " + ("ON" if self.auto_slow else "OFF"),
                          lambda: setattr(self, "auto_slow", not self.auto_slow)),
                         ("SOUND: " + ("ON" if self.app.audio.volume > 0 else "OFF"), self.app.toggle_sound),
                         ("END SHIFT → DEBRIEF", self.end_shift), ("QUIT TO TITLE", self.app.to_title)):
-            if gui.button(R(inner.x + 20, y, inner.w - 40, 36), lab, size=13):
+            if gui.button(R(inner.x + 24, y, inner.w - 48, 38), lab, size=13,
+                          color=gui.theme.lamp_red if lab.startswith(("END", "QUIT")) else None):
                 fn()
                 if lab in ("SAVE", "END SHIFT → DEBRIEF"):
                     self.menu = False
-            y += 44
+            y += 46
 
 
 # ====================================================================== DEBRIEF

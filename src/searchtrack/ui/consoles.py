@@ -70,7 +70,7 @@ class TracksConsole(Console):
         w = scene.world
         th = scene.theme
         us = w.faction == "US"
-        inner = gui.panel(r, "SURVEILLANCE & IDENTIFICATION" if us else "ЦЕЛИ · TARGETS", "track console")
+        inner = gui.panel(r, "SURVEILLANCE & IDENTIFICATION", "track console")
         tracks = sorted(w.tracks.values(), key=lambda t: (t.lost, {"hostile": 0, "suspect": 1, "unknown": 2,
                                                                   "pending": 3}.get(t.identity, 5), t.id))
         cols = [("TRK", 56), ("IDENT", 104), ("ALT", 52), ("SPD", 62), ("HDG", 40), ("Q", 22), ("IFF", 82),
@@ -101,10 +101,13 @@ class TracksConsole(Console):
                 scene.initiate()
             return
         rec, basis = ident.recommend(w, trk)
-        gui.label((inner.x, y), f"{trk.id}", 18, _ident_color(scene, trk.identity), "ui_bold")
-        gui.label((inner.x + 80, y + 3), f"{doctrine.id_label(w, trk.identity)}   recommended: "
-                  f"{doctrine.id_label(w, rec)}", 13, th.engraving)
-        y += 26
+        hdr = R(inner.x, y, inner.w, 24)
+        gui.glass(hdr, bezel=False)
+        gui.label((hdr.x + 8, hdr.y + 1), f"{trk.id}", 18, _ident_color(scene, trk.identity), "ui_bold")
+        gui.crt((hdr.x + 92, hdr.y + 4), f"{doctrine.id_label(w, trk.identity)}   recommended: "
+                f"{doctrine.id_label(w, rec)}", 13)
+        gui.crt_overlay(hdr, strength=0.5)
+        y += 32
         bw = (inner.w - 10) // 6
         for i, idn in enumerate(["friend", "unknown", "suspect", "hostile", "faker", "pending"]):
             label = doctrine.id_label(w, idn)
@@ -169,13 +172,13 @@ class TracksConsole(Console):
         lines.append((f"Data: {last}; {len(srcs)} radar(s): {src_txt}; raid size {trk.size}", th.text))
         if trk.adiz_t >= 0:
             lines.append((f"ADIZ penetration {clock(w, trk.adiz_t)}", th.accent))
-        for i, (txt, col) in enumerate(lines):
-            gui.crt((inner.x + 4, y + i * 16), txt, 12, col)
-        y += len(lines) * 16 + 6
+        gui.readout(R(inner.x, y, inner.w, len(lines) * 16 + 8), lines)
+        y += len(lines) * 16 + 16
         # coverage analysis
-        gui.label((inner.x, y), "COVERAGE ANALYSIS — predicted detectability at the track's estimated position", 11,
-                  th.engraving_dim)
-        y += 16
+        gui.eng((inner.x, y), "COVERAGE ANALYSIS", 12)
+        gui.label((inner.x + inner.w - 2, y + 2), "predicted detectability at the track's estimated position", 10,
+                  th.engraving_dim, "eng_r", "right")
+        y += 22
         px, py = tracking.predicted(trk, w.t)
         alt = trk.alt if trk.alt is not None else 6000.0
         rows = []
@@ -207,7 +210,7 @@ class WeaponsConsole(Console):
         w = scene.world
         th = scene.theme
         us = w.faction == "US"
-        inner = gui.panel(r, "WEAPONS DIRECTION" if us else "НАВЕДЕНИЕ ИСТРЕБИТЕЛЕЙ · FIGHTER CONTROL", "interceptors")
+        inner = gui.panel(r, "WEAPONS DIRECTION", "interceptors")
         sqs = list(w.squadrons.values())
         rows = []
         for q in sqs:
@@ -310,9 +313,8 @@ class WeaponsConsole(Console):
             info.append(f"Control: {ctrl}, {'computer' if fl.auto else 'manual'} vectors.  Weapons "
                         f"{'FREE' if fl.weapons_free else 'HOLD'}.  Load: "
                         + ", ".join(f"{v}×{k}" for k, v in lead.weapons.items() if v))
-        for i, ln in enumerate(info):
-            gui.crt((inner.x + 4, y + i * 16), ln, 12)
-        y += len(info) * 16 + 6
+        gui.readout(R(inner.x, y, inner.w, len(info) * 16 + 8), info)
+        y += len(info) * 16 + 16
         b = 2
         bw = (inner.w - 6 * b) // 7
         row = [("ASSIGN", lambda: scene.cmd("assign", flight=fl.id, track=scene.sel.get("track") or "",
@@ -386,7 +388,7 @@ class MissilesConsole(Console):
         w = scene.world
         th = scene.theme
         us = w.faction == "US"
-        inner = gui.panel(r, "MISSILE CONTROL" if us else "ЗРВ · SAM CONTROL", "surface-to-air")
+        inner = gui.panel(r, "MISSILE CONTROL", "surface-to-air")
         sams = list(w.sams.values())
         if not sams:
             gui.wrapped(inner, "No missile units assigned in this scenario.", 13, th.engraving_dim)
@@ -426,9 +428,8 @@ class MissilesConsole(Console):
                                                       if s.lock in w.aircraft and w.aircraft[s.lock].state == 'airborne' else "")]
         if s.reloading:
             info.append(f"Reloading: next missile in {(min(s.reloading) - w.t) / 60:.1f} min")
-        for i, ln in enumerate(info):
-            gui.crt((inner.x + 4, y + i * 16), ln, 12)
-        y += len(info) * 16 + 8
+        gui.readout(R(inner.x, y, inner.w, len(info) * 16 + 8), info)
+        y += len(info) * 16 + 16
         tsel = scene.sel.get("track") or ""
         bw = (inner.w - 10) // 5
         if st.homing_km <= 0:
@@ -479,7 +480,7 @@ class RadarNetConsole(Console):
         w = scene.world
         th = scene.theme
         us = w.faction == "US"
-        inner = gui.panel(r, "RADAR NETWORK & TECHNICAL" if us else "РТВ · RADAR NETWORK", "sites, settings, coverage")
+        inner = gui.panel(r, "RADAR NETWORK & TECHNICAL", "sites, settings, coverage")
         sites = list(w.radars.values())
         rows, colors = [], []
         sel_i = -1
@@ -507,9 +508,11 @@ class RadarNetConsole(Console):
         colw = inner.w // 2 - 6
         lx = inner.x
         # ---- left: controls
-        gui.label((lx, y), f"{s.name}", 12, th.engraving, "ui_bold")
-        gui.label((lx, y + 15), f"{rt.id} {rt.band} {rt.freq_mhz:.0f}MHz {rt.peak_kw:,.0f}kW {rt.pulse_us:g}µs "
-                  f"PRF{rt.prf:.0f} {rt.az_beam_deg:g}°", 10, th.engraving_dim)
+        gui.label((lx, y), s.name_ru if (gui.ussr and gui.lang_mode != "en" and s.name_ru) else s.name, 14,
+                  th.engraving, "eng")
+        gui.label((lx, y + 17), f"{rt.name_ru if (gui.ussr and rt.name_ru) else rt.id} · {rt.band} {rt.freq_mhz:.0f} MHz "
+                  f"{rt.peak_kw:,.0f} kW {rt.pulse_us:g} µs PRF {rt.prf:.0f} · {rt.az_beam_deg:g}°", 11,
+                  th.engraving_dim, "eng_r")
         yy = y + 34
         if rt.mti:
             v = gui.toggle(R(lx, yy, 140, 26), "MTI", s.mti, tip="Moving Target Indication: cancels clutter, but also "
@@ -554,27 +557,29 @@ class RadarNetConsole(Console):
         yy += 66
         hfs = [h for h in w.hfs.values() if h.site_id == s.id]
         for h in hfs:
-            gui.crt((lx, yy), f"{h.type_id}: {'BUSY ' + h.current if h.current else 'IDLE'}  queue {len(h.queue)}", 11)
-            gui.crt((lx, yy + 14), f"  last: {h.last_result or '—'}", 11, th.text_dim)
-            yy += 30
+            gui.readout(R(lx, yy, colw, 36), [f"{h.type_id}: {'BUSY ' + h.current if h.current else 'IDLE'}  "
+                                              f"queue {len(h.queue)}", (f"last: {h.last_result or '—'}", th.text_dim)],
+                        11)
+            yy += 44
         if us:
             yy = max(yy, inner.bottom - 64)
-            gui.label((lx, yy), "AN/FSQ-7 DUPLEX", 11, th.engraving_dim, "ui_bold")
+            gui.eng((lx, yy), "AN/FSQ-7 DUPLEX", 12)
             for i, side in enumerate(("A", "B")):
                 st = w.duplex.get(side, "?")
                 col = th.lamp_green if st == "active" else th.lamp_amber if st == "standby" else th.lamp_red
                 gui.lamp((lx + 10 + i * 100, yy + 26), col, True, label=f"{side}: {st.upper()}")
             if w.duplex_until > w.t:
-                gui.label((lx, yy + 42), f"SWITCHOVER {w.duplex_until - w.t:.0f}s", 11, th.alert)
+                gui.annunciator(R(lx + 200, yy + 44, 90, 16), f"SWITCH {w.duplex_until - w.t:.0f}s", th.lamp_red, True,
+                                blink=True, size=10)
             if gui.button(R(lx + 200, yy + 14, 90, 26), "SWITCH", color=th.lamp_red,
                           tip="Switch the standby computer on line (≈45 s with tracking frozen)."):
                 scene.cmd("switchover")
         else:
             yy = max(yy, inner.bottom - 50)
             down = [ln.name for ln in w.links.values() if not ln.up]
-            gui.label((lx, yy), "TELEPHONE LINES", 11, th.engraving_dim, "ui_bold")
-            gui.crt((lx, yy + 16), "all lines up" if not down else "DOWN: " + ", ".join(down), 11,
-                    th.text if not down else th.alert)
+            gui.eng((lx, yy), "TELEPHONE LINES", 12)
+            gui.readout(R(lx, yy + 18, colw, 22), [("all lines up" if not down else "DOWN: " + ", ".join(down),
+                                                     th.text if not down else th.alert)], 11)
         # ---- right: vertical coverage diagram and radar equation
         rx = inner.x + colw + 12
         trk = w.tracks.get(scene.sel.get("track") or "")
@@ -593,7 +598,7 @@ class RadarNetConsole(Console):
             self._vc_key = key
         gui.glass(vr)
         gui.screen.blit(self._vc, (vr.x + 26, vr.y + 4))
-        gui.label((vr.x + 28, vr.y + 4), f"VERTICAL COVERAGE · AZ {az:03.0f}° · 5 m²", 10, th.engraving)
+        gui.label((vr.x + 28, vr.y + 4), f"VERTICAL COVERAGE · AZ {az:03.0f}° · 5 m²", 10, th.text)
         for frac in (0.25, 0.5, 0.75):
             hy = vr.y + 4 + (vr.h - 26) * (1 - frac)
             gui.label((vr.x + 2, hy - 6), fmt_alt(th, hmax * frac), 9, th.text_dim)
@@ -605,6 +610,7 @@ class RadarNetConsole(Console):
                 mx = vr.x + 26 + (vr.w - 30) * d / rt.range_km
                 my = vr.y + 4 + (vr.h - 26) * (1 - trk.alt / hmax)
                 pygame.draw.circle(gui.screen, th.lamp_white, (int(mx), int(my)), 4, 1)
+        gui.crt_overlay(vr, strength=0.7)
         gui.tip(vr, "Where this radar can see a 5 m² target (brightness = probability of detection) along the bearing "
                 "to the selected track. Black wedges: below the horizon, behind terrain, or lobing nulls (VHF).")
         y2 = vr.bottom + 8
@@ -627,8 +633,8 @@ class RadarNetConsole(Console):
                      f"Pd {bd.pd:4.2f}: {bd.explain().upper()}"]
         else:
             lines = ["RADAR EQUATION", "Select a track to see this radar's full", "detection budget against it."]
-        for i, ln in enumerate(lines):
-            gui.crt((rx, y2 + i * 15), ln[:44], 11, th.text if i else th.engraving)
+        gui.readout(R(rx, y2, colw, min(inner.bottom - y2, len(lines) * 15 + 10)),
+                    [(ln[:46], th.text if i else th.accent) for i, ln in enumerate(lines)], 11)
 
 
 # ====================================================================== COMMS
@@ -642,7 +648,7 @@ class CommsConsole(Console):
         w = scene.world
         th = scene.theme
         us = w.faction == "US"
-        inner = gui.panel(r, "COMMUNICATIONS" if us else "СВЯЗЬ · COMMUNICATIONS", "radio · telephone · teletype")
+        inner = gui.panel(r, "COMMUNICATIONS", "radio · telephone · teletype")
         x = inner.x
         for f, lab in (("all", "ALL"), ("radio", "RADIO"), ("voice", "VOICE"), ("tty", "TELETYPE"), ("system", "ALERTS")):
             if gui.button(R(x, inner.y, 84, 24), lab, lit=self.filter == f):
@@ -663,9 +669,8 @@ class CommsConsole(Console):
         gui.log("comms", R(inner.x, inner.y + 30, inner.w, inner.h - 210), lines, 12,
                 "cyr" if not us else "ui")
         y = inner.bottom - 172
-        gui.label((inner.x, y), "REQUESTS TO HIGHER AUTHORITY" if us else "ЗАПРОСЫ · REQUESTS TO COMMAND POST", 12,
-                  th.engraving, "ui_bold")
-        y += 20
+        gui.eng((inner.x, y), "REQUESTS TO HIGHER AUTHORITY", 13)
+        y += 22
         tsel = scene.sel.get("track") or ""
         bw = (inner.w - 8) // 4
         reqs = [("HOSTILE " + (tsel or "—"), "declare_hostile", "Ask for this track to be declared hostile."),
@@ -698,9 +703,9 @@ class CommsConsole(Console):
         y += 32
         pending = [rq for rq in w.hq.requests if not rq.answered]
         txt = "; ".join(f"{rq.kind} {rq.ref or rq.value} (~{max(0, rq.t_answer - w.t) / 60:.0f} min)" for rq in pending)
-        gui.crt((inner.x, y), f"Pending: {txt or 'none'}", 11, th.text_dim)
-        gui.crt((inner.x, y + 16), f"HQ: {w.hq.name}   weapons {w.hq.weapons_status}   credibility "
-                f"{w.hq.credibility:.2f}", 11, th.text_dim)
+        gui.readout(R(inner.x, y, inner.w, 40), [(f"Pending: {txt or 'none'}", th.text),
+                                                 (f"HQ: {w.hq.name}   weapons {w.hq.weapons_status}   credibility "
+                                                  f"{w.hq.credibility:.2f}", th.text_dim)], 11)
 
 
 # ====================================================================== INTEL
@@ -713,7 +718,7 @@ class IntelConsole(Console):
     def draw(self, gui, r, scene):
         w = scene.world
         th = scene.theme
-        inner = gui.panel(r, "INTELLIGENCE" if w.faction == "US" else "РАЗВЕДКА · INTELLIGENCE", "briefing · threats · notes")
+        inner = gui.panel(r, "INTELLIGENCE", "briefing · threats · notes")
         x = inner.x
         for t, lab in (("brief", "BRIEFING"), ("intel", "REPORTS"), ("threat", "AIRCRAFT"), ("tech", "TECH NOTES")):
             if gui.button(R(x, inner.y, 110, 24), lab, lit=self.tab == t):
@@ -753,15 +758,16 @@ class StatusConsole(Console):
         w = scene.world
         th = scene.theme
         us = w.faction == "US"
-        inner = gui.panel(r, "STATUS & LOGISTICS" if us else "ОБСТАНОВКА · STATUS", "readiness · automation · objectives")
+        inner = gui.panel(r, "STATUS & LOGISTICS", "readiness · automation · objectives")
         y = inner.y
         hq = w.hq
-        gui.crt((inner.x, y), f"{hq.name}:  {hq.readiness}   {'ADW ' + hq.alert if us else ''}   WEAPONS {hq.weapons_status}", 13)
+        gui.readout(R(inner.x, y - 2, inner.w - 118, 24), [f"{hq.name}:  {hq.readiness}   {'ADW ' + hq.alert if us else ''}"
+                                                           f"   WEAPONS {hq.weapons_status}"], 13)
         gui.meter(R(inner.right - 100, y - 4, 96, 56), hq.credibility, "HQ CONFIDENCE",
                   tip="Falls when you ignore orders, leave alerts unacknowledged or make unfounded requests.")
+        y += 40
+        gui.eng((inner.x, y), "POSITIONS (automation)", 12)
         y += 22
-        gui.label((inner.x, y), "POSITIONS (automation)", 11, th.engraving_dim, "ui_bold")
-        y += 18
         pos = [("surveil", "SURVEILLANCE", "AI operators initiate tracks from persistent returns."),
                ("ident", "IDENTIFICATION", "AI technicians apply safe IDs (friend by IFF/flight plan, else unknown)."),
                ("height", "HEIGHT", "Automatic height-finder requests for tracks of interest."),
@@ -775,28 +781,31 @@ class StatusConsole(Console):
             if v != w.automation.get(k, False):
                 scene.cmd("automation", position=k, on=v)
         y += 66
-        gui.label((inner.x, y), "OBJECTIVES", 11, th.engraving_dim, "ui_bold")
-        y += 16
+        gui.eng((inner.x, y), "OBJECTIVES", 12)
+        y += 20
         for o in w.objectives:
             if o.hidden:
                 continue
             col = th.lamp_green if o.status == "done" else th.lamp_red if o.status == "failed" else th.lamp_amber
             gui.lamp((inner.x + 8, y + 8), col, o.status != "open" or True, radius=5)
-            gui.label((inner.x + 20, y), o.text[:76], 12, th.engraving if o.status == "open" else th.engraving_dim)
+            gui.label((inner.x + 20, y), o.text[:80], 13, th.engraving if o.status == "open" else th.engraving_dim,
+                      "eng_r")
             y += 18
         y += 8
-        gui.label((inner.x, y), "AIRBASES & SQUADRONS", 11, th.engraving_dim, "ui_bold")
-        y += 16
+        gui.eng((inner.x, y), "AIRBASES & SQUADRONS", 12)
+        y += 20
+        sq_lines = []
         for q in w.squadrons.values():
             b = w.airbases[q.base_id]
             alert = sum(q.ready.values())
-            gui.crt((inner.x, y), f"{q.name:<22} {b.name:<18} on alert {alert:>2}  airborne {q.airborne:>2}  "
-                    f"recovering {len(q.recovering)}  pilots {q.pilots}", 11)
-            y += 15
-        y += 8
+            sq_lines.append(f"{q.name[:20]:<20} {b.name[:16]:<16} alert {alert:>2}  air {q.airborne:>2}  "
+                            f"rcv {len(q.recovering)}  plt {q.pilots}")
         st = w.stats
-        gui.crt((inner.x, y), f"Tracks {st.tracks_initiated} ({st.false_tracks} false) · sorties {st.sorties} · AAM {st.aam_shots}"
-                f" · SAM {st.missiles} · reports {st.reports_to_hq} · overdue acks {st.unacked_overdue}", 11, th.text_dim)
+        sq_lines.append((f"Tracks {st.tracks_initiated} ({st.false_tracks} false) · sorties {st.sorties} · AAM {st.aam_shots}"
+                         f" · SAM {st.missiles} · reports {st.reports_to_hq} · late acks {st.unacked_overdue}", th.text_dim))
+        hgt = min(len(sq_lines) * 15 + 10, inner.bottom - 40 - y)
+        if hgt > 20:
+            gui.readout(R(inner.x, y, inner.w, hgt), sq_lines, 11)
         y = inner.bottom - 30
         if gui.button(R(inner.x, y, 140, 28), "SAVE (F5)", tip="Save the current shift."):
             scene.app.save_game()

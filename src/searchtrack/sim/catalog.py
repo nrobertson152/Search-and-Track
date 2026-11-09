@@ -25,6 +25,7 @@ SWERLING1_SNR_DB_PD50_PFA6 = 10.0 * math.log10(math.log(1e-6) / math.log(0.5) - 
 class RadarType:
     id: str
     name: str
+    name_ru: str = ""
     nation: str = ""
     role: str = "search"            # search | height | acq | fc
     band: str = "L"
@@ -82,6 +83,7 @@ class RadarType:
 class AircraftType:
     id: str
     name: str
+    name_ru: str = ""
     nation: str = ""
     role: str = "airliner"           # interceptor bomber recon airliner transport light tanker
     rcs_nose: float = 10.0
@@ -143,6 +145,7 @@ class WeaponType:
 class SamType:
     id: str
     name: str
+    name_ru: str = ""
     nation: str = ""
     controller: str = "pvo"          # pvo | army | sage
     acq_radar: str = ""

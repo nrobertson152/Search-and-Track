@@ -1,0 +1,209 @@
+id = "us_training_intercept"
+title = "Training: Intercept Fundamentals"
+subtitle = "Bangor Air Defense Sector — instructor-led"
+summary = "Initiate a track, get a height, identify it, scramble a pair and run a visual identification intercept."
+faction = "US"
+kind = "training"
+order = 1
+theater = "gulf_of_maine"
+start = "1962-10-20T15:00:00"
+tz = "Z"
+duration_min = 45
+seed = 1101
+reliability = 50.0
+
+briefing = """
+DIRECTION CENTER DC-05, TOPSHAM AFS — TRAINING SHIFT
+
+You are the Senior Director. An exercise target (a KC-135 flying with its IFF switched off) will approach the sector from the east over the Gulf of Maine. Treat it as a genuine UNKNOWN.
+
+Your instructor will talk you through each step on the teletype:
+  1. INITIATE the track with the light gun (click the return, then INITIATE).
+  2. Request a HEIGHT from a height finder.
+  3. Set the identity to UNKNOWN.
+  4. SCRAMBLE a pair from Dow AFB and commit them for an identification pass.
+  5. Get a visual identification, then send the fighters home.
+
+Surveillance and identification automation are switched OFF for this lesson so you do the work yourself.
+"""
+
+[automation]
+surveil = false
+ident = false
+height = false
+tech = true
+
+[weather]
+k_factor = 1.333
+wind_from = 260.0
+wind_kmh = 70.0
+ceiling_m = 4000.0
+visibility_km = 30.0
+night = false
+sea_state = 3.0
+
+[hq]
+name = "26 AIR DIV"
+readiness = "DEFCON 5"
+alert = "WHITE"
+weapons_status = "HOLD"
+[hq.policy]
+response_s = [40.0, 90.0]
+declare_hostile = "evidence"
+engage = "deny"
+special_release = "deny"
+mode1_valid = ["23", "41"]
+track_start = 1
+
+[[link]]
+id = "L_charleston"
+name = "Charleston data line"
+kind = "data"
+delay_s = 3.0
+
+[[link]]
+id = "L_bucks"
+name = "Bucks Harbor data line"
+kind = "data"
+delay_s = 3.0
+
+[[link]]
+id = "L_dow"
+name = "Dow AFB scramble line"
+kind = "voice"
+delay_s = 8.0
+
+[[radar]]
+site = "charleston"
+type = "AN/FPS-20A"
+hf = ["AN/FPS-6"]
+link = "L_charleston"
+
+[[radar]]
+site = "bucks_harbor"
+type = "AN/FPS-20A"
+hf = ["AN/FPS-6"]
+link = "L_bucks"
+
+[[airbase]]
+site = "dow"
+link = "L_dow"
+
+[[airbase]]
+site = "loring"
+
+[[squadron]]
+id = "75fis"
+name = "75th FIS"
+base = "dow"
+type = "F-101B"
+callsign = "COBRA"
+ready = { "5" = 2, "15" = 2 }
+pilots = 6
+
+[[flight]]
+id = "target"
+type = "KC-135A"
+callsign = "EXERCISE TARGET"
+side = "blue"
+spawn_t = 30.0
+truth_label = "KC-135A tanker (exercise target)"
+markings = "USAF"
+start = { lat = 43.7, lon = -63.9, alt_m = 8500.0, kmh = 700.0 }
+route = [
+  { lat = 44.2, lon = -66.0, alt_m = 8500.0, kmh = 700.0 },
+  { lat = 44.6, lon = -68.4, alt_m = 8500.0, kmh = 700.0 },
+  { lat = 45.2, lon = -71.5, alt_m = 8500.0, kmh = 700.0, action = "remove" },
+]
+transponder = { system = "sif", on = false }
+
+[[flight]]
+id = "ne405"
+type = "CV-440"
+callsign = "NORTHEAST 405"
+side = "civil"
+spawn_t = 0.0
+truth_label = "Convair 440"
+markings = "Northeast Airlines"
+start = { lat = 43.9, lon = -70.0, alt_m = 4500.0, kmh = 450.0 }
+route = [
+  { lat = 44.80, lon = -68.83, alt_m = 1500.0, kmh = 400.0, action = "land" },
+]
+transponder = { system = "atc", codes = { "3" = "2101" } }
+flight_plan = { kind = "IFR", callsign = "NORTHEAST 405", mode3 = "2101" }
+
+# ---------------------------------------------------------------- instructor
+[[trigger]]
+id = "t0"
+cond = { type = "time", t = 5.0 }
+actions = [{ do = "message", channel = "tty", sender = "INSTRUCTOR", ack = true, text = "Welcome to the weapons room. Watch the situation display east of Bucks Harbor. Returns that the computer has not associated with a track show as small dots. When the unknown appears, click it with the light gun, then press INITIATE TRACK (or press I)." }]
+
+[[trigger]]
+id = "t1"
+cond = { type = "tracked", ac = "target" }
+actions = [{ do = "message", channel = "tty", sender = "INSTRUCTOR", ack = true, text = "Good — the computer now holds a track. Search radars give range and bearing only. With the track selected, press HEIGHT to queue it on a height finder. Then set its identity: it has no IFF reply and no flight plan, so it is UNKNOWN." }]
+
+[[trigger]]
+id = "t2"
+cond = { type = "identity", ac = "target", is = ["unknown", "faker"] }
+actions = [{ do = "message", channel = "tty", sender = "INSTRUCTOR", ack = true, text = "Identity set. An unknown inbound must be visually identified. Open WEAPONS (F3), select 75th FIS at Dow and SCRAMBLE 2 with task ID PASS on the selected track. The computer computes a stern approach so the fighters can close safely from behind." }]
+
+[[trigger]]
+id = "t3"
+cond = { type = "scrambled", n = 1 }
+actions = [{ do = "message", channel = "tty", sender = "INSTRUCTOR", ack = true, text = "Scramble ordered. Five-minute alert aircraft take a few minutes to get airborne. Watch the predicted intercept point (the X) and the fuel readout. The F-101B is voice controlled: each vector reaches the pilot several seconds after you give it. Use time compression (+/-) while they climb." }]
+
+[[trigger]]
+id = "t4"
+cond = { type = "vid", ac = "target" }
+actions = [{ do = "message", channel = "tty", sender = "INSTRUCTOR", ack = true, text = "Visual identification complete — read the pilot's report in COMMS. A friendly exercise target should be re-identified FRIEND (or FAKER). Then send the flight home: select it in WEAPONS and press RTB." }]
+
+[[trigger]]
+id = "t5"
+cond = { type = "all", of = [{ type = "vid", ac = "target" }, { type = "flights_home" }] }
+actions = [
+  { do = "message", channel = "tty", sender = "INSTRUCTOR", text = "Flight recovered. That is the core loop: detect, track, height, identify, commit, identify visually, recover. Lesson complete." },
+  { do = "end", reason = "Lesson complete", result = "complete" },
+]
+
+[[objective]]
+id = "track"
+text = "Initiate a track on the unknown"
+kind = "identify"
+params = { ac = "target", correct = ["pending", "unknown", "faker", "friend"], from = "track" }
+points = 10
+
+[[objective]]
+id = "ident"
+text = "Identify the target as UNKNOWN before the fighters launch"
+kind = "identify"
+params = { ac = "target", correct = ["unknown", "faker", "friend"], wrong = ["hostile"] }
+points = 20
+
+[[objective]]
+id = "vid"
+text = "Obtain a visual identification before the target crosses the coast"
+kind = "vid"
+params = { ac = "target" }
+points = 40
+
+[[objective]]
+id = "nofrat"
+text = "Do not fire on friendly aircraft"
+kind = "no_fratricide"
+points = 10
+penalty = 50
+
+[[objective]]
+id = "nociv"
+text = "No civil aircraft losses"
+kind = "no_civil_losses"
+points = 10
+penalty = 100
+
+[[objective]]
+id = "ready"
+text = "Keep at least one interceptor on alert"
+kind = "keep_ready"
+params = { min = 1 }
+points = 10

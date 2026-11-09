@@ -1,0 +1,275 @@
+id = "middle_urals"
+name = "Middle Urals — 4th Separate Air Defense Army area"
+provenance = "approximate"
+
+[projection]
+lat0 = 56.5
+lon0 = 60.5
+extent_km = [-420.0, 420.0, -460.0, 420.0]
+
+[build]
+simplify_km = 0.8
+terrain_spacing_km = 4.0
+state_lines_countries = ["Russia", "Kazakhstan"]
+lake_max_rank = 7
+river_max_rank = 6
+
+# Site positions are approximate and unit allocations fictionalized (historically inspired).
+
+[[radar_site]]
+id = "koltsovo_gp"
+name = "Koltsovo guidance point"
+lat = 56.76
+lon = 60.82
+elev_m = 235.0
+mast_m = 12.0
+unit = "Guidance point, Koltsovo"
+
+[[radar_site]]
+id = "savino_gp"
+name = "Bolshoye Savino guidance point"
+lat = 57.92
+lon = 56.05
+elev_m = 150.0
+mast_m = 12.0
+unit = "Guidance point, Perm"
+
+[[radar_site]]
+id = "shagol_gp"
+name = "Shagol guidance point"
+lat = 55.28
+lon = 61.28
+elev_m = 235.0
+mast_m = 12.0
+unit = "Guidance point, Chelyabinsk"
+
+[[radar_site]]
+id = "rlr_troitsk"
+name = "Radar company Troitsk"
+lat = 54.10
+lon = 61.57
+elev_m = 200.0
+mast_m = 15.0
+unit = "RTR, Troitsk"
+
+[[radar_site]]
+id = "rlr_kurgan"
+name = "Radar company Kurgan"
+lat = 55.45
+lon = 65.30
+elev_m = 80.0
+mast_m = 15.0
+unit = "RTR, Kurgan"
+
+[[radar_site]]
+id = "rlr_kyshtym"
+name = "Radar company Kyshtym"
+lat = 55.70
+lon = 60.50
+elev_m = 330.0
+mast_m = 12.0
+unit = "RTR, Kyshtym"
+
+[[radar_site]]
+id = "rlr_tagil"
+name = "Radar company Nizhny Tagil"
+lat = 57.88
+lon = 60.05
+elev_m = 260.0
+mast_m = 15.0
+unit = "RTR, Nizhny Tagil"
+
+[[radar_site]]
+id = "rlr_kamensk"
+name = "Radar company Kamensk"
+lat = 56.42
+lon = 61.90
+elev_m = 170.0
+mast_m = 15.0
+unit = "RTR, Kamensk-Uralsky"
+
+[[radar_site]]
+id = "rlr_zlatoust"
+name = "Radar company Zlatoust"
+lat = 55.17
+lon = 59.67
+elev_m = 520.0
+mast_m = 12.0
+unit = "RTR, Zlatoust"
+
+[[radar_site]]
+id = "rlr_kustanai"
+name = "Radar company Kustanai"
+lat = 53.25
+lon = 63.55
+elev_m = 170.0
+mast_m = 15.0
+unit = "RTR, Kustanai (Turkestan district)"
+
+[[airbase]]
+id = "koltsovo"
+name = "Koltsovo"
+lat = 56.74
+lon = 60.80
+elev_m = 233.0
+kind = "military"
+
+[[airbase]]
+id = "savino"
+name = "Bolshoye Savino"
+lat = 57.91
+lon = 56.02
+elev_m = 120.0
+kind = "military"
+
+[[airbase]]
+id = "shagol"
+name = "Shagol"
+lat = 55.26
+lon = 61.30
+elev_m = 230.0
+kind = "military"
+
+[[sam_site]]
+id = "zrdn_north"
+name = "SAM battalion North (Verkhnyaya Pyshma)"
+lat = 57.07
+lon = 60.58
+elev_m = 280.0
+unit = "SAM battalion 1"
+
+[[sam_site]]
+id = "zrdn_east"
+name = "SAM battalion East (Beloyarsky)"
+lat = 56.80
+lon = 61.20
+elev_m = 220.0
+unit = "SAM battalion 2"
+
+[[sam_site]]
+id = "zrdn_south"
+name = "SAM battalion South (Kosulino)"
+lat = 56.62
+lon = 60.88
+elev_m = 260.0
+unit = "SAM battalion 3"
+
+[[sam_site]]
+id = "zrdn_west"
+name = "SAM battalion West (Degtyarsk)"
+lat = 56.72
+lon = 60.15
+elev_m = 330.0
+unit = "SAM battalion 4"
+
+[[sam_site]]
+id = "zrdn_kyshtym"
+name = "SAM battalion Kyshtym"
+lat = 55.76
+lon = 60.78
+elev_m = 300.0
+unit = "SAM battalion 5"
+
+[[city]]
+name = "Sverdlovsk"
+lat = 56.84
+lon = 60.61
+size = 3
+
+[[city]]
+name = "Chelyabinsk"
+lat = 55.16
+lon = 61.40
+size = 3
+
+[[city]]
+name = "Perm"
+lat = 58.01
+lon = 56.25
+size = 3
+
+[[city]]
+name = "Nizhny Tagil"
+lat = 57.91
+lon = 59.97
+size = 2
+
+[[city]]
+name = "Kamensk-Uralsky"
+lat = 56.42
+lon = 61.92
+size = 1
+
+[[city]]
+name = "Zlatoust"
+lat = 55.17
+lon = 59.65
+size = 1
+
+[[city]]
+name = "Kurgan"
+lat = 55.44
+lon = 65.34
+size = 2
+
+[[city]]
+name = "Tyumen"
+lat = 57.15
+lon = 65.53
+size = 2
+
+[[city]]
+name = "Magnitogorsk"
+lat = 53.41
+lon = 58.98
+size = 2
+
+[[city]]
+name = "Troitsk"
+lat = 54.10
+lon = 61.57
+size = 1
+
+[[city]]
+name = "Chelyabinsk-40"
+lat = 55.70
+lon = 60.80
+size = 0
+label = "closed city"
+
+[[city]]
+name = "Ufa"
+lat = 54.74
+lon = 55.97
+size = 2
+
+[[city]]
+name = "Kustanai"
+lat = 53.21
+lon = 63.62
+size = 1
+
+[[zone]]
+id = "sverdlovsk_da"
+name = "Sverdlovsk defended area"
+kind = "defended"
+shape = "circle"
+lat = 56.84
+lon = 60.61
+r_km = 45.0
+
+[[zone]]
+id = "chel40_da"
+name = "Chelyabinsk-40 defended area"
+kind = "defended"
+shape = "circle"
+lat = 55.72
+lon = 60.70
+r_km = 35.0
+
+[[zone]]
+id = "exit_north"
+name = "4th Army northern boundary"
+kind = "boundary"
+shape = "poly"
+points = [[58.55, 54.0], [58.55, 67.5], [60.5, 67.5], [60.5, 54.0]]

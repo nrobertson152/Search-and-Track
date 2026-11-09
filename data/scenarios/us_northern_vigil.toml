@@ -1,0 +1,535 @@
+id = "us_northern_vigil"
+title = "Northern Vigil"
+subtitle = "Bangor Air Defense Sector, 24 October 1962"
+summary = "A night shift at the height of the Cuban Missile Crisis: routine traffic, stragglers off their flight plans, a Soviet Bear probing the coast — and something else on the scopes."
+faction = "US"
+kind = "scenario"
+order = 10
+theater = "gulf_of_maine"
+start = "1962-10-24T22:30:00"
+tz = "Z"
+duration_min = 120
+seed = 1962
+reliability = 3.0
+
+briefing = """
+DIRECTION CENTER DC-05, TOPSHAM AFS — NIGHT SHIFT, 24 OCTOBER 1962
+
+SITUATION. The quarantine of Cuba is in force. Strategic Air Command went to DEFCON 2 today; Air Defense Command is at DEFCON 3 with interceptors dispersed and armed. Air Defense Warning is YELLOW. Weapons status is HOLD: no engagement without the authority of 26th NORAD Region.
+
+YOUR SECTOR. Long-range radars at Charleston, Bucks Harbor, Caswell, North Truro, St. Albans and Texas Tower 2, plus Pinetree stations at Barrington and St. Margarets, feed the AN/FSQ-7. Interceptors: 75th FIS (F-101B, Dow), 27th FIS (F-106A, Loring), F-106 detachment at Otis. Army Nike Hercules batteries defend Loring and Boston through the AADCP; BOMARC at Dow (nuclear — requires release).
+
+TASKS.
+  • Identify every track penetrating the ADIZ within five minutes (NORAD tolerances: ±5 min, 20 nm over water / 10 nm over land of a filed flight plan).
+  • Intercept and visually identify unknowns. Keep aircraft off the coast until identified.
+  • Do not escalate on bad information. The Region will hold you accountable for every request you make.
+  • Keep interceptors on alert for the next shift.
+
+It is night: visual identification requires a close, slow approach.
+"""
+
+[[intel]]
+title = "Soviet long-range aviation"
+text = "Tu-95 BEAR reconnaissance flights have been reported off Newfoundland this week. Expect probing of the ADIZ. Bears carry ECM; jamming strobes from several radars can be triangulated into a jammer track. Peacetime rules: intercept, identify, escort — weapons HOLD."
+
+[[intel]]
+title = "SIF codes in effect"
+text = "Mode 1 codes valid this period: 23 and 41. Aircraft replying on other Mode 1 codes are not authenticated and must be treated as UNKNOWN until identified."
+
+[[intel]]
+title = "Propagation"
+text = "Weather office warns of a strong temperature inversion forming over the Gulf of Maine after 2330Z. Expect anomalous propagation on coastal radars: false returns, ranges far beyond normal, no height-finder confirmation."
+
+[automation]
+surveil = true
+ident = true
+height = true
+tech = false
+
+[weather]
+k_factor = 1.333
+wind_from = 255.0
+wind_kmh = 95.0
+ceiling_m = 2500.0
+visibility_km = 15.0
+night = true
+sea_state = 4.0
+cells = [
+  { lat = 44.2, lon = -64.2, r_km = 35.0, intensity = 0.6, move_kmh = 40.0, move_to = 60.0 },
+  { lat = 42.9, lon = -67.4, r_km = 25.0, intensity = 0.4, move_kmh = 35.0, move_to = 70.0 },
+]
+
+[hq]
+name = "26 NORAD REGION"
+readiness = "DEFCON 3"
+alert = "YELLOW"
+weapons_status = "HOLD"
+[hq.policy]
+response_s = [60.0, 180.0]
+declare_hostile = "evidence"
+engage = "deny"
+ram = "deny"
+special_release = "deny"
+weapons_status_TIGHT = "var:real_raid"
+weapons_status_FREE = "deny"
+alert_RED = "var:real_raid"
+alert_WHITE = "grant"
+mode1_valid = ["23", "41"]
+track_start = 101
+
+[vars]
+real_raid = 0
+
+# ---------------------------------------------------------------- communications
+[[link]]
+id = "D_charleston"
+name = "Charleston data line"
+kind = "data"
+delay_s = 3.0
+[[link]]
+id = "D_bucks"
+name = "Bucks Harbor data line"
+kind = "data"
+delay_s = 3.0
+[[link]]
+id = "D_caswell"
+name = "Caswell data line"
+kind = "data"
+delay_s = 3.0
+[[link]]
+id = "D_truro"
+name = "North Truro data line"
+kind = "data"
+delay_s = 3.0
+[[link]]
+id = "D_albans"
+name = "St. Albans data line"
+kind = "data"
+delay_s = 3.5
+[[link]]
+id = "D_tt2"
+name = "Texas Tower 2 cable"
+kind = "data"
+delay_s = 4.0
+[[link]]
+id = "D_pinetree"
+name = "Pinetree cross-tell"
+kind = "data"
+delay_s = 6.0
+[[link]]
+id = "V_dow"
+name = "Dow AFB alert line"
+kind = "voice"
+delay_s = 8.0
+[[link]]
+id = "V_loring"
+name = "Loring AFB alert line"
+kind = "voice"
+delay_s = 8.0
+[[link]]
+id = "V_otis"
+name = "Otis AFB alert line"
+kind = "voice"
+delay_s = 10.0
+[[link]]
+id = "V_aadcp"
+name = "AADCP Missile Master"
+kind = "voice"
+delay_s = 6.0
+
+# ---------------------------------------------------------------- radars
+[[radar]]
+site = "charleston"
+type = "AN/FPS-20A"
+hf = ["AN/FPS-6", "AN/FPS-6"]
+link = "D_charleston"
+[[radar]]
+site = "bucks_harbor"
+type = "AN/FPS-20A"
+hf = ["AN/FPS-6"]
+link = "D_bucks"
+[[radar]]
+site = "caswell"
+type = "AN/FPS-20A"
+hf = ["AN/FPS-6"]
+link = "D_caswell"
+[[radar]]
+site = "north_truro"
+type = "AN/FPS-20A"
+hf = ["AN/FPS-6"]
+link = "D_truro"
+[[radar]]
+site = "st_albans"
+type = "AN/FPS-20A"
+hf = ["AN/FPS-6"]
+link = "D_albans"
+[[radar]]
+site = "tt2"
+type = "AN/FPS-20A"
+hf = ["AN/FPS-6"]
+link = "D_tt2"
+channel = 1
+[[radar]]
+site = "barrington"
+type = "AN/FPS-20A"
+hf = ["AN/FPS-6"]
+link = "D_pinetree"
+[[radar]]
+site = "st_margarets"
+type = "AN/FPS-20A"
+link = "D_pinetree"
+channel = 1
+[[radar]]
+site = "desert_gf"
+type = "AN/FPS-14"
+link = "D_charleston"
+[[radar]]
+site = "boothbay_gf"
+type = "AN/FPS-14"
+link = "D_charleston"
+
+# ---------------------------------------------------------------- bases & forces
+[[airbase]]
+site = "dow"
+link = "V_dow"
+[[airbase]]
+site = "loring"
+link = "V_loring"
+[[airbase]]
+site = "otis"
+link = "V_otis"
+[[airbase]]
+site = "pease"
+[[airbase]]
+site = "brunswick"
+
+[[squadron]]
+id = "75fis"
+name = "75th FIS"
+base = "dow"
+type = "F-101B"
+callsign = "COBRA"
+ready = { "5" = 2, "15" = 2, "30" = 2, "60" = 4 }
+pilots = 12
+
+[[squadron]]
+id = "27fis"
+name = "27th FIS"
+base = "loring"
+type = "F-106A"
+callsign = "SABER"
+ready = { "5" = 2, "15" = 2, "60" = 4 }
+pilots = 10
+
+[[squadron]]
+id = "otis_det"
+name = "F-106 det. Otis"
+base = "otis"
+type = "F-106A"
+callsign = "DAGGER"
+ready = { "5" = 2, "15" = 2 }
+pilots = 6
+
+[[sam]]
+site = "nike_l13"
+type = "NIKE-H"
+link = "V_aadcp"
+missiles = 8
+reloads = 8
+[[sam]]
+site = "nike_l58"
+type = "NIKE-H"
+link = "V_aadcp"
+missiles = 8
+reloads = 8
+[[sam]]
+site = "nike_b15"
+type = "NIKE-H"
+link = "V_aadcp"
+missiles = 8
+reloads = 8
+[[sam]]
+site = "nike_b55"
+type = "NIKE-H"
+link = "V_aadcp"
+missiles = 8
+reloads = 8
+[[sam]]
+site = "bomarc_dow"
+type = "BOMARC-A"
+missiles = 6
+reloads = 0
+
+# ---------------------------------------------------------------- traffic
+[[flight]]
+id = "tca820"
+type = "Viscount"
+callsign = "TRANS-CANADA 820"
+side = "civil"
+spawn_t = 0.0
+truth_label = "Vickers Viscount"
+markings = "Trans-Canada Air Lines"
+start = { lat = 45.55, lon = -72.4, alt_m = 7500.0, kmh = 500.0 }
+route = [
+  { lat = 45.9, lon = -69.0, alt_m = 7500.0, kmh = 500.0 },
+  { lat = 45.5, lon = -65.5, alt_m = 7500.0, kmh = 500.0 },
+  { lat = 44.88, lon = -63.51, alt_m = 1000.0, kmh = 400.0, action = "land" },
+]
+transponder = { system = "atc", codes = { "3" = "2301" } }
+flight_plan = { kind = "IFR", mode3 = "2301" }
+
+[[flight]]
+id = "ne405"
+type = "CV-440"
+callsign = "NORTHEAST 405"
+side = "civil"
+spawn_t = 300.0
+truth_label = "Convair 440"
+markings = "Northeast Airlines"
+start = { lat = 42.6, lon = -70.9, alt_m = 2500.0, kmh = 420.0 }
+route = [
+  { lat = 43.6, lon = -70.2, alt_m = 5000.0, kmh = 450.0 },
+  { lat = 44.81, lon = -68.83, alt_m = 800.0, kmh = 380.0, action = "land" },
+]
+transponder = { system = "atc", codes = { "3" = "2101" } }
+flight_plan = { kind = "IFR", mode3 = "2101" }
+
+[[flight]]
+id = "paa61"
+type = "B707"
+callsign = "CLIPPER 61"
+side = "civil"
+spawn_t = 600.0
+truth_label = "Boeing 707"
+markings = "Pan American"
+start = { lat = 46.4, lon = -59.6, alt_m = 10700.0, kmh = 900.0 }
+route = [
+  { lat = 45.0, lon = -64.0, alt_m = 10700.0, kmh = 900.0 },
+  { lat = 43.2, lon = -68.5, alt_m = 9000.0, kmh = 880.0 },
+  { lat = 42.36, lon = -71.01, alt_m = 1500.0, kmh = 500.0, action = "land" },
+]
+transponder = { system = "atc", codes = { "3" = "2210" } }
+flight_plan = { kind = "IFR", mode3 = "2210" }
+
+[[flight]]
+id = "boac507"
+type = "B707"
+callsign = "SPEEDBIRD 507"
+side = "civil"
+spawn_t = 1500.0
+truth_label = "Boeing 707"
+markings = "BOAC"
+start = { lat = 46.2, lon = -59.6, alt_m = 11000.0, kmh = 900.0 }
+route = [
+  { lat = 44.0, lon = -66.0, alt_m = 11000.0, kmh = 900.0 },
+  { lat = 42.5, lon = -69.6, alt_m = 10000.0, kmh = 880.0 },
+  { lat = 41.0, lon = -72.2, alt_m = 8000.0, kmh = 850.0, action = "remove" },
+]
+transponder = { system = "atc", codes = { "3" = "2240" } }
+flight_plan = { kind = "IFR", mode3 = "2240", delay_min = 9.0, note = "departed Prestwick late; position report not relayed" }
+
+[[flight]]
+id = "cessna"
+type = "C172"
+callsign = "N4213X"
+side = "civil"
+spawn_t = 2400.0
+truth_label = "Cessna 172"
+markings = "N4213X, civil registration"
+start = { lat = 43.83, lon = -66.09, alt_m = 1500.0, kmh = 190.0 }
+route = [
+  { lat = 44.0, lon = -67.6, alt_m = 1500.0, kmh = 190.0 },
+  { lat = 44.06, lon = -69.10, alt_m = 600.0, kmh = 170.0, action = "land" },
+]
+transponder = { system = "none" }
+
+[[flight]]
+id = "doom21"
+type = "B-52G"
+callsign = "DOOM 21"
+side = "blue"
+spawn_t = 3000.0
+truth_label = "B-52G Stratofortress"
+markings = "USAF, Strategic Air Command"
+start = { lat = 48.6, lon = -60.5, alt_m = 11000.0, kmh = 850.0 }
+route = [
+  { lat = 47.8, lon = -64.0, alt_m = 11000.0, kmh = 850.0 },
+  { lat = 46.95, lon = -67.89, alt_m = 1000.0, kmh = 450.0, action = "land" },
+]
+transponder = { system = "sif", codes = { "1" = "17", "2" = "5021" } }
+flight_plan = { kind = "MIL", mode3 = "", delay_min = -11.0, note = "Chrome Dome return, early" }
+
+[[flight]]
+id = "bear"
+type = "Tu-95M"
+callsign = "BEAR"
+side = "red"
+spawn_t = 2700.0
+truth_label = "Tu-95 BEAR"
+markings = "red star, Soviet Long-Range Aviation"
+nationality = "USSR"
+jammer = "ECM-BARRAGE-LS"
+on_intercept = "turn_away:125"
+start = { lat = 44.6, lon = -59.8, alt_m = 10500.0, kmh = 750.0 }
+route = [
+  { lat = 43.4, lon = -63.0, alt_m = 10500.0, kmh = 750.0, action = "jam_on" },
+  { lat = 43.05, lon = -66.5, alt_m = 10000.0, kmh = 740.0 },
+  { lat = 43.75, lon = -69.35, alt_m = 9000.0, kmh = 720.0, action = "var:bear_coast" },
+  { lat = 41.6, lon = -69.2, alt_m = 10000.0, kmh = 740.0, action = "jam_off" },
+  { lat = 40.6, lon = -65.0, alt_m = 10500.0, kmh = 750.0, action = "remove" },
+]
+transponder = { system = "kremniy", codes = { "period" = "OCT" } }
+
+[[flight]]
+id = "ghost"
+type = "ANAPROP"
+callsign = "PHANTOM"
+side = "neutral"
+spawn = "trigger"
+kind = "ghost"
+mission = "ghost"
+wander = 35.0
+count = 6
+spacing_km = 9.0
+visible_to = ["bucks_harbor"]
+truth_label = "anomalous propagation"
+start = { lat = 43.6, lon = -64.4, alt_m = 6000.0, kmh = 420.0 }
+route = [
+  { lat = 43.9, lon = -67.0, alt_m = 6000.0, kmh = 420.0 },
+  { lat = 44.2, lon = -68.5, alt_m = 6000.0, kmh = 400.0 },
+]
+transponder = { system = "none" }
+
+# ---------------------------------------------------------------- events
+[[trigger]]
+id = "open"
+cond = { type = "time", t = 5.0 }
+actions = [
+  { do = "message", channel = "tty", sender = "26 NORAD REGION", ack = true, kind = "order", text = "DEFCON 3 REMAINS IN EFFECT. ADW YELLOW. WEAPONS HOLD — NO ENGAGEMENT WITHOUT REGION AUTHORITY. REPORT ALL ADIZ VIOLATIONS. MAINTAIN TWO AIRCRAFT ON FIVE-MINUTE ALERT PER SQUADRON." },
+]
+
+[[trigger]]
+id = "tt2_line"
+cond = { type = "time", t = 1800.0 }
+actions = [{ do = "link", id = "D_tt2", up = false, minutes = 20.0, text = "TEXAS TOWER 2 CABLE FAULT — NO DATA FROM TT-2. Repair crew dispatched." }]
+
+[[trigger]]
+id = "bear_warn"
+cond = { type = "time", t = 2820.0 }
+actions = [{ do = "message", channel = "tty", sender = "26 NORAD REGION", ack = true, kind = "order", text = "PINETREE REPORTS LARGE AIRCRAFT EAST OF CAPE BRETON HEADING SOUTHWEST, NO FLIGHT PLAN. PROBABLE BEAR. INTERCEPT, IDENTIFY, ESCORT. WEAPONS HOLD." }]
+
+[[trigger]]
+id = "bear_vid"
+cond = { type = "vid", ac = "bear" }
+actions = [{ do = "message", channel = "voice", sender = "26 NORAD REGION", ack = true, kind = "order", text = "Region copies BEAR identified. Shadow until it leaves the ADIZ. Do not close inside one mile. Weapons remain HOLD." }]
+
+[[trigger]]
+id = "charleston_tx"
+cond = { type = "time", t = 4200.0 }
+actions = [{ do = "radar_status", site = "charleston", status = "degraded", db = 6.0, text = "CHARLESTON: KLYSTRON OUTPUT LOW — TRANSMITTER DEGRADED 6 dB" }]
+
+[[trigger]]
+id = "duct_on"
+cond = { type = "time", t = 4800.0 }
+actions = [
+  { do = "duct", radars = ["bucks_harbor"], k = 4.0, on = true },
+  { do = "spawn", flight = "ghost" },
+]
+
+[[trigger]]
+id = "duct_query"
+cond = { type = "time", t = 5100.0 }
+actions = [{ do = "message", channel = "voice", sender = "26 NORAD REGION", ack = true, kind = "order", text = "Region sees multiple new tracks east of Bucks Harbor on your cross-tell. Assess and report immediately. Is this a raid?" }]
+
+[[trigger]]
+id = "computer"
+cond = { type = "time", t = 5400.0 }
+actions = [{ do = "computer_fail", side = "A" }]
+
+[[trigger]]
+id = "duct_off"
+cond = { type = "time", t = 6600.0 }
+actions = [
+  { do = "duct", radars = [], on = false },
+  { do = "remove", ac = "ghost" },
+  { do = "message", channel = "tty", sender = "WEATHER", text = "INVERSION BREAKING UP OVER GULF OF MAINE. PROPAGATION RETURNING TO NORMAL." },
+]
+
+# ---------------------------------------------------------------- objectives
+[[objective]]
+id = "id_boac"
+text = "Correctly identify SPEEDBIRD 507 (off-plan airliner) as FRIEND"
+kind = "identify"
+params = { ac = "boac507", correct = ["friend"], wrong = ["suspect", "hostile"] }
+points = 10
+
+[[objective]]
+id = "id_doom"
+text = "Correctly identify the returning bomber as FRIEND"
+kind = "identify"
+params = { ac = "doom21", correct = ["friend"], wrong = ["suspect", "hostile"] }
+points = 10
+
+[[objective]]
+id = "vid_cessna"
+text = "Visually identify the low, slow unknown over the Gulf of Maine"
+kind = "vid"
+params = { ac = "cessna" }
+points = 10
+
+[[objective]]
+id = "vid_bear"
+text = "Intercept and visually identify the BEAR"
+kind = "vid"
+params = { ac = "bear" }
+points = 15
+
+[[objective]]
+id = "bear_coast"
+text = "Keep the BEAR off the coast until identified"
+kind = "keep_out"
+params = { ac = "bear", zone = "coast_maine", unless_vid = true }
+points = 10
+
+[[objective]]
+id = "bear_alive"
+text = "Do not engage the BEAR (peacetime rules)"
+kind = "not_destroyed"
+params = { ac = "bear" }
+points = 10
+penalty = 40
+
+[[objective]]
+id = "phantom"
+text = "Recognise the phantom raid: drop at least three false tracks"
+kind = "var"
+params = { name = "ghosts_dropped", op = ">=", value = 3 }
+points = 15
+
+[[objective]]
+id = "no_red"
+text = "Do not take the sector to Air Defense Warning RED on false information"
+kind = "no_alert"
+params = { level = "RED", unless_var = "real_raid" }
+points = 5
+
+[[objective]]
+id = "no_civ"
+text = "No civil aircraft losses"
+kind = "no_civil_losses"
+points = 5
+penalty = 100
+
+[[objective]]
+id = "no_frat"
+text = "No fratricide"
+kind = "no_fratricide"
+points = 5
+penalty = 60
+
+[[objective]]
+id = "alert"
+text = "Hand over at least four interceptors on alert"
+kind = "keep_ready"
+params = { min = 4 }
+points = 5

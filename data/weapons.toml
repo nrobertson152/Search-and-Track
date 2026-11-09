@@ -1,0 +1,74 @@
+[[weapon]]
+id = "GAR-3A"
+name = "GAR-3A Super Falcon"
+kind = "aam_radar"
+min_km = 1.2
+max_km = 11.0
+aspect = "all"
+pk = 0.45
+salvo = 2
+lethal_m = 12.0
+provenance = "approximate"
+notes = "Semi-active radar AIM-4F."
+
+[[weapon]]
+id = "GAR-4A"
+name = "GAR-4A Super Falcon (IR)"
+kind = "aam_ir"
+min_km = 1.2
+max_km = 11.0
+aspect = "rear"
+pk = 0.5
+salvo = 2
+lethal_m = 12.0
+provenance = "approximate"
+
+[[weapon]]
+id = "GAR-2A"
+name = "GAR-2A Falcon (IR)"
+kind = "aam_ir"
+min_km = 1.0
+max_km = 8.0
+aspect = "rear"
+pk = 0.4
+salvo = 2
+lethal_m = 10.0
+provenance = "approximate"
+
+[[weapon]]
+id = "MB-1"
+name = "MB-1 Genie (nuclear rocket)"
+kind = "nuclear_rocket"
+min_km = 3.0
+max_km = 9.5
+aspect = "all"
+pk = 0.95
+salvo = 1
+special = true
+lethal_m = 300.0
+provenance = "historical"
+notes = "[H] Unguided nuclear air-to-air rocket (AIR-2A). Requires special-weapons release."
+
+[[weapon]]
+id = "RS-2US"
+name = "RS-2US (K-5M) beam-riding missile"
+kind = "aam_beam"
+min_km = 1.5
+max_km = 6.0
+aspect = "rear"
+pk = 0.35
+salvo = 2
+lethal_m = 15.0
+provenance = "approximate"
+
+[[weapon]]
+id = "NR-23"
+name = "NR-23 cannon"
+kind = "gun"
+min_km = 0.2
+max_km = 1.2
+aspect = "rear"
+pk = 0.3
+salvo = 1
+lethal_m = 25.0
+provenance = "approximate"

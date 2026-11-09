@@ -1,0 +1,35 @@
+# Faction doctrine definitions. See docs/design/game-design.md §3.
+
+[[faction]]
+id = "US"
+name = "Air Defense Command / NORAD"
+short = "USAF"
+pipeline = "digital"          # SAGE: radar plots arrive digitally each scan
+identities = ["pending", "friend", "unknown", "suspect", "hostile", "faker"]
+id_time_limit_s = 300
+readiness_levels = ["DEFCON 5", "DEFCON 4", "DEFCON 3", "DEFCON 2", "DEFCON 1"]
+weapons_status = ["HOLD", "TIGHT", "FREE"]
+track_prefix = "A"
+track_digits = 3
+link_delay_s = 3.0
+own_color = "blue"
+notes = "Semi-automatic: computer associates plots; operators initiate tracks with the light gun."
+
+[[faction]]
+id = "USSR"
+name = "Air Defense Forces of the Country (PVO Strany)"
+short = "PVO"
+pipeline = "manual"           # 1960: radar companies report by voice/teletype
+identities = ["pending", "friend", "unknown", "suspect", "hostile", "faker"]
+id_time_limit_s = 300
+readiness_levels = ["CONSTANT", "INCREASED", "FULL"]
+weapons_status = ["HOLD", "TIGHT", "FREE"]
+track_prefix = ""
+track_digits = 4
+report_interval_s = 60.0
+report_delay_s = [150.0, 270.0]   # [H] 3-5 min radar company -> army CP in manual mode (1960)
+grid_km = 10.0
+report_error_rate = 0.03
+company_capacity = 6
+own_color = "red"
+notes = "Manual reporting with minutes of latency; guidance points control interceptors with real-time local radar."

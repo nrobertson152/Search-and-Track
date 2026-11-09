@@ -1,0 +1,492 @@
+# Aircraft definitions (metric). RCS in m^2 by aspect (nose/beam/tail).
+# Performance is approximate unless noted; see docs/research.
+
+# ----------------------------------------------------------- US interceptors
+[[aircraft]]
+id = "F-106A"
+name = "F-106A Delta Dart"
+nation = "US"
+role = "interceptor"
+rcs_nose = 4.0
+rcs_beam = 12.0
+rcs_tail = 6.0
+cruise_kmh = 980.0
+cruise_alt_m = 11500.0
+max_mach = 2.3
+max_kmh_sl = 1250.0
+min_kmh = 300.0
+ceiling_m = 17400.0
+zoom_ceiling_m = 19500.0
+climb_mps = 145.0
+accel_mps2 = 8.0
+turn_dps = 9.0
+fuel_kg = 6000.0
+ff_cruise = 36.0
+ff_mil = 60.0
+ff_ab = 260.0
+ai_radar_km = 45.0
+ai_radar_cone = 60.0
+weapons = { "GAR-3A" = 2, "GAR-4A" = 2, "MB-1" = 1 }
+datalink = "sage"
+transponder = "sif"
+provenance = "approximate"
+notes = "[H] Hughes MA-1 fire control integrated with SAGE data link; Mach 2+, ~57,000 ft ceiling."
+
+[[aircraft]]
+id = "F-101B"
+name = "F-101B Voodoo"
+nation = "US"
+role = "interceptor"
+rcs_nose = 5.0
+rcs_beam = 16.0
+rcs_tail = 8.0
+cruise_kmh = 900.0
+cruise_alt_m = 11000.0
+max_mach = 1.72
+max_kmh_sl = 1100.0
+min_kmh = 320.0
+ceiling_m = 15800.0
+zoom_ceiling_m = 18000.0
+climb_mps = 170.0
+accel_mps2 = 7.0
+turn_dps = 7.0
+fuel_kg = 9000.0
+ff_cruise = 55.0
+ff_mil = 85.0
+ff_ab = 330.0
+ai_radar_km = 35.0
+ai_radar_cone = 60.0
+weapons = { "GAR-2A" = 2, "MB-1" = 2 }
+datalink = ""
+transponder = "sif"
+provenance = "approximate"
+notes = "Two-seat, MG-13 fire control, voice-controlled in this model."
+
+# ----------------------------------------------------------- US friendly / exercise
+[[aircraft]]
+id = "B-52G"
+name = "B-52G Stratofortress"
+nation = "US"
+role = "bomber"
+rcs_nose = 30.0
+rcs_beam = 100.0
+rcs_tail = 50.0
+cruise_kmh = 850.0
+cruise_alt_m = 11500.0
+max_mach = 0.86
+max_kmh_sl = 760.0
+min_kmh = 280.0
+ceiling_m = 15000.0
+climb_mps = 18.0
+turn_dps = 2.0
+fuel_kg = 130000.0
+ff_cruise = 160.0
+ff_mil = 220.0
+transponder = "sif"
+provenance = "approximate"
+
+[[aircraft]]
+id = "KC-135A"
+name = "KC-135A Stratotanker"
+nation = "US"
+role = "tanker"
+rcs_nose = 20.0
+rcs_beam = 60.0
+rcs_tail = 30.0
+cruise_kmh = 850.0
+cruise_alt_m = 10500.0
+max_mach = 0.84
+max_kmh_sl = 740.0
+ceiling_m = 12500.0
+climb_mps = 15.0
+turn_dps = 2.5
+fuel_kg = 90000.0
+ff_cruise = 110.0
+transponder = "sif"
+provenance = "approximate"
+
+[[aircraft]]
+id = "P-2H"
+name = "P-2H Neptune"
+nation = "US"
+role = "patrol"
+rcs_nose = 10.0
+rcs_beam = 30.0
+rcs_tail = 14.0
+cruise_kmh = 320.0
+cruise_alt_m = 2000.0
+max_mach = 0.5
+max_kmh_sl = 540.0
+min_kmh = 220.0
+ceiling_m = 6800.0
+climb_mps = 8.0
+turn_dps = 3.0
+fuel_kg = 10000.0
+ff_cruise = 25.0
+transponder = "sif"
+provenance = "approximate"
+
+# ----------------------------------------------------------- Soviet long-range aviation
+[[aircraft]]
+id = "Tu-95M"
+name = "Tu-95 Bear"
+nation = "USSR"
+role = "bomber"
+rcs_nose = 40.0
+rcs_beam = 120.0
+rcs_tail = 60.0
+cruise_kmh = 750.0
+cruise_alt_m = 11000.0
+max_mach = 0.82
+max_kmh_sl = 750.0
+min_kmh = 300.0
+ceiling_m = 13000.0
+climb_mps = 10.0
+turn_dps = 2.0
+fuel_kg = 80000.0
+ff_cruise = 75.0
+ff_mil = 110.0
+transponder = "kremniy"
+provenance = "approximate"
+notes = "Turboprop strategic bomber/reconnaissance; propellers make it a large radar target."
+
+# ----------------------------------------------------------- civil (North America)
+[[aircraft]]
+id = "B707"
+name = "Boeing 707-320"
+nation = "US"
+role = "airliner"
+rcs_nose = 15.0
+rcs_beam = 45.0
+rcs_tail = 22.0
+cruise_kmh = 900.0
+cruise_alt_m = 10500.0
+max_mach = 0.86
+max_kmh_sl = 750.0
+min_kmh = 260.0
+ceiling_m = 12500.0
+climb_mps = 12.0
+turn_dps = 2.5
+fuel_kg = 60000.0
+ff_cruise = 100.0
+transponder = "atc"
+provenance = "approximate"
+
+[[aircraft]]
+id = "DC-7C"
+name = "Douglas DC-7C"
+nation = "US"
+role = "airliner"
+rcs_nose = 12.0
+rcs_beam = 35.0
+rcs_tail = 16.0
+cruise_kmh = 530.0
+cruise_alt_m = 7000.0
+max_mach = 0.55
+max_kmh_sl = 580.0
+min_kmh = 200.0
+ceiling_m = 8700.0
+climb_mps = 6.0
+turn_dps = 3.0
+fuel_kg = 22000.0
+ff_cruise = 35.0
+transponder = "atc"
+provenance = "approximate"
+
+[[aircraft]]
+id = "L-1049"
+name = "Lockheed Super Constellation"
+nation = "US"
+role = "airliner"
+rcs_nose = 12.0
+rcs_beam = 40.0
+rcs_tail = 18.0
+cruise_kmh = 500.0
+cruise_alt_m = 6500.0
+max_mach = 0.52
+max_kmh_sl = 560.0
+min_kmh = 190.0
+ceiling_m = 7300.0
+climb_mps = 6.0
+turn_dps = 3.0
+fuel_kg = 20000.0
+ff_cruise = 33.0
+transponder = "atc"
+provenance = "approximate"
+
+[[aircraft]]
+id = "Viscount"
+name = "Vickers Viscount"
+nation = "UK"
+role = "airliner"
+rcs_nose = 8.0
+rcs_beam = 25.0
+rcs_tail = 12.0
+cruise_kmh = 500.0
+cruise_alt_m = 7500.0
+max_mach = 0.5
+max_kmh_sl = 520.0
+min_kmh = 180.0
+ceiling_m = 8500.0
+climb_mps = 6.0
+turn_dps = 3.0
+fuel_kg = 8000.0
+ff_cruise = 20.0
+transponder = "atc"
+provenance = "approximate"
+
+[[aircraft]]
+id = "CV-440"
+name = "Convair 440"
+nation = "US"
+role = "airliner"
+rcs_nose = 6.0
+rcs_beam = 20.0
+rcs_tail = 9.0
+cruise_kmh = 450.0
+cruise_alt_m = 5000.0
+max_mach = 0.45
+max_kmh_sl = 500.0
+min_kmh = 170.0
+ceiling_m = 7600.0
+climb_mps = 6.0
+turn_dps = 3.0
+fuel_kg = 4500.0
+ff_cruise = 15.0
+transponder = "atc"
+provenance = "approximate"
+
+[[aircraft]]
+id = "C172"
+name = "Cessna 172"
+nation = "US"
+role = "light"
+rcs_nose = 0.8
+rcs_beam = 2.5
+rcs_tail = 1.0
+cruise_kmh = 190.0
+cruise_alt_m = 1500.0
+max_mach = 0.2
+max_kmh_sl = 220.0
+min_kmh = 90.0
+ceiling_m = 4100.0
+climb_mps = 3.5
+turn_dps = 4.0
+fuel_kg = 130.0
+ff_cruise = 0.5
+transponder = "none"
+provenance = "approximate"
+
+[[aircraft]]
+id = "ANAPROP"
+name = "anomalous propagation return"
+nation = ""
+role = "ghost"
+rcs_nose = 25.0
+rcs_beam = 25.0
+rcs_tail = 25.0
+cruise_kmh = 450.0
+cruise_alt_m = 6000.0
+max_mach = 0.9
+max_kmh_sl = 950.0
+min_kmh = 150.0
+ceiling_m = 15000.0
+climb_mps = 50.0
+turn_dps = 6.0
+fuel_kg = 0.0
+transponder = "none"
+provenance = "fictional"
+notes = "Not an aircraft: returns produced by a temperature-inversion duct. Seen only by the ducted radar."
+
+# ----------------------------------------------------------- Soviet PVO interceptors
+[[aircraft]]
+id = "MiG-19PM"
+name = "MiG-19PM"
+nation = "USSR"
+role = "interceptor"
+rcs_nose = 3.0
+rcs_beam = 8.0
+rcs_tail = 4.0
+cruise_kmh = 900.0
+cruise_alt_m = 10000.0
+max_mach = 1.35
+max_kmh_sl = 1100.0
+min_kmh = 300.0
+ceiling_m = 17500.0
+zoom_ceiling_m = 18500.0
+climb_mps = 130.0
+accel_mps2 = 6.0
+turn_dps = 9.0
+fuel_kg = 3300.0
+ff_cruise = 30.0
+ff_mil = 50.0
+ff_ab = 160.0
+ai_radar_km = 12.0
+ai_radar_cone = 45.0
+weapons = { "RS-2US" = 4 }
+transponder = "kremniy"
+provenance = "approximate"
+notes = "Could not reach the U-2's ~21 km cruise altitude."
+
+[[aircraft]]
+id = "Su-9"
+name = "Su-9 (FISHPOT)"
+nation = "USSR"
+role = "interceptor"
+rcs_nose = 3.0
+rcs_beam = 9.0
+rcs_tail = 4.0
+cruise_kmh = 950.0
+cruise_alt_m = 11000.0
+max_mach = 2.0
+max_kmh_sl = 1200.0
+min_kmh = 320.0
+ceiling_m = 16800.0
+zoom_ceiling_m = 19800.0
+climb_mps = 140.0
+accel_mps2 = 8.0
+turn_dps = 7.0
+fuel_kg = 3500.0
+ff_cruise = 35.0
+ff_mil = 60.0
+ff_ab = 220.0
+ai_radar_km = 15.0
+ai_radar_cone = 45.0
+weapons = { "RS-2US" = 4 }
+transponder = "kremniy"
+provenance = "approximate"
+notes = "[H] On 1 May 1960 a new, unarmed Su-9 reached ~19.5 km but could not reach the U-2."
+
+[[aircraft]]
+id = "MiG-17PF"
+name = "MiG-17PF"
+nation = "USSR"
+role = "interceptor"
+rcs_nose = 3.0
+rcs_beam = 8.0
+rcs_tail = 4.0
+cruise_kmh = 750.0
+cruise_alt_m = 9000.0
+max_mach = 0.95
+max_kmh_sl = 1100.0
+min_kmh = 280.0
+ceiling_m = 15600.0
+zoom_ceiling_m = 16200.0
+climb_mps = 60.0
+accel_mps2 = 4.0
+turn_dps = 10.0
+fuel_kg = 2000.0
+ff_cruise = 25.0
+ff_mil = 35.0
+ff_ab = 70.0
+ai_radar_km = 9.0
+ai_radar_cone = 45.0
+weapons = { "NR-23" = 3 }
+transponder = "kremniy"
+provenance = "approximate"
+
+# ----------------------------------------------------------- threats and traffic (USSR theater)
+[[aircraft]]
+id = "U-2C"
+name = "Lockheed U-2C"
+nation = "US"
+role = "recon"
+rcs_nose = 1.5
+rcs_beam = 5.0
+rcs_tail = 2.5
+cruise_kmh = 740.0
+cruise_alt_m = 21300.0
+max_mach = 0.8
+max_kmh_sl = 600.0
+min_kmh = 300.0
+ceiling_m = 21800.0
+climb_mps = 25.0
+turn_dps = 1.5
+fuel_kg = 4400.0
+ff_cruise = 12.0
+transponder = "none"
+provenance = "approximate"
+notes = "[H] ~70,500 ft (21.5 km) cruise on 1 May 1960."
+
+[[aircraft]]
+id = "Il-14"
+name = "Ilyushin Il-14 (Aeroflot)"
+nation = "USSR"
+role = "airliner"
+rcs_nose = 8.0
+rcs_beam = 25.0
+rcs_tail = 12.0
+cruise_kmh = 320.0
+cruise_alt_m = 3000.0
+max_mach = 0.35
+max_kmh_sl = 400.0
+min_kmh = 150.0
+ceiling_m = 6500.0
+climb_mps = 5.0
+turn_dps = 3.0
+fuel_kg = 2500.0
+ff_cruise = 10.0
+transponder = "kremniy"
+provenance = "approximate"
+
+[[aircraft]]
+id = "Tu-104"
+name = "Tupolev Tu-104 (Aeroflot)"
+nation = "USSR"
+role = "airliner"
+rcs_nose = 12.0
+rcs_beam = 40.0
+rcs_tail = 18.0
+cruise_kmh = 800.0
+cruise_alt_m = 10000.0
+max_mach = 0.8
+max_kmh_sl = 700.0
+min_kmh = 260.0
+ceiling_m = 11500.0
+climb_mps = 10.0
+turn_dps = 2.5
+fuel_kg = 20000.0
+ff_cruise = 70.0
+transponder = "kremniy"
+provenance = "approximate"
+
+[[aircraft]]
+id = "An-2"
+name = "Antonov An-2"
+nation = "USSR"
+role = "light"
+rcs_nose = 3.0
+rcs_beam = 8.0
+rcs_tail = 4.0
+cruise_kmh = 180.0
+cruise_alt_m = 1000.0
+max_mach = 0.2
+max_kmh_sl = 250.0
+min_kmh = 80.0
+ceiling_m = 4400.0
+climb_mps = 3.0
+turn_dps = 4.0
+fuel_kg = 900.0
+ff_cruise = 3.0
+transponder = "none"
+provenance = "approximate"
+
+[[aircraft]]
+id = "BALLOON"
+name = "radiosonde balloon"
+nation = ""
+role = "balloon"
+rcs_nose = 0.3
+rcs_beam = 0.3
+rcs_tail = 0.3
+cruise_kmh = 40.0
+cruise_alt_m = 20000.0
+max_mach = 0.2
+max_kmh_sl = 100.0
+min_kmh = 0.0
+ceiling_m = 30000.0
+climb_mps = 5.0
+fuel_kg = 0.0
+transponder = "none"
+provenance = "approximate"
+notes = "Meteorological sounding balloon drifting with the upper wind; radar-reflective target."

@@ -1,0 +1,18 @@
+[[jammer]]
+id = "ECM-BARRAGE-LS"
+name = "noise barrage jammer (L/S band)"
+mode = "barrage"
+bands = ["L", "S"]
+erp_dbw_mhz = 3.0
+provenance = "approximate"
+notes = "Generic airborne noise jammer spread across L and S bands."
+
+[[jammer]]
+id = "ECM-SPOT-L"
+name = "spot noise jammer (L band)"
+mode = "spot"
+bands = ["L"]
+erp_dbw_mhz = 14.0
+retune_s = 50.0
+provenance = "approximate"
+notes = "Concentrates power on one radar channel; must re-tune when the radar changes frequency."

@@ -1,0 +1,387 @@
+id = "su_may_day"
+title = "May Day Overflight"
+subtitle = "4th Separate Air Defense Army, 1 May 1960"
+summary = "A high-altitude intruder crosses the Urals on a holiday morning. Your fighters cannot reach it, your picture is minutes old, and Moscow wants it destroyed."
+faction = "USSR"
+kind = "scenario"
+order = 10
+theater = "middle_urals"
+start = "1960-05-01T05:40:00"
+tz = "MSK"
+duration_min = 85
+seed = 1960
+reliability = 4.0
+
+briefing = """
+COMMAND POST, 4th SEPARATE AIR DEFENSE ARMY — 1 MAY 1960, 05:40 MOSCOW TIME
+
+SITUATION. At dawn the radars of the Turkestan district detected a single high-altitude intruder crossing the southern border. It has been tracked intermittently northward across Kazakhstan. All Air Defense Forces are at FULL combat readiness. Civil flights are being grounded. Many officers are away for the holiday.
+
+THE INTRUDER is flying at 20,000 m or above — higher than our fighters can climb. Your weapons:
+  • S-75 battalions around Sverdlovsk (north, east, south, west). The Kyshtym battalion near Chelyabinsk-40 is still deploying: it needs about 20 minutes to be ready, and only if you order it now.
+  • MiG-19PM (764th IAP, Bolshoye Savino), MiG-17PF (Shagol) and one new Su-9 at Koltsovo on a ferry flight — unarmed.
+
+YOUR PICTURE. Radar companies report to this command post by telephone. Their reports reach the plotting board 2½–4½ minutes late. The guidance points at Koltsovo, Savino and Shagol see their own scopes in real time: use their PPIs to see where the target really is.
+
+CAUTION. Because of the holiday, the 764th IAP has not yet changed its IFF transponders to the May code.
+
+TASK. Destroy the intruder before it leaves the Army's zone to the north. Report it to Moscow. Do not shoot down our own aircraft.
+"""
+
+[[intel]]
+title = "Intruder"
+text = "Single aircraft, very high altitude (20-22 km), subsonic (~700-750 km/h), steady course. No IFF reply. Probably a Lockheed U-2. Previous overflights went unpunished because no weapon could reach that height."
+
+[[intel]]
+title = "IFF codes"
+text = "The May code took effect at 00:00. 764th IAP (MiG-19PM) aircraft still answer on the April code: SAM battalions will see them as FOREIGN."
+
+[[intel]]
+title = "Weather"
+text = "Clear over the Urals, visibility over 40 km. A meteorological sounding balloon is released from Sverdlovsk at 06:00 as usual; it will rise to about 25 km."
+
+[automation]
+surveil = true
+ident = true
+height = false
+tech = false
+
+[weather]
+k_factor = 1.333
+wind_from = 250.0
+wind_kmh = 70.0
+ceiling_m = 6000.0
+visibility_km = 40.0
+night = false
+sea_state = 0.0
+
+[hq]
+name = "PVO CP MOSCOW"
+readiness = "FULL"
+alert = ""
+weapons_status = "HOLD"
+[hq.policy]
+response_s = [50.0, 120.0]
+declare_hostile = "target:u2"
+engage = "target:u2"
+ram = "target:u2"
+special_release = "deny"
+iff_period = "MAY"
+track_start = 4501
+
+# ---------------------------------------------------------------- communications
+[[link]]
+id = "T_troitsk"
+name = "Troitsk telephone"
+[[link]]
+id = "T_kurgan"
+name = "Kurgan telephone"
+[[link]]
+id = "T_kyshtym"
+name = "Kyshtym telephone"
+[[link]]
+id = "T_tagil"
+name = "Nizhny Tagil telephone"
+[[link]]
+id = "T_kamensk"
+name = "Kamensk telephone"
+[[link]]
+id = "T_zlatoust"
+name = "Zlatoust telephone"
+[[link]]
+id = "T_kustanai"
+name = "Kustanai (Turkestan) cross-tell"
+[[link]]
+id = "T_gp"
+name = "Guidance points"
+[[link]]
+id = "A_savino"
+name = "764th IAP alert line"
+delay_s = 15.0
+[[link]]
+id = "A_koltsovo"
+name = "Koltsovo line"
+delay_s = 15.0
+[[link]]
+id = "A_shagol"
+name = "Shagol line"
+delay_s = 15.0
+
+# ---------------------------------------------------------------- radars
+[[radar]]
+site = "koltsovo_gp"
+type = "P-30"
+gci = true
+link = "T_gp"
+[[radar]]
+site = "savino_gp"
+type = "P-30"
+gci = true
+link = "T_gp"
+[[radar]]
+site = "shagol_gp"
+type = "P-20"
+gci = true
+link = "T_gp"
+[[radar]]
+site = "rlr_troitsk"
+type = "P-10"
+link = "T_troitsk"
+[[radar]]
+site = "rlr_kurgan"
+type = "P-8"
+link = "T_kurgan"
+[[radar]]
+site = "rlr_kyshtym"
+type = "P-30"
+link = "T_kyshtym"
+[[radar]]
+site = "rlr_tagil"
+type = "P-10"
+link = "T_tagil"
+[[radar]]
+site = "rlr_kamensk"
+type = "P-12"
+link = "T_kamensk"
+[[radar]]
+site = "rlr_zlatoust"
+type = "P-20"
+link = "T_zlatoust"
+[[radar]]
+site = "rlr_kustanai"
+type = "P-10"
+link = "T_kustanai"
+
+# ---------------------------------------------------------------- forces
+[[airbase]]
+site = "koltsovo"
+link = "A_koltsovo"
+[[airbase]]
+site = "savino"
+link = "A_savino"
+[[airbase]]
+site = "shagol"
+link = "A_shagol"
+
+[[squadron]]
+id = "764iap"
+name = "764th IAP"
+base = "savino"
+type = "MiG-19PM"
+callsign = "6"
+ready = { "3" = 2, "7" = 2, "20" = 2 }
+pilots = 6
+iff_codes = { period = "APR" }
+
+[[squadron]]
+id = "shagol_iap"
+name = "Shagol IAP"
+base = "shagol"
+type = "MiG-17PF"
+callsign = "4"
+ready = { "3" = 2, "7" = 2 }
+pilots = 4
+
+[[squadron]]
+id = "ferry"
+name = "Ferry Su-9 (Koltsovo)"
+base = "koltsovo"
+type = "Su-9"
+callsign = "73"
+ready = { "3" = 1 }
+pilots = 1
+loadout = {}
+
+[[sam]]
+site = "zrdn_north"
+type = "S-75"
+missiles = 6
+reloads = 6
+[[sam]]
+site = "zrdn_east"
+type = "S-75"
+missiles = 6
+reloads = 6
+[[sam]]
+site = "zrdn_south"
+type = "S-75"
+missiles = 6
+reloads = 6
+[[sam]]
+site = "zrdn_west"
+type = "S-75"
+missiles = 6
+reloads = 6
+[[sam]]
+site = "zrdn_kyshtym"
+type = "S-75"
+missiles = 6
+reloads = 0
+readiness_min = 20.0
+alerted = false
+
+# ---------------------------------------------------------------- traffic
+[[flight]]
+id = "u2"
+type = "U-2C"
+callsign = "INTRUDER"
+side = "red"
+spawn_t = 0.0
+truth_label = "Lockheed U-2C reconnaissance aircraft"
+markings = "no national markings"
+nationality = "US"
+start = { lat = 52.9, lon = 63.6, alt_m = 21300.0, kmh = 740.0 }
+route = [
+  { lat = 54.3, lon = 62.1, alt_m = 21300.0, kmh = 740.0 },
+  { lat = 55.72, lon = 60.78, alt_m = 21400.0, kmh = 740.0 },
+  { lat = 56.45, lon = 60.62, alt_m = 21400.0, kmh = 740.0 },
+  { lat = 56.95, lon = 60.45, alt_m = 21500.0, kmh = 740.0 },
+  { lat = 57.55, lon = 58.8, alt_m = 21500.0, kmh = 740.0 },
+  { lat = 58.6, lon = 55.8, alt_m = 21500.0, kmh = 740.0 },
+  { lat = 59.6, lon = 53.0, alt_m = 21500.0, kmh = 740.0, action = "remove" },
+]
+transponder = { system = "none" }
+
+[[flight]]
+id = "aeroflot"
+type = "Il-14"
+callsign = "AEROFLOT 2041"
+side = "civil"
+spawn_t = 0.0
+truth_label = "Il-14 airliner"
+markings = "Aeroflot"
+start = { lat = 56.95, lon = 60.3, alt_m = 3000.0, kmh = 320.0 }
+route = [
+  { lat = 57.6, lon = 57.6, alt_m = 3000.0, kmh = 320.0 },
+  { lat = 57.91, lon = 56.02, alt_m = 600.0, kmh = 260.0, action = "land" },
+]
+transponder = { system = "kremniy", codes = { period = "MAY" } }
+
+[[flight]]
+id = "an2"
+type = "An-2"
+callsign = "AN-2 (holiday flight)"
+side = "civil"
+spawn_t = 900.0
+truth_label = "An-2 biplane"
+markings = "DOSAAF club"
+start = { lat = 56.3, lon = 61.6, alt_m = 900.0, kmh = 170.0 }
+route = [
+  { lat = 56.55, lon = 62.15, alt_m = 900.0, kmh = 170.0 },
+  { lat = 56.2, lon = 62.35, alt_m = 900.0, kmh = 170.0 },
+  { lat = 56.38, lon = 61.65, alt_m = 400.0, kmh = 150.0, action = "land" },
+]
+transponder = { system = "none" }
+
+[[flight]]
+id = "balloon"
+type = "BALLOON"
+callsign = "RADIOSONDE"
+side = "neutral"
+spawn_t = 1200.0
+mission = "balloon"
+kind = "balloon"
+truth_label = "meteorological sounding balloon"
+start = { lat = 56.83, lon = 60.72, alt_m = 2000.0, kmh = 30.0 }
+route = [{ lat = 56.9, lon = 61.5, alt_m = 25000.0, kmh = 30.0 }]
+transponder = { system = "none" }
+
+# ---------------------------------------------------------------- events
+[[trigger]]
+id = "open"
+cond = { type = "time", t = 5.0 }
+actions = [
+  { do = "message", channel = "tty", sender = "4th ARMY CP", ack = true, kind = "order", text = "FULL COMBAT READINESS. INTRUDER CROSSED THE STATE BORDER FROM AFGHANISTAN AT 05:36. ALTITUDE OVER 20,000 M, COURSE NORTH. EXPECTED IN OUR ZONE FROM THE SOUTH (KUSTANAI). ALL CIVIL FLIGHTS TO LAND." },
+]
+
+[[trigger]]
+id = "moscow"
+cond = { type = "time", t = 60.0 }
+actions = [
+  { do = "message", channel = "voice", sender = "PVO CP MOSCOW", ack = true, kind = "order", priority = 2, text = "Moscow here. The intruder is to be destroyed at any cost. Report on it immediately and every five minutes." },
+]
+
+[[trigger]]
+id = "iffwarn"
+cond = { type = "time", t = 120.0 }
+actions = [
+  { do = "message", channel = "voice", sender = "764th IAP", ack = true, kind = "order", text = "Regiment reports: transponders not yet re-coded for May. Our aircraft will answer on the April code." },
+]
+
+[[trigger]]
+id = "designate"
+cond = { type = "tracked", ac = "u2" }
+actions = [
+  { do = "authorize", ac = "u2" },
+  { do = "message", channel = "voice", sender = "PVO CP MOSCOW", ack = true, kind = "order", priority = 2, text = "The high-altitude target from the south is the violator. Fire is permitted on it. Destroy it." },
+]
+
+[[trigger]]
+id = "fault"
+cond = { type = "near", ac = "u2", lat = 56.80, lon = 61.20, km = 70.0 }
+actions = [{ do = "sam_fault", site = "zrdn_east", seconds = 420.0 }]
+
+[[trigger]]
+id = "pressure"
+cond = { type = "in_zone", ac = "u2", zone = "sverdlovsk_da" }
+actions = [{ do = "message", channel = "voice", sender = "PVO CP MOSCOW", ack = true, kind = "order", priority = 2, text = "Moscow: the target is over Sverdlovsk. Why is it not destroyed? Report!" }]
+
+[[trigger]]
+id = "killed"
+cond = { type = "destroyed", ac = "u2" }
+actions = [
+  { do = "message", channel = "voice", sender = "4th ARMY CP", delay = 900.0, text = "Ground parties report aircraft wreckage near Kosulino and a parachutist detained. The intruder is down." },
+  { do = "set_var", name = "u2_down", value = 1 },
+]
+
+[[trigger]]
+id = "escaped"
+cond = { type = "in_zone", ac = "u2", zone = "exit_north" }
+actions = [
+  { do = "message", channel = "voice", sender = "PVO CP MOSCOW", priority = 2, text = "The intruder has left the 4th Army zone. Explain yourself." },
+  { do = "end", reason = "Intruder left the zone", result = "failed" },
+]
+
+# ---------------------------------------------------------------- objectives
+[[objective]]
+id = "destroy"
+text = "Destroy the intruder before it leaves the Army zone"
+kind = "destroy"
+params = { ac = "u2", zone = "exit_north" }
+points = 50
+
+[[objective]]
+id = "report"
+text = "Report the intruder to Moscow within 10 minutes of tracking it"
+kind = "report"
+params = { ac = "u2", within_s = 600.0 }
+points = 10
+
+[[objective]]
+id = "frat"
+text = "Do not shoot down our own aircraft"
+kind = "no_fratricide"
+points = 15
+penalty = 40
+
+[[objective]]
+id = "civ"
+text = "No civil losses"
+kind = "no_civil_losses"
+points = 10
+penalty = 60
+
+[[objective]]
+id = "an2"
+text = "Do not engage the low, slow holiday flight"
+kind = "not_destroyed"
+params = { ac = "an2" }
+points = 5
+penalty = 20
+
+[[objective]]
+id = "economy"
+text = "Expend no more than 9 missiles"
+kind = "max_missiles"
+params = { max = 9 }
+points = 10

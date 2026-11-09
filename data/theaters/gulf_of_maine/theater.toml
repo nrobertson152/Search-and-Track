@@ -1,0 +1,349 @@
+id = "gulf_of_maine"
+name = "Gulf of Maine — Bangor Air Defense Sector"
+provenance = "approximate"
+
+[projection]
+lat0 = 44.6
+lon0 = -68.6
+extent_km = [-480.0, 720.0, -420.0, 460.0]
+
+[build]
+simplify_km = 0.6
+terrain_spacing_km = 4.0
+state_lines_countries = ["United States of America", "Canada"]
+lake_max_rank = 7
+river_max_rank = 5
+
+# Site positions and elevations are approximate (historically inspired).
+
+[[radar_site]]
+id = "charleston"
+name = "Charleston AFS"
+lat = 45.07
+lon = -69.05
+elev_m = 330.0
+mast_m = 25.0
+unit = "765th Radar Sq"
+
+[[radar_site]]
+id = "bucks_harbor"
+name = "Bucks Harbor AFS"
+lat = 44.64
+lon = -67.40
+elev_m = 60.0
+mast_m = 25.0
+unit = "907th Radar Sq"
+
+[[radar_site]]
+id = "caswell"
+name = "Caswell AFS"
+lat = 46.98
+lon = -67.85
+elev_m = 260.0
+mast_m = 25.0
+unit = "766th Radar Sq"
+
+[[radar_site]]
+id = "north_truro"
+name = "North Truro AFS"
+lat = 42.04
+lon = -70.05
+elev_m = 45.0
+mast_m = 25.0
+unit = "762nd Radar Sq"
+
+[[radar_site]]
+id = "st_albans"
+name = "St. Albans AFS"
+lat = 44.86
+lon = -73.04
+elev_m = 610.0
+mast_m = 20.0
+unit = "911th Radar Sq"
+
+[[radar_site]]
+id = "tt2"
+name = "Texas Tower 2"
+lat = 41.72
+lon = -67.77
+elev_m = 0.0
+mast_m = 60.0
+unit = "762nd Radar Sq (det.)"
+
+[[radar_site]]
+id = "barrington"
+name = "RCAF Stn Barrington"
+lat = 43.56
+lon = -65.57
+elev_m = 60.0
+mast_m = 25.0
+unit = "RCAF Pinetree"
+
+[[radar_site]]
+id = "st_margarets"
+name = "RCAF Stn St. Margarets"
+lat = 46.93
+lon = -65.27
+elev_m = 50.0
+mast_m = 25.0
+unit = "RCAF Pinetree"
+
+[[radar_site]]
+id = "desert_gf"
+name = "Mount Desert gap filler"
+lat = 44.35
+lon = -68.23
+elev_m = 300.0
+mast_m = 15.0
+unit = "765th Radar Sq (GF)"
+
+[[radar_site]]
+id = "boothbay_gf"
+name = "Boothbay gap filler"
+lat = 43.85
+lon = -69.63
+elev_m = 60.0
+mast_m = 15.0
+unit = "Topsham (GF)"
+
+[[airbase]]
+id = "dow"
+name = "Dow AFB"
+lat = 44.81
+lon = -68.83
+elev_m = 59.0
+kind = "military"
+
+[[airbase]]
+id = "loring"
+name = "Loring AFB"
+lat = 46.95
+lon = -67.89
+elev_m = 228.0
+kind = "military"
+
+[[airbase]]
+id = "otis"
+name = "Otis AFB"
+lat = 41.66
+lon = -70.52
+elev_m = 40.0
+kind = "military"
+
+[[airbase]]
+id = "pease"
+name = "Pease AFB"
+lat = 43.08
+lon = -70.82
+elev_m = 30.0
+kind = "military"
+
+[[airbase]]
+id = "brunswick"
+name = "NAS Brunswick"
+lat = 43.89
+lon = -69.94
+elev_m = 20.0
+kind = "military"
+
+[[airbase]]
+id = "logan"
+name = "Boston Logan"
+lat = 42.36
+lon = -71.01
+elev_m = 6.0
+kind = "civil"
+
+[[airbase]]
+id = "portland"
+name = "Portland Intl"
+lat = 43.65
+lon = -70.31
+elev_m = 23.0
+kind = "civil"
+
+[[airbase]]
+id = "halifax"
+name = "Halifax Intl"
+lat = 44.88
+lon = -63.51
+elev_m = 145.0
+kind = "civil"
+
+[[sam_site]]
+id = "bomarc_dow"
+name = "Dow BOMARC site"
+lat = 44.87
+lon = -68.86
+elev_m = 80.0
+unit = "30th Air Defense Missile Sq"
+
+[[sam_site]]
+id = "nike_l13"
+name = "Nike L-13 (Loring DA)"
+lat = 47.03
+lon = -67.98
+elev_m = 250.0
+unit = "4th Msl Bn, 61st Arty"
+
+[[sam_site]]
+id = "nike_l58"
+name = "Nike L-58 (Loring DA)"
+lat = 46.84
+lon = -67.75
+elev_m = 220.0
+unit = "4th Msl Bn, 61st Arty"
+
+[[sam_site]]
+id = "nike_b15"
+name = "Nike B-15 (Boston DA)"
+lat = 42.58
+lon = -70.88
+elev_m = 30.0
+unit = "Boston Defense Area"
+
+[[sam_site]]
+id = "nike_b55"
+name = "Nike B-55 (Boston DA)"
+lat = 42.21
+lon = -71.11
+elev_m = 150.0
+unit = "Boston Defense Area"
+
+[[city]]
+name = "Boston"
+lat = 42.36
+lon = -71.06
+size = 3
+
+[[city]]
+name = "Portland"
+lat = 43.66
+lon = -70.26
+size = 2
+
+[[city]]
+name = "Bangor"
+lat = 44.80
+lon = -68.77
+size = 1
+
+[[city]]
+name = "Augusta"
+lat = 44.31
+lon = -69.78
+size = 1
+
+[[city]]
+name = "Portsmouth"
+lat = 43.07
+lon = -70.76
+size = 1
+
+[[city]]
+name = "Concord"
+lat = 43.21
+lon = -71.54
+size = 1
+
+[[city]]
+name = "Burlington"
+lat = 44.48
+lon = -73.21
+size = 1
+
+[[city]]
+name = "Halifax"
+lat = 44.65
+lon = -63.58
+size = 2
+
+[[city]]
+name = "Saint John"
+lat = 45.27
+lon = -66.06
+size = 1
+
+[[city]]
+name = "Fredericton"
+lat = 45.96
+lon = -66.64
+size = 1
+
+[[city]]
+name = "Moncton"
+lat = 46.09
+lon = -64.78
+size = 1
+
+[[city]]
+name = "Charlottetown"
+lat = 46.24
+lon = -63.13
+size = 1
+
+[[city]]
+name = "Presque Isle"
+lat = 46.68
+lon = -68.02
+size = 0
+
+[[city]]
+name = "Montreal"
+lat = 45.50
+lon = -73.57
+size = 3
+
+[[city]]
+name = "Quebec"
+lat = 46.81
+lon = -71.21
+size = 2
+
+[[city]]
+name = "Worcester"
+lat = 42.26
+lon = -71.80
+size = 1
+
+[[city]]
+name = "Providence"
+lat = 41.82
+lon = -71.41
+size = 2
+
+[[zone]]
+id = "adiz"
+name = "Atlantic Coastal ADIZ (approx.)"
+kind = "adiz"
+shape = "poly"
+points = [[40.6, -70.6], [40.6, -63.5], [43.3, -60.5], [45.6, -58.4], [47.8, -58.4], [47.0, -60.6],
+          [45.3, -61.0], [44.4, -63.2], [43.4, -65.7], [44.6, -66.8], [43.8, -68.8], [43.0, -70.5],
+          [41.9, -69.9], [41.2, -70.3]]
+
+[[zone]]
+id = "boston_da"
+name = "Boston Defense Area"
+kind = "defended"
+shape = "circle"
+lat = 42.36
+lon = -71.06
+r_km = 60.0
+
+[[zone]]
+id = "loring_da"
+name = "Loring Defense Area (SAC)"
+kind = "defended"
+shape = "circle"
+lat = 46.95
+lon = -67.89
+r_km = 45.0
+
+[[zone]]
+id = "coast_maine"
+name = "Maine coast (12 nm)"
+kind = "territory"
+shape = "poly"
+points = [[43.05, -70.75], [43.45, -70.15], [43.62, -69.70], [43.70, -69.00], [44.05, -68.30],
+          [44.25, -67.55], [44.60, -66.95], [45.20, -67.20], [45.60, -67.80], [45.00, -70.20],
+          [43.40, -71.00]]

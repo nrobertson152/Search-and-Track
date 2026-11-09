@@ -56,14 +56,56 @@ class Scene:
 
 
 # ====================================================================== TITLE
+MENU_ITEMS = [
+    ("CAMPAIGN", "A career at the scopes: the historical watches of your service, 1956–1987, in order."),
+    ("SCENARIOS", "Any historical watch, with its own briefing, forces and objectives."),
+    ("ALERT DUTY", "A procedurally generated shift: your sector, any era, and whatever the night brings."),
+    ("TRAINING", "Instructor-led exercises that teach the core loop of each system."),
+    ("CONTINUE", "Resume the saved shift."),
+    ("OPERATOR'S MANUAL", "How the radars, the identification rules and the weapons really work."),
+    ("SETTINGS", "Panel engraving, phosphor focus, film grain, sound."),
+    ("QUIT", "Leave the bunker."),
+]
+
+
+def film_item(gui, r: pygame.Rect, label: str, text: str, size: int = 26, selected: bool = False,
+              enabled: bool = True, font: str = "title", top: int | None = None) -> bool:
+    """A title-card menu entry: white letters on black, inverted on hover or when selected."""
+    gui.drawn[label] = r
+    hov = enabled and gui.hover(r)
+    s = gui.screen
+    if selected or hov:
+        pygame.draw.rect(s, (236, 236, 230) if selected else (70, 70, 68), r)
+        col = (12, 12, 12) if selected else (250, 250, 246)
+    else:
+        col = (226, 226, 220) if enabled else (90, 90, 88)
+    ty = r.y + top if top is not None else r.centery - TEXT.font(font, size).get_height() // 2
+    gui.label((r.x + 14, ty), text, size, col, font)
+    return enabled and gui.clicked(r)
+
+
 class TitleScene(Scene):
     def __init__(self, app):
         super().__init__(app)
         self.faction = "US"
         self.items = scenario.list_scenarios()
         self.sel_id = ""
-        self.vig = vignette((W, H), 180)
         self.t = 0.0
+        self.frame = pygame.Surface((W, H))
+        self.film = fx.Film((W, H), grain=22)
+        self.backdrops: dict[str, object] = {}
+        self.hover_note = ""
+        self.theme = theme_for(self.faction)
+
+    def backdrop(self):
+        bd = self.backdrops.get(self.faction)
+        if bd is None:
+            from ..sim.world import theater
+            from .cinema import Backdrop
+            th = theater("gulf_of_maine" if self.faction == "US" else "middle_urals")
+            bd = Backdrop((W, H), th, self.faction, board=(0.04, 0.07, 0.66, 0.60))
+            self.backdrops[self.faction] = bd
+        return bd
 
     def update(self, dt):
         self.t += dt
@@ -71,72 +113,199 @@ class TitleScene(Scene):
     def draw(self, screen):
         gui = self.app.gui
         th = theme_for(self.faction)
-        gui.set_theme(th) if gui.theme is not th else None
-        screen.fill((10, 12, 12))
-        # header
-        hdr = R(20, 18, W - 40, 110)
-        gui.panel(hdr)
-        gui.label((hdr.x + 30, hdr.y + 14), "SEARCH AND TRACK", 44, th.engraving, "ui_bold", shadow=True)
-        gui.label((hdr.x + 34, hdr.y + 70), "A Cold War air-defense command simulator · 1955–1990 · two systems, "
-                  "one sky", 15, th.engraving_dim)
-        gui.label((hdr.right - 30, hdr.y + 78), "v0.1 vertical slice", 12, th.engraving_dim, align="right")
-        # faction panels
-        fy = 150
-        for i, (fid, tm, title, sub, blurb) in enumerate([
-            ("US", US, "UNITED STATES — NORAD / AIR DEFENSE COMMAND", "SAGE semi-automatic ground environment",
-             "Digital radar data every scan into the AN/FSQ-7. You initiate tracks with the light gun, correlate "
-             "flight plans against NORAD tolerances, assign height finders, and fly F-106s by data link. "
-             "Army Nike batteries answer to the Missile Master; BOMARC answers to your key."),
-            ("USSR", USSR, "СССР — ВОЙСКА ПВО СТРАНЫ", "PVO Strany: Air Defense Forces of the Country",
-             "Radar companies telephone their targets in; your plotting board is minutes behind the sky. Guidance "
-             "points with their own radars control the interceptors. S-75 battalions, V-beam altitudes, monthly IFF "
-             "codes — and a command chain that wants results.")]):
-            pr = R(20 + i * (W // 2 - 10), fy, W // 2 - 30, 250)
-            gui.set_theme(tm)
-            inner = gui.panel(pr, title, sub)
-            gui.wrapped(R(inner.x + 4, inner.y + 6, inner.w - 10, 140), blurb, 14, tm.engraving)
-            if gui.button(R(inner.x + 4, inner.bottom - 40, 260, 34), "SELECT " + ("NORAD" if fid == "US" else "ПВО / PVO"),
-                          lit=self.faction == fid, color=tm.lamp_amber if fid == "US" else tm.lamp_red, size=13):
-                self.faction = fid
-                self.sel_id = ""
-        th = theme_for(self.faction)
+        self.theme = th
         gui.set_theme(th)
-        # scenario list
-        lr = R(20, 420, W - 40, 400)
-        inner = gui.panel(lr, "SCENARIOS" if self.faction == "US" else "ЗАДАЧИ · SCENARIOS",
-                          "training missions first")
-        items = [s for s in self.items if s["faction"] == self.faction]
-        y = inner.y + 4
-        for s in items:
-            rr = R(inner.x, y, 640, 64)
-            sel = s["id"] == self.sel_id
-            gui.glass(rr, (30, 40, 40) if sel else None)
-            gui.label((rr.x + 12, rr.y + 6), s["title"], 16, th.text, "ui_bold" if self.faction == "US" else "cyr")
-            gui.label((rr.x + 12, rr.y + 28), s["subtitle"], 12, th.text_dim)
-            gui.label((rr.right - 10, rr.y + 8), s["kind"].upper(), 11, th.accent, align="right")
-            if gui.clicked(rr):
-                self.sel_id = s["id"]
-            y += 72
-        cur = next((s for s in items if s["id"] == self.sel_id), None)
-        side = R(inner.x + 660, inner.y + 4, inner.w - 664, inner.h - 60)
-        gui.glass(side)
-        if cur:
-            gui.wrapped(side.inflate(-20, -16), cur["summary"], 15, th.text, "tty" if self.faction == "US" else "cyr")
+        bd = self.backdrop()
+        bd.draw(self.frame, self.app.dt)
+        f = self.frame
+        # the title over the controllers' desk
+        glow = TEXT.font("title", 96).render("SEARCH AND TRACK", True, (90, 90, 90), (0, 0, 0))
+        for ox, oy in ((-3, 0), (3, 0), (0, -3), (0, 3)):
+            f.blit(glow, (54 + ox, 700 + oy), special_flags=pygame.BLEND_ADD)
+        f.blit(TEXT.render("SEARCH AND TRACK", 96, (246, 246, 240), "title"), (54, 700))
+        n = int(self.t * 26)
+        sub = "ПОИСК И СОПРОВОЖДЕНИЕ  ·  A COLD WAR AIR-DEFENSE COMMAND SIMULATOR  ·  1956–1987"
+        f.blit(TEXT.render(sub[:n], 18, (210, 210, 204), "eng"), (60, 828))
+        f.blit(TEXT.render("Two systems. One sky. Every return could be the start of the war — or a lost Cessna.",
+                           15, (160, 160, 156), "eng_r"), (60, 856))
+        if self.app.settings.get("film", True):
+            self.film.apply(f, self.app.dt, 0.07)
+            ox, oy = self.film.weave()
         else:
-            gui.wrapped(side.inflate(-20, -16), "Select a scenario.\n\nNew to the game? Start with the training "
-                        "mission: an instructor walks you through the core loop.", 15, th.text_dim)
-        by = inner.bottom - 44
-        if gui.button(R(inner.x + 660, by, 220, 38), "BRIEFING >>", enabled=cur is not None, color=th.lamp_green, size=14):
-            self.app.start_briefing(cur["id"])
-        if gui.button(R(inner.x + 890, by, 180, 38), "LOAD SAVE", size=13, enabled=self.app.has_save()):
-            self.app.load_game()
-        if gui.button(R(inner.x + 1080, by, 160, 38), "MANUAL", size=13):
-            self.app.push(ManualScene(self.app, self))
-        if gui.button(R(inner.right - 120, by, 120, 38), "QUIT", size=13, color=th.lamp_red):
-            self.app.running = False
-        gui.label((20, H - 26), "Map data: Natural Earth (public domain). Terrain: ETOPO1 10′ (NOAA, via Fatiando a Terra). "
-                  "Fonts: SIL OFL. Sounds synthesized. GPL-3.0.", 11, (110, 110, 100))
-        screen.blit(self.vig, (0, 0))
+            ox, oy = 0, 0
+        screen.fill((0, 0, 0))
+        screen.blit(f, (ox, oy))
+        # ---- menu card
+        card = R(1120, 70, 440, 640)
+        sh = pygame.Surface(card.size, pygame.SRCALPHA)
+        sh.fill((0, 0, 0, 214))
+        screen.blit(sh, card.topleft)
+        pygame.draw.rect(screen, (200, 200, 194), card, 1)
+        pygame.draw.rect(screen, (200, 200, 194), card.inflate(-8, -8), 1)
+        gui.label((card.x + 22, card.y + 18), "SELECT YOUR SERVICE", 14, (160, 160, 154), "eng")
+        y = card.y + 44
+        for fid, a, b in (("US", "UNITED STATES", "NORAD · AIR DEFENSE COMMAND"),
+                          ("USSR", "СССР · SOVIET UNION", "ВОЙСКА ПВО СТРАНЫ · PVO STRANY")):
+            r = R(card.x + 20, y, card.w - 40, 58)
+            if film_item(gui, r, "SELECT " + ("NORAD" if fid == "US" else "ПВО"), a, 24, self.faction == fid, top=2):
+                self.faction = fid
+                self.app.audio.play("key")
+            col = (60, 60, 58) if self.faction == fid else (150, 150, 146)
+            gui.label((r.x + 16, r.y + 37), b, 13, col, "eng_r")
+            y += 64
+        y += 14
+        pygame.draw.line(screen, (120, 120, 116), (card.x + 22, y), (card.right - 22, y))
+        y += 14
+        note = ""
+        for key, desc in MENU_ITEMS:
+            r = R(card.x + 20, y, card.w - 40, 44)
+            enabled = key != "CONTINUE" or self.app.has_save()
+            if gui.hover(r):
+                note = desc
+            if film_item(gui, r, key, key, 28, enabled=enabled):
+                self._choose(key)
+            y += 50
+        if note:
+            for i, ln in enumerate(TEXT.wrap(note, card.w - 50, 13, "eng_r")[:3]):
+                gui.label((card.x + 24, card.bottom - 62 + i * 17), ln, 13, (176, 176, 170), "eng_r")
+        gui.label((W - 20, H - 22), "v1.0 · GPL-3.0 · offline, no telemetry", 11, (110, 110, 106), "eng_r", "right")
+
+    def _choose(self, key: str) -> None:
+        app = self.app
+        if key == "SCENARIOS":
+            app.push(OperationsScene(app, self.faction, "scenario"))
+        elif key == "TRAINING":
+            app.push(OperationsScene(app, self.faction, "training"))
+        elif key == "CAMPAIGN":
+            app.push(CampaignScene(app, self.faction))
+        elif key == "ALERT DUTY":
+            app.push(AlertDutyScene(app, self.faction))
+        elif key == "CONTINUE":
+            app.load_game()
+        elif key == "OPERATOR'S MANUAL":
+            app.push(ManualScene(app, self))
+        elif key == "SETTINGS":
+            app.push(SettingsScene(app, self))
+        elif key == "QUIT":
+            app.running = False
+
+
+# ====================================================================== OPERATIONS FILE
+class OperationsScene(Scene):
+    """Scenario selection laid out as an operations file on a desk: era tabs,
+    index cards, and the dossier of the selected watch."""
+
+    def __init__(self, app, faction: str, kind: str = "scenario"):
+        super().__init__(app)
+        self.faction = faction
+        self.kind = kind
+        self.theme = theme_for(faction)
+        self.items = [s for s in scenario.list_scenarios() if s["faction"] == faction and
+                      (s["kind"] == "training") == (kind == "training")]
+        self.items.sort(key=lambda s: (s["start"], s["order"]))
+        self.sel_id = self.items[0]["id"] if self.items else ""
+        self.desk = None
+        self.cache: dict[str, pygame.Surface] = {}
+        app.audio.play("tty")
+
+    def _desk(self) -> pygame.Surface:
+        if self.desk is None:
+            import numpy as np
+            from .cinema import noise_surface
+            n = noise_surface((W, H), 5.0, 31, scale=3) + noise_surface((W, H), 9.0, 32, scale=40)
+            base = 30.0 if self.faction == "US" else 26.0
+            arr = np.clip(base + n, 0, 255)
+            tint = (1.0, 0.92, 0.8) if self.faction == "US" else (0.86, 0.9, 0.95)
+            img = np.stack([arr * tint[0], arr * tint[1], arr * tint[2]], axis=2)
+            self.desk = pygame.surfarray.make_surface(np.clip(img, 0, 255).astype(np.uint8))
+            self.desk.blit(fx.vignette((W, H), 200), (0, 0))
+        return self.desk
+
+    def _dossier(self, it) -> pygame.Surface:
+        key = it["id"]
+        if key not in self.cache:
+            from .cinema import framed_photo, paper, photo, stamp
+            pr = pygame.Surface((800, 760), pygame.SRCALPHA)
+            pg = paper((780, 740), (232, 226, 206) if self.faction == "US" else (226, 222, 200), seed=len(key))
+            pr.blit(pg, (10, 10))
+            ink = (40, 34, 26)
+            ru = self.faction == "USSR"
+            head = "СОВЕРШЕННО СЕКРЕТНО" if ru else "SECRET"
+            hs = TEXT.render(head, 16, (150, 30, 24), "eng")
+            pr.blit(hs, (400 - hs.get_width() // 2, 28))
+            if ru:
+                ex = TEXT.render("Экз. № 1 · TOP SECRET", 11, (110, 40, 30), "eng_r")
+                pr.blit(ex, (400 - ex.get_width() // 2, 48))
+            title = TEXT.render(it["title"].upper(), 30, ink, "title")
+            pr.blit(title, (44, 74))
+            pr.blit(TEXT.render(it["subtitle"], 16, (80, 70, 56), "typewriter" if not ru else "cyr"), (46, 118))
+            types = it["photo"] or []
+            if types:
+                cat = __import__("searchtrack.sim.world", fromlist=["catalog"]).catalog()
+                tl = [(t, cat.aircraft[t].role if t in cat.aircraft else "") for t in types]
+                img = photo(tl, (380, 250), seed=len(key) * 7, night=it.get("night", False))
+                ph = framed_photo(img, it.get("photo_caption", ""), angle=-2.5)
+                pr.blit(ph, (380, 150))
+            body = TEXT.wrap(it["summary"], 320 if types else 700, 15, "typewriter" if not ru else "cyr")
+            y = 160
+            for ln in body[:16]:
+                pr.blit(TEXT.render(ln, 15, ink, "typewriter" if not ru else "cyr"), (46, y))
+                y += 21
+            y = max(y, 470) + 10
+            facts = [f"THEATER    {it['theater'].replace('_', ' ').upper()}",
+                     f"DATE       {it['start'][:10]}",
+                     f"DURATION   {it['duration_min']} MIN" + ("   NIGHT" if it.get("night") else ""),
+                     f"OBJECTIVES {it['n_objectives']}",
+                     f"DIFFICULTY {'■' * int(it['difficulty'])}{'□' * (4 - int(it['difficulty']))}"]
+            for ln in facts:
+                pr.blit(TEXT.render(ln, 15, ink, "cyr"), (46, y))
+                y += 22
+            st = stamp("ДЛЯ СЛУЖЕБНОГО" if ru else "OPERATIONS", (160, 32, 26), 26, -9,
+                       "FOR OFFICIAL USE" if ru else "NORAD · ADC", seed=len(key))
+            pr.blit(st, (520, 560))
+            self.cache[key] = pr
+        return self.cache[key]
+
+    def draw(self, screen):
+        gui = self.app.gui
+        th = self.theme
+        gui.set_theme(th)
+        screen.blit(self._desk(), (0, 0))
+        hdr = ("ОПЕРАТИВНЫЕ ЗАДАЧИ · OPERATIONS FILE" if self.faction == "USSR" else "OPERATIONS FILE") + \
+            ("  —  TRAINING" if self.kind == "training" else "")
+        gui.label((60, 30), hdr, 30, (226, 220, 200), "title")
+        y = 96
+        last_era = None
+        for it in self.items:
+            era = it["era"] if self.kind != "training" else "TRAINING"
+            if era != last_era:
+                gui.label((62, y), era.upper(), 16, (180, 170, 150), "eng")
+                y += 26
+                last_era = era
+            r = R(60, y, 520, 70)
+            sel = it["id"] == self.sel_id
+            gui.drawn["CARD " + it["id"]] = r
+            pygame.draw.rect(screen, (0, 0, 0), r.move(3, 4))
+            pygame.draw.rect(screen, (238, 232, 212) if sel else (206, 200, 180), r)
+            pygame.draw.line(screen, (190, 120, 110), (r.x, r.y + 22), (r.right, r.y + 22))
+            ink = (30, 26, 20)
+            gui.label((r.x + 12, r.y + 2), it["start"][:10] + "  ·  " + it["theater"].replace("_", " ").upper(), 13,
+                      (110, 60, 50), "eng")
+            gui.label((r.x + 12, r.y + 26), it["title"], 22, ink, "title")
+            gui.label((r.right - 12, r.y + 2), it["kind"].upper(), 12, (110, 60, 50), "eng", "right")
+            if sel:
+                pygame.draw.rect(screen, (200, 60, 40), r, 3)
+            if gui.clicked(r):
+                self.sel_id = it["id"]
+            y += 80
+        cur = next((s for s in self.items if s["id"] == self.sel_id), None)
+        if cur is not None:
+            d = self._dossier(cur)
+            screen.blit(d, (640, 40))
+            if gui.button(R(1280, 806, 260, 44), "BRIEFING >>", color=th.lamp_green, size=15):
+                self.app.start_briefing(cur["id"])
+        if gui.button(R(60, 820, 160, 40), "BACK", size=13) or any(e.key == pygame.K_ESCAPE for e in gui.keys):
+            self.app.pop()
 
 
 # ====================================================================== MANUAL
@@ -209,69 +378,118 @@ class SettingsScene(Scene):
 
 
 # ====================================================================== BRIEFING
+def _desk_surface(faction: str, seed: int = 31) -> pygame.Surface:
+    import numpy as np
+    from .cinema import noise_surface
+    n = noise_surface((W, H), 5.0, seed, scale=3) + noise_surface((W, H), 9.0, seed + 1, scale=40)
+    base = 30.0 if faction == "US" else 26.0
+    arr = np.clip(base + n, 0, 255)
+    tint = (1.0, 0.92, 0.8) if faction == "US" else (0.86, 0.9, 0.95)
+    img = np.stack([arr * tint[0], arr * tint[1], arr * tint[2]], axis=2)
+    d = pygame.surfarray.make_surface(np.clip(img, 0, 255).astype(np.uint8))
+    d.blit(fx.vignette((W, H), 200), (0, 0))
+    return d
+
+
 class BriefingScene(Scene):
-    def __init__(self, app, sid: str):
+    def __init__(self, app, sid: str = "", world=None, meta: dict | None = None):
         super().__init__(app)
-        self.world = scenario.build_world(sid)
+        self.world = world if world is not None else scenario.build_world(sid)
+        self.meta = meta or next((s for s in scenario.list_scenarios() if s["id"] == self.world.scenario_id), {})
         self.theme = theme_for(self.world.faction)
         self.t = 0.0
-        self.vig = vignette((W, H), 170)
+        self.desk = _desk_surface(self.world.faction)
+        self.orders = None
+        self.extras = None
         app.audio.play("tty")
 
     def update(self, dt):
         self.t += dt
 
+    def _orders_paper(self) -> pygame.Surface:
+        from .cinema import paper, stamp
+        w = self.world
+        ru = w.faction == "USSR"
+        pg = paper((860, 830), (234, 228, 208) if not ru else (228, 224, 202), seed=7)
+        ink = (40, 34, 26)
+        head = "СОВЕРШЕННО СЕКРЕТНО · TOP SECRET" if ru else "TOP SECRET — OPERATIONAL IMMEDIATE"
+        t = TEXT.render(head, 16, (150, 30, 24), "eng")
+        pg.blit(t, (430 - t.get_width() // 2, 18))
+        pg.blit(TEXT.render(w.title.upper(), 34, ink, "title"), (40, 46))
+        pg.blit(TEXT.render(w.theater.name, 15, (90, 80, 64), "eng_r"), (42, 94))
+        pygame.draw.line(pg, (120, 100, 80), (40, 120), (820, 120), 1)
+        st = stamp("СЕКРЕТНО" if ru else "SECRET", (160, 32, 26), 28, 7, "SECRET" if ru else "", seed=3)
+        pg.blit(st, (640, 30))
+        return pg
+
     def draw(self, screen):
         gui = self.app.gui
-        gui.set_theme(self.theme) if gui.theme is not self.theme else None
+        gui.set_theme(self.theme)
         th = self.theme
         w = self.world
-        screen.fill((10, 12, 12))
-        inner = gui.panel(R(30, 24, W - 60, H - 48), w.title.upper(), w.theater.name)
-        paper = R(inner.x, inner.y, 900, inner.h - 10)
-        pygame.draw.rect(screen, (226, 222, 204) if w.faction == "US" else (214, 210, 186), paper)
-        for yy in range(paper.y + 30, paper.bottom, 32):
-            pygame.draw.line(screen, (205, 200, 182), (paper.x, yy), (paper.right, yy))
-        n = int(self.t * 160)
+        ru = w.faction == "USSR"
+        screen.blit(self.desk, (0, 0))
+        if self.orders is None:
+            self.orders = self._orders_paper()
+        screen.blit(self.orders, (34, 30))
+        n = int(self.t * 170)
         text = w.briefing.strip()
         shown = text[:n] + ("_" if n < len(text) and int(self.t * 4) % 2 == 0 else "")
-        gui.wrapped(paper.inflate(-40, -30), shown, 15, (40, 34, 26), "tty" if w.faction == "US" else "cyr")
-        side = R(paper.right + 16, inner.y, inner.right - paper.right - 16, inner.h - 70)
-        gui.glass(side)
-        y = side.y + 12
-        gui.label((side.x + 12, y), "OBJECTIVES", 14, th.engraving, "ui_bold")
-        y += 26
+        kind = th.doc_font
+        gui.wrapped(R(74, 162, 790, 690), shown, 15, (40, 34, 26), kind, line_h=21, scroll_id="brief")
+        # right column: photograph, situation map, objectives card
+        if self.extras is None:
+            from .cinema import framed_photo, photo, situation_map
+            types = self.meta.get("photo") or []
+            ph = None
+            if types:
+                tl = [(t, w.catalog.aircraft[t].role if t in w.catalog.aircraft else "") for t in types]
+                ph = framed_photo(photo(tl, (300, 186), seed=len(w.scenario_id) * 3, night=w.weather.night),
+                                  self.meta.get("photo_caption", ""), angle=3.0)
+            self.extras = (ph, situation_map(w, (560, 330)))
+        ph, smap = self.extras
+        pygame.draw.rect(screen, (0, 0, 0), R(920, 60, 560, 330).move(4, 5))
+        screen.blit(smap, (920, 60))
+        gui.label((930, 36), "SITUATION MAP · OWN FORCES" if not ru else "КАРТА ОБСТАНОВКИ · OWN FORCES", 13,
+                  (200, 192, 170), "eng")
+        if ph is not None:
+            screen.blit(ph, (1250, 140))
+        card = R(920, 410, 640, 300)
+        pygame.draw.rect(screen, (0, 0, 0), card.move(4, 5))
+        pygame.draw.rect(screen, (238, 234, 216), card)
+        for yy in range(card.y + 34, card.bottom, 22):
+            pygame.draw.line(screen, (190, 200, 214), (card.x, yy), (card.right, yy))
+        pygame.draw.line(screen, (210, 120, 110), (card.x + 26, card.y), (card.x + 26, card.bottom))
+        gui.label((card.x + 34, card.y + 8), "ЗАДАЧИ · OBJECTIVES" if ru else "OBJECTIVES", 15, (120, 40, 30), "eng")
+        y = card.y + 36
         for o in w.objectives:
             if o.hidden:
                 continue
-            lines = TEXT.wrap(f"• {o.text} ({o.points})", side.w - 30, 13)
-            for ln in lines:
-                gui.label((side.x + 14, y), ln, 13, th.text)
+            for ln in TEXT.wrap(f"{o.text} ({o.points})", card.w - 44, 13, "eng_r"):
+                if y > card.bottom - 20:
+                    break
+                gui.label((card.x + 34, y), ln, 13, (36, 32, 26), "eng_r")
                 y += 18
             y += 4
-        y += 10
-        gui.label((side.x + 12, y), "FORCES", 14, th.engraving, "ui_bold")
-        y += 24
-        for q in w.squadrons.values():
-            gui.label((side.x + 14, y), f"{q.name}: {sum(q.ready.values())} × {q.type_id} at {w.airbases[q.base_id].name}",
-                      12, th.text)
-            y += 17
+        # forces strip
+        fr = R(920, 724, 640, 58)
+        forces = ", ".join(f"{sum(q.ready.values())}× {q.type_id} ({q.name})" for q in w.squadrons.values())
         types = {}
         for s in w.radars.values():
             types[s.type_id] = types.get(s.type_id, 0) + 1
-        gui.label((side.x + 14, y), "Radars: " + ", ".join(f"{v}× {k}" for k, v in types.items()), 12, th.text)
-        y += 17
+        gui.label((fr.x, fr.y), "FORCES: " + forces[:110], 12, (200, 192, 170), "eng_r")
+        gui.label((fr.x, fr.y + 18), "RADARS: " + ", ".join(f"{v}× {k}" for k, v in types.items())[:110], 12,
+                  (200, 192, 170), "eng_r")
         if w.sams:
-            st = {}
+            stt = {}
             for s in w.sams.values():
-                st[s.type_id] = st.get(s.type_id, 0) + 1
-            gui.label((side.x + 14, y), "Missiles: " + ", ".join(f"{v}× {k}" for k, v in st.items()), 12, th.text)
-        by = inner.bottom - 50
-        if gui.button(R(side.x, by, 220, 40), "TAKE THE WATCH >>", color=th.lamp_green, size=14):
+                stt[s.type_id] = stt.get(s.type_id, 0) + 1
+            gui.label((fr.x, fr.y + 36), "MISSILES: " + ", ".join(f"{v}× {k}" for k, v in stt.items()), 12,
+                      (200, 192, 170), "eng_r")
+        if gui.button(R(1260, 806, 300, 54), "TAKE THE WATCH >>", color=th.lamp_green, size=15):
             self.app.start_command(self.world)
-        if gui.button(R(side.right - 140, by, 140, 40), "BACK", size=13):
+        if gui.button(R(920, 812, 150, 44), "BACK", size=13) or any(e.key == pygame.K_ESCAPE for e in gui.keys):
             self.app.pop()
-        screen.blit(self.vig, (0, 0))
 
 
 # ====================================================================== COMMAND CENTER
@@ -498,6 +716,7 @@ class CommandScene(Scene):
         self._housing(gui)
         mr = self.map.rect
         if self.mode == "map":
+            self.map.lang_mode = gui.lang_mode
             self.map.draw(screen, self.sel, self.render_t)
             self._finish_display(gui, mr)
             self.map.annotate(screen, self.sel)
@@ -807,80 +1026,148 @@ class CommandScene(Scene):
 
 
 # ====================================================================== DEBRIEF
+GRADE_RU = {"5 — EXCELLENT": ("ОТЛИЧНО", "EXCELLENT"), "4 — GOOD": ("ХОРОШО", "GOOD"),
+            "3 — SATISFACTORY": ("УДОВЛЕТВОРИТЕЛЬНО", "SATISFACTORY"),
+            "2 — UNSATISFACTORY": ("НЕУДОВЛЕТВОРИТЕЛЬНО", "UNSATISFACTORY")}
+
+
+def headlines(world, rep) -> list[tuple[str, str]]:
+    """(headline, standfirst) for the newspaper clipping: scenario-defined ones first."""
+    out = []
+    for hl in world.headlines:
+        try:
+            if scenario.cond(world, hl.get("cond", {"type": "time", "t": 0})):
+                if world.faction == "USSR" and hl.get("text_ru"):
+                    out.append((hl["text_ru"], hl.get("sub", "")))
+                else:
+                    out.append((hl["text"], hl.get("sub", "")))
+        except (KeyError, TypeError):
+            continue
+    c = rep["consequences"]
+    if not out:
+        if c["civil_losses"]:
+            out.append(("AIRLINER DOWN — AIR DEFENSE UNDER FIRE" if world.faction == "US" else
+                        "ГИБЕЛЬ ПАССАЖИРСКОГО САМОЛЁТА", "A civil aircraft was lost during the watch. An inquiry has been ordered."))
+        elif c["fratricide"]:
+            out.append(("FRIENDLY FIRE OVER THE SECTOR" if world.faction == "US" else "ОГОНЬ ПО СВОИМ",
+                        "Own aircraft were lost to own weapons. The commander has been summoned."))
+        elif c["kills"]:
+            out.append(("INTRUDER DESTROYED" if world.faction == "US" else "НАРУШИТЕЛЬ ГРАНИЦЫ УНИЧТОЖЕН",
+                        f"{len(c['kills'])} aircraft destroyed during the watch."))
+    return out
+
+
 class DebriefScene(Scene):
-    def __init__(self, app, world):
+    def __init__(self, app, world, on_done=None):
         super().__init__(app)
         self.world = world
         self.theme = theme_for(world.faction)
         app.gui.set_theme(self.theme)
         self.rep = aar.build(world)
-        self.map = MapView(world, self.theme, R(830, 84, 740, 560))
-        self.snap_i = len(world.stats.truth_snaps) - 1
+        self.map = MapView(world, self.theme, R(874, 84, 690, 500))
+        self.snap_i = 0
+        self.playing = True
+        self.play_t = 0.0
         self.tab = "summary"
+        self.desk = _desk_surface(world.faction, 41)
+        self.paper = None
+        self.news = headlines(world, self.rep)
+        self.on_done = on_done
         app.audio.play("tty")
+
+    def update(self, dt):
+        snaps = self.world.stats.truth_snaps
+        if self.playing and snaps:
+            self.play_t += dt
+            if self.play_t > 0.05:
+                self.play_t = 0.0
+                self.snap_i += 1
+                if self.snap_i >= len(snaps) - 1:
+                    self.snap_i = len(snaps) - 1
+                    self.playing = False
+
+    def _paper(self):
+        from .cinema import paper, stamp
+        w = self.world
+        rep = self.rep
+        ru = w.faction == "USSR"
+        pg = paper((800, 840), (234, 228, 208) if not ru else (228, 224, 202), seed=13)
+        ink = (40, 34, 26)
+        t = TEXT.render("РАЗБОР · AFTER-ACTION REVIEW" if ru else "AFTER-ACTION REPORT", 16, (150, 30, 24), "eng")
+        pg.blit(t, (400 - t.get_width() // 2, 16))
+        pg.blit(TEXT.render(w.title.upper(), 32, ink, "title"), (36, 40))
+        pg.blit(TEXT.render(f"{rep['score']} / {rep['total']} points · {rep['reason']}", 15, (80, 70, 56), "eng_r"),
+                (38, 86))
+        g = rep["grade"]
+        good = rep["score"] >= rep["total"] * 0.55
+        col = (30, 60, 150) if good else (170, 30, 26)
+        if ru:
+            main, sub = GRADE_RU.get(g, (g, ""))
+        else:
+            main, sub = g, "EVALUATION"
+        st = stamp(main, col, 30, -6, sub, seed=5)
+        pg.blit(st, (790 - st.get_width(), 52))
+        pygame.draw.line(pg, (120, 100, 80), (36, 120), (764, 120), 1)
+        return pg
 
     def draw(self, screen):
         gui = self.app.gui
         th = self.theme
         w = self.world
         rep = self.rep
-        screen.fill(th.bg)
-        inner = gui.panel(R(14, 14, W - 28, H - 28), "AFTER-ACTION REPORT" if w.faction == "US" else
-                          "РАЗБОР · AFTER-ACTION REVIEW", w.title)
-        gui.label((inner.x + 4, inner.y + 2), f"{rep['grade']}", 30, th.accent if rep["score"] < rep["total"] * 0.55 else
-                  th.ok, "ui_bold")
-        gui.label((inner.x + 4, inner.y + 42), f"{rep['score']} / {rep['total']} points · {rep['reason']}", 14, th.engraving)
-        x = inner.x + 520
+        gui.set_theme(th)
+        screen.blit(self.desk, (0, 0))
+        if self.paper is None:
+            self.paper = self._paper()
+        screen.blit(self.paper, (30, 30))
+        ink = (40, 34, 26)
+        x = 62
         for t, lab in (("summary", "SUMMARY"), ("ident", "DETECTION & ID"), ("timeline", "TIMELINE")):
-            if gui.button(R(x, inner.y + 6, 170, 30), lab, lit=self.tab == t):
+            if gui.button(R(x, 162, 200, 34), lab, lit=self.tab == t, size=12):
                 self.tab = t
-            x += 174
-        body = R(inner.x, inner.y + 70, 800, inner.h - 120)
+            x += 210
+        body = R(66, 212, 740, 640)
         if self.tab == "summary":
             lines = []
             for o in rep["objectives"]:
                 mark = {"done": "[+]", "failed": "[x]", "open": "[ ]"}[o["status"]]
                 pen = f"  (−{o['penalty']})" if o["status"] == "failed" and o["penalty"] else ""
                 lines.append((f"{mark} {o['text']} — {o['points']} pts{pen}  {o['t']}",
-                              th.ok if o["status"] == "done" else th.alert))
+                              (30, 90, 40) if o["status"] == "done" else (150, 30, 24)))
             e = rep["expenditure"]
             c = rep["consequences"]
             cm = rep["command"]
-            lines += [("", th.text), (f"Sorties {e['sorties']} · air-to-air shots {e['aam_shots']} · SAMs {e['sam_missiles']} · "
-                                       f"tracks {e['tracks_initiated']} ({e['false_tracks']} false)", th.text),
+            lines += [("", ink), (f"Sorties {e['sorties']} · air-to-air shots {e['aam_shots']} · SAMs {e['sam_missiles']} · "
+                                  f"tracks {e['tracks_initiated']} ({e['false_tracks']} false)", ink),
                       (f"Civil losses {c['civil_losses']} · fratricide {c['fratricide']} · overdue acknowledgements "
                        f"{cm['unacked_overdue']} · reports to HQ {cm['reports_to_hq']} · HQ confidence {cm['hq_credibility']}",
-                       th.text)]
+                       ink)]
             for k in c["kills"]:
-                lines.append((f"  destroyed: {k['victim']} — by {k['by']}", th.accent))
+                lines.append((f"  destroyed: {k['victim']} — by {k['by']}", (150, 30, 24)))
             for rq in cm["requests"]:
                 lines.append((f"  request {rq['kind']} {rq['ref']} at {rq['t']}: {'granted' if rq['granted'] else 'denied'} — "
-                              f"{rq['reason']}", th.text_dim))
-            gui.log("deb_s", body, lines, 13, "ui", follow=False)
+                              f"{rq['reason']}", (90, 80, 64)))
+            self._typed(gui, body, lines, "deb_s")
         elif self.tab == "ident":
-            rows = []
+            lines = [("TRUTH (REVEALED)                       TRACK  ADIZ   ID      DELAY  FINAL       VID   FATE", (120, 40, 30))]
             for r in rep["identification"]:
                 d = f"{r['id_delay_s'] / 60:.1f}m" if r["id_delay_s"] is not None else "—"
-                rows.append([r["truth"][:40], r["first_track"], r["adiz"], r["first_id"], d, r["final_id"], r["vid"],
-                             r["fate"]])
-            gui.table("deb_id", R(body.x, body.y, body.w, 330), [("TRUTH (revealed)", 290), ("TRACK", 72), ("ADIZ", 72),
-                                                                 ("ID", 72), ("DELAY", 56), ("FINAL", 100),
-                                                                 ("VID", 72), ("FATE", 70)], rows, size=11)
-            why = [(f"{r['truth']}: never tracked — {r['why_untracked']}", th.accent) for r in rep["identification"]
-                   if r["why_untracked"]]
-            gui.log("deb_why", R(body.x, body.y + 340, body.w, body.h - 340), why or
-                    [("Every aircraft in the area was tracked at some point.", th.text)], 12)
+                lines.append((f"{r['truth'][:38]:<38} {r['first_track']:<6} {r['adiz']:<6} {r['first_id']:<7} {d:<6} "
+                              f"{r['final_id']:<11} {r['vid']:<5} {r['fate']}", ink))
+            for r in rep["identification"]:
+                if r["why_untracked"]:
+                    lines.append((f"{r['truth']}: never tracked — {r['why_untracked']}", (150, 30, 24)))
+            self._typed(gui, body, lines, "deb_id", kind="ui", size=11)
         else:
-            gui.log("deb_t", body, [(f"{e['t']} [{e['cat']}] {e['text']}", th.text) for e in rep["timeline"]], 12,
-                    follow=False)
-        # truth replay
-        snaps = w.stats.truth_snaps
+            self._typed(gui, body, [(f"{e['t']} [{e['cat']}] {e['text']}", ink) for e in rep["timeline"]], "deb_t", size=12)
+        # ---- truth replay device
         mr = self.map.rect
         gui.glass(mr, (0, 0, 0))
         if self.map._base_key is None:
             self.map._base = self.map._build_base()
             self.map._base_key = 1
         screen.blit(self.map._base, mr.topleft)
+        snaps = w.stats.truth_snaps
         screen.set_clip(mr)
         if snaps:
             self.snap_i = max(0, min(self.snap_i, len(snaps) - 1))
@@ -890,7 +1177,7 @@ class DebriefScene(Scene):
                 for aid, x, y, alt, side, kind in acs:
                     paths.setdefault(aid, []).append(self.map.w2s(x, y))
                     sides[aid] = (side, kind)
-            cols = {"blue": (120, 180, 255), "red": (255, 90, 80), "civil": (220, 220, 200), "neutral": (170, 170, 170)}
+            cols = {"blue": (120, 180, 255), "red": (255, 90, 80), "civil": (230, 230, 210), "neutral": (170, 170, 170)}
             for aid, pts in paths.items():
                 side, kind = sides[aid]
                 col = cols.get(side, (200, 200, 200)) if kind != "ghost" else (200, 120, 255)
@@ -906,19 +1193,83 @@ class DebriefScene(Scene):
                 sx, sy = self.map.w2s(x, y)
                 pygame.draw.rect(screen, th.id_colors.get(idn, th.text), (sx - 5, sy - 5, 10, 10), 1)
         screen.set_clip(None)
-        gui.label((mr.x, mr.bottom + 6), "TRUTH REPLAY — lines: what really flew · squares: your tracks", 12, th.engraving)
+        fx.bloom(screen, mr, 90)
+        gui.crt_overlay(mr)
+        gui.label((mr.x, mr.y - 30), "TRUTH REPLAY — lines: what really flew · squares: your tracks", 14,
+                  (210, 202, 180), "eng")
         if snaps:
-            sr = R(mr.x, mr.bottom + 28, mr.w, 22)
-            pygame.draw.rect(screen, (0, 0, 0), sr)
-            fx = sr.x + int(sr.w * self.snap_i / max(1, len(snaps) - 1))
-            pygame.draw.rect(screen, th.accent, (fx - 4, sr.y, 8, sr.h))
-            if gui.down and sr.collidepoint(gui.mouse):
+            sr = R(mr.x + 60, mr.bottom + 22, mr.w - 60, 22)
+            pygame.draw.rect(screen, (0, 0, 0), sr.inflate(4, 4), border_radius=3)
+            pygame.draw.rect(screen, (40, 38, 34), sr, border_radius=3)
+            fxp = sr.x + int(sr.w * self.snap_i / max(1, len(snaps) - 1))
+            pygame.draw.rect(screen, th.accent, (sr.x, sr.y + 8, fxp - sr.x, 6))
+            pygame.draw.rect(screen, (230, 226, 210), (fxp - 5, sr.y - 2, 10, sr.h + 4), border_radius=2)
+            if gui.down and sr.inflate(0, 10).collidepoint(gui.mouse):
                 self.snap_i = int((gui.mouse[0] - sr.x) / sr.w * (len(snaps) - 1))
-            gui.label((sr.right, sr.bottom + 4), f"T+{snaps[self.snap_i][0] // 60:.0f} min", 11, th.engraving, align="right")
-        if gui.button(R(inner.right - 200, inner.bottom - 40, 200, 36), "BACK TO TITLE", size=13):
-            self.app.to_title()
-        if gui.button(R(inner.right - 410, inner.bottom - 40, 200, 36), "SAVE REPORT", size=13,
+                self.playing = False
+            gui.label((sr.right, sr.bottom + 6), f"T+{snaps[self.snap_i][0] // 60:.0f} min", 12, (210, 202, 180), "eng",
+                      align="right")
+            if gui.button(R(mr.x, mr.bottom + 16, 50, 34), "II" if self.playing else ">", lit=self.playing, size=12,
+                          tip="Play / pause the replay"):
+                self.playing = not self.playing
+                if self.snap_i >= len(snaps) - 1:
+                    self.snap_i = 0
+        # ---- newspaper clipping
+        if self.news:
+            from .cinema import paper
+            np_r = R(874, 650, 690, 150)
+            pg = paper(np_r.size, (220, 214, 194), seed=21, age=1.4)
+            screen.blit(pg, np_r.topleft)
+            mast = "ВЕСТНИК ПВО" if w.faction == "USSR" else "THE MORNING SENTINEL"
+            gui.label((np_r.centerx, np_r.y + 6), mast, 14, (60, 54, 44), "title_ru" if w.faction == "USSR" else "title",
+                      "center")
+            pygame.draw.line(screen, (60, 54, 44), (np_r.x + 10, np_r.y + 28), (np_r.right - 10, np_r.y + 28), 2)
+            head, sub = self.news[0]
+            fs = 34
+            while fs > 18 and TEXT.width(head, fs, "title") > np_r.w - 30:
+                fs -= 2
+            gui.label((np_r.centerx, np_r.y + 34), head, fs, (24, 20, 16), "title", "center")
+            if sub:
+                gui.label((np_r.centerx, np_r.y + 44 + fs), sub[:110], 13, (60, 54, 44), "eng_r", "center")
+        by = 818
+        if self.on_done is not None:
+            if gui.button(R(1310, by, 254, 44), "CONTINUE", color=th.lamp_green, size=14, tip="Back to the campaign"):
+                self.on_done()
+        else:
+            if gui.button(R(1310, by, 254, 44), "BACK TO TITLE", size=13):
+                self.app.to_title()
+        if gui.button(R(874, by, 200, 44), "SAVE REPORT", size=13,
                       tip="Write the report as a text file in the saves folder."):
             p = self.app.save_dir() / f"aar_{w.scenario_id}.txt"
             p.write_text(aar.as_text(rep), encoding="utf-8")
             self.app.flash(f"Report written to {p}")
+
+    def _typed(self, gui, r, lines, sid, kind="eng_r", size=14):
+        wrapped = []
+        for text, col in lines:
+            for ln in TEXT.wrap(text, r.w - 10, size, kind):
+                wrapped.append((ln, col))
+        lh = size + 6
+        off = gui._scroll(sid, r, len(wrapped) * lh)
+        gui.screen.set_clip(r)
+        y = r.y - off
+        for ln, col in wrapped:
+            if r.y - lh <= y <= r.bottom:
+                gui.label((r.x, y), ln, size, col, kind)
+            y += lh
+        gui.screen.set_clip(None)
+
+
+# ====================================================================== (filled in below)
+class CampaignScene(Scene):  # pragma: no cover - replaced by the campaign module
+    def __init__(self, app, faction):
+        super().__init__(app)
+        app.pop() if False else None
+        self.inner = OperationsScene(app, faction, "scenario")
+
+    def draw(self, screen):
+        self.app.scenes[-1] = self.inner
+
+
+class AlertDutyScene(CampaignScene):  # pragma: no cover
+    pass

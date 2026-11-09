@@ -141,12 +141,38 @@ class MapView:
         return self.w2s(px, py)
 
     # ------------------------------------------------------------ base layer
+    def _nm(self, obj) -> str:
+        """Russian lettering on the Soviet board (cosmetic), English elsewhere."""
+        ru = obj.get("name_ru", "") if isinstance(obj, dict) else getattr(obj, "name_ru", "")
+        name = obj["name"] if isinstance(obj, dict) else obj.name
+        if ru and self.theme.faction == "USSR" and getattr(self, "lang_mode", "ru+en") != "en":
+            return ru
+        return name
+
+    def _background(self) -> pygame.Surface:
+        import numpy as np
+        board = self.theme.map_style == "board"
+        w, h = self.rect.size
+        yy, xx = np.meshgrid(np.arange(h, dtype=np.float32), np.arange(w, dtype=np.float32))
+        d = np.sqrt(((xx - w * 0.5) / (w * 0.6)) ** 2 + ((yy - h * 0.45) / (h * 0.6)) ** 2)
+        f = np.clip(1.0 - d * 0.75, 0.0, 1.0)[..., None]
+        rng = np.random.default_rng(3)
+        if board:
+            inner, outer = np.array((26, 50, 52), np.float32), np.array((7, 16, 18), np.float32)
+            noise = rng.normal(0, 2.2, (w, h, 1)).astype(np.float32)
+        else:
+            inner, outer = np.array((5, 17, 20), np.float32), np.array((1, 4, 5), np.float32)
+            noise = rng.normal(0, 0.8, (w, h, 1)).astype(np.float32)
+        img = outer + (inner - outer) * f + noise
+        return pygame.surfarray.make_surface(np.clip(img, 0, 255).astype(np.uint8))
+
     def _build_base(self) -> pygame.Surface:
         th = self.theme
         w = self.world
-        surf = pygame.Surface(self.rect.size)
         board = th.map_style == "board"
-        surf.fill((16, 30, 32) if board else (3, 9, 8))
+        if getattr(self, "_bg_src", None) is None or self._bg_src.get_size() != self.rect.size:
+            self._bg_src = self._background()
+        surf = self._bg_src.copy()
         ox, oy = self.rect.topleft
 
         def tp(x, y):
@@ -175,13 +201,13 @@ class MapView:
                 while gy <= y1:
                     lab = tracking.grid_label(w, gx + 1, gy + 1)[0]
                     sx, sy = tp(gx + 4, gy + step - 4)
-                    surf.blit(TEXT.render(lab, 15, (70, 120, 118), "cyr"), (sx, sy))
+                    surf.blit(TEXT.render(lab, 16, (76, 128, 124), "eng"), (sx + 2, sy - 2))
                     gy += step
                 gx += step
         mp = w.theater.map
-        styles = [("rivers", (40, 70, 90) if board else (20, 50, 50), 1), ("lakes", th.map_line, 1),
-                  ("states", th.map_line if board else (24, 70, 60), 1), ("borders", th.map_coast, 1 if board else 2),
-                  ("coast", th.map_coast, 1)]
+        styles = [("rivers", (44, 82, 104) if board else (16, 46, 54), 1), ("lakes", th.map_line, 1),
+                  ("states", (70, 92, 84) if board else (22, 62, 70), 1), ("borders", th.map_coast, 2),
+                  ("coast", th.map_coast, 2 if board else 1)]
         for layer, col, wd in styles:
             for seg in mp.get(layer, []):
                 if len(seg) < 4:
@@ -191,11 +217,11 @@ class MapView:
         # cities
         for c in w.cities:
             sx, sy = tp(c["x"], c["y"])
-            col = (150, 150, 120) if board else (60, 150, 120)
-            pygame.draw.circle(surf, col, (sx, sy), 2 + c["size"])
+            col = (176, 180, 150) if board else (70, 170, 170)
+            pygame.draw.circle(surf, col, (sx, sy), 2 + c["size"], 0 if c["size"] >= 2 else 1)
             if self.layers["labels"]:
-                surf.blit(TEXT.render(c["name"], 11 + (1 if c["size"] >= 2 else 0), col, th.label_font if board else "crt"),
-                          (sx + 5, sy - 6))
+                surf.blit(TEXT.render(self._nm(c), 12 + (1 if c["size"] >= 2 else 0), col, "eng" if board else "ui"),
+                          (sx + 6, sy - 8))
         # zones
         if self.layers["zones"]:
             for z in w.zones.values():
@@ -209,7 +235,7 @@ class MapView:
                     pts = [tp(*p) for p in z["poly"]]
                     _dashed_poly(surf, col, pts)
                 lx, ly = (tp(z["x"], z["y"]) if z["shape"] == "circle" else tp(*z["poly"][0]))
-                surf.blit(TEXT.render(z["name"], 10, col, th.label_font if board else "crt"), (lx + 4, ly + 4))
+                surf.blit(TEXT.render(self._nm(z), 11, col, "eng_r" if board else "ui"), (lx + 4, ly + 4))
         return surf
 
     # ------------------------------------------------------------ draw
@@ -217,7 +243,7 @@ class MapView:
         th = self.theme
         w = self.world
         key = (round(self.cx, 2), round(self.cy, 2), round(self.scale, 4), self.layers["zones"], self.layers["labels"],
-               self.rect.size)
+               self.rect.size, getattr(self, "lang_mode", ""))
         if key != self._base_key:
             self._base = self._build_base()
             self._base_key = key
@@ -238,7 +264,7 @@ class MapView:
                 col = th.map_coast if b.kind == "military" else th.map_line
                 pygame.draw.line(screen, col, (sx - 6, sy + 3), (sx + 6, sy - 3), 3)
                 if self.layers["labels"] and b.kind == "military":
-                    screen.blit(TEXT.render(b.name, 10, col, th.label_font if board else "crt"), (sx + 8, sy + 6))
+                    screen.blit(TEXT.render(self._nm(b), 11, col, "eng_r" if board else "ui"), (sx + 8, sy + 5))
             for sm in w.sams.values():
                 self._sam(screen, sm, sel)
         # range rings for selected radar
@@ -347,9 +373,8 @@ class MapView:
         pts = [(sx, sy - 6), (sx + 5, sy + 4), (sx - 5, sy + 4)]
         pygame.draw.polygon(screen, col, pts, 1 if not s.gci else 0)
         if self.layers["labels"]:
-            lab = s.name.replace("Radar company ", "").replace(" guidance point", " GP")
-            screen.blit(TEXT.render(lab, 10, col, self.theme.label_font if th.map_style == "board" else "crt"),
-                        (sx + 7, sy - 4))
+            lab = self._nm(s).replace("Radar company ", "").replace(" guidance point", " GP")
+            screen.blit(TEXT.render(lab, 11, col, "eng_r" if th.map_style == "board" else "ui"), (sx + 7, sy - 5))
 
     def _sam(self, screen, s, sel) -> None:
         th = self.theme

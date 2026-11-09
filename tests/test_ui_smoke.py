@@ -30,10 +30,11 @@ def app(monkeypatch, tmp_path):
 
 def test_full_training_loop_through_the_ui(app):
     from searchtrack.ui.scenes import BriefingScene, CommandScene
-    title = app.scene
-    app.frame([], mouse=(0, 0))
-    click(app, (300, 484))                      # first scenario card (training)
-    assert title.sel_id == "us_training_intercept"
+    from searchtrack.ui.scenes import OperationsScene
+    press(app, "TRAINING")
+    ops = app.scene
+    assert isinstance(ops, OperationsScene)
+    assert ops.sel_id == "us_training_intercept"
     press(app, "BRIEFING")
     assert isinstance(app.scene, BriefingScene)
     press(app, "TAKE THE WATCH")
@@ -68,6 +69,7 @@ def test_soviet_title_and_board(app):
     from searchtrack.ui.scenes import CommandScene
     press(app, "SELECT ПВО")
     assert app.scene.faction == "USSR"
+    press(app, "SCENARIOS")
     app.scene.sel_id = "su_may_day"
     press(app, "BRIEFING")
     press(app, "TAKE THE WATCH")

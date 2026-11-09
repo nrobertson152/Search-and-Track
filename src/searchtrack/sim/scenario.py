@@ -23,7 +23,11 @@ def list_scenarios() -> list[dict[str, Any]]:
         d = load_toml(p)
         out.append({"id": d["id"], "title": d["title"], "faction": d["faction"], "kind": d.get("kind", "scenario"),
                     "subtitle": d.get("subtitle", ""), "summary": d.get("summary", ""), "order": d.get("order", 50),
-                    "path": str(p)})
+                    "path": str(p), "start": d.get("start", ""), "theater": d.get("theater", ""),
+                    "photo": list(d.get("photo", [])), "photo_caption": d.get("photo_caption", ""),
+                    "difficulty": d.get("difficulty", 2), "era": d.get("era", d.get("start", "1960")[:3] + "0s"),
+                    "duration_min": d.get("duration_min", 120), "n_objectives": len(d.get("objective", [])),
+                    "campaign": d.get("campaign", True), "night": d.get("weather", {}).get("night", False)})
     out.sort(key=lambda s: (s["faction"], s["order"]))
     return out
 
@@ -52,6 +56,7 @@ def build_world(path_or_id: str, seed: Optional[int] = None) -> World:
     w.attach_static()
     w.briefing = sc.get("briefing", "")
     w.intel = [[i["title"], i["text"]] for i in sc.get("intel", [])]
+    w.headlines = [dict(h) for h in sc.get("headline", [])]
     w.reliability = sc.get("reliability", 1.0)
     w.automation = dict({"surveil": True, "ident": True, "height": True, "tech": False}, **sc.get("automation", {}))
     w.own_side = "blue"
@@ -75,13 +80,14 @@ def build_world(path_or_id: str, seed: Optional[int] = None) -> World:
         if z.get("shape", "poly") == "circle":
             x, y = th.xy(z["lat"], z["lon"])
             w.zones[z["id"]] = {"name": z["name"], "kind": z.get("kind", ""), "shape": "circle", "x": x, "y": y,
-                                "r": z["r_km"]}
+                                "r": z["r_km"], "name_ru": z.get("name_ru", "")}
         else:
             w.zones[z["id"]] = {"name": z["name"], "kind": z.get("kind", ""), "shape": "poly",
-                                "poly": [list(th.xy(a, b)) for a, b in z["points"]]}
+                                "poly": [list(th.xy(a, b)) for a, b in z["points"]], "name_ru": z.get("name_ru", "")}
     for c in th.cfg.get("city", []):
         x, y = th.xy(c["lat"], c["lon"])
-        w.cities.append({"name": c["name"], "x": x, "y": y, "size": c.get("size", 1), "label": c.get("label", "")})
+        w.cities.append({"name": c["name"], "x": x, "y": y, "size": c.get("size", 1), "label": c.get("label", ""),
+                         "name_ru": c.get("name_ru", "")})
     # links
     for ln in sc.get("link", []):
         w.links[ln["id"]] = Link(ln["id"], ln.get("name", ln["id"]), ln.get("kind", "voice"), ln.get("up", True),

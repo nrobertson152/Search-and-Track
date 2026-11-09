@@ -117,6 +117,7 @@ class World:
     pending_flights: dict[str, dict[str, Any]] = field(default_factory=dict)
     briefing: str = ""
     intel: list[list[str]] = field(default_factory=list)
+    headlines: list[dict[str, Any]] = field(default_factory=list)
     ids: dict[str, int] = field(default_factory=dict)
     track_seq: int = 0
     reliability: float = 1.0

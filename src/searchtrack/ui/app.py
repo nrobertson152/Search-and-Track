@@ -186,6 +186,7 @@ def screenshot(path: str, sid: str | None, seconds: float, console: int, mode: s
     if scene == "title":
         if faction:
             app.scene.faction = faction
+        app.scene.t = 8.0                 # let the subtitle finish typing
         for _ in range(3):
             app.frame([])
     elif scene == "briefing":

@@ -110,7 +110,8 @@ class TitleScene(Scene):
             f.blit(glow, (54 + ox, 700 + oy), special_flags=pygame.BLEND_ADD)
         f.blit(TEXT.render("SEARCH AND TRACK", 96, (246, 246, 240), "title"), (54, 700))
         n = int(self.t * 26)
-        sub = "ПОИСК И СОПРОВОЖДЕНИЕ  ·  A COLD WAR AIR-DEFENSE COMMAND SIMULATOR  ·  1956–1987"
+        sub = ("ПОИСК И СОПРОВОЖДЕНИЕ  ·  " if self.faction == "USSR" and gui.lang_mode != "en" else "") + \
+            "A COLD WAR AIR-DEFENSE COMMAND SIMULATOR  ·  1956–1987"
         f.blit(TEXT.render(sub[:n], 18, (210, 210, 204), "eng"), (60, 828))
         f.blit(TEXT.render("Two systems. One sky. Every return could be the start of the war — or a lost Cessna.",
                            15, (160, 160, 156), "eng_r"), (60, 856))
@@ -190,7 +191,7 @@ class OperationsScene(Scene):
         self.theme = theme_for(faction)
         self.items = [s for s in scenario.list_scenarios() if s["faction"] == faction and
                       (s["kind"] == "training") == (kind == "training")]
-        self.items.sort(key=lambda s: (s["start"], s["order"]))
+        self.items.sort(key=lambda s: (s["order"], s["start"]) if kind == "training" else (s["start"], s["order"]))
         self.sel_id = self.items[0]["id"] if self.items else ""
         self.desk = None
         self.cache: dict[str, pygame.Surface] = {}
@@ -259,9 +260,14 @@ class OperationsScene(Scene):
         th = self.theme
         gui.set_theme(th)
         screen.blit(self._desk(), (0, 0))
-        hdr = ("ОПЕРАТИВНЫЕ ЗАДАЧИ · OPERATIONS FILE" if self.faction == "USSR" else "OPERATIONS FILE") + \
-            ("  —  TRAINING" if self.kind == "training" else "")
-        gui.label((60, 30), hdr, 30, (226, 220, 200), "title")
+        en = "OPERATIONS FILE" + ("  —  TRAINING" if self.kind == "training" else "")
+        if self.faction == "USSR" and gui.lang_mode != "en":
+            gui.label((60, 26), "УЧЕБНЫЕ ЗАДАЧИ" if self.kind == "training" else "ОПЕРАТИВНЫЕ ЗАДАЧИ", 30,
+                      (226, 220, 200), "title")
+            if gui.lang_mode == "ru+en":
+                gui.label((62, 68), en, 13, (170, 164, 146), "eng_r")
+        else:
+            gui.label((60, 30), en, 30, (226, 220, 200), "title")
         y = 96
         last_era = None
         for it in self.items:

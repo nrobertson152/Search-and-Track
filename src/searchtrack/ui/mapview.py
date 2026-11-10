@@ -62,6 +62,8 @@ class MapView:
         self.drag = None
         self.light_gun: Optional[tuple[float, float]] = None
         self.hover_world = (0.0, 0.0)
+        self._base_labels: list[pygame.Rect] = []     # label rects baked into the base layer (screen coords)
+        self._occ: list[pygame.Rect] = []             # label rects taken this frame
 
     # ------------------------------------------------------------ transforms
     def w2s(self, x: float, y: float) -> tuple[int, int]:
@@ -166,6 +168,25 @@ class MapView:
         img = outer + (inner - outer) * f + noise
         return pygame.surfarray.make_surface(np.clip(img, 0, 255).astype(np.uint8))
 
+    # ------------------------------------------------------------ label placement
+    def _place(self, img: pygame.Surface, sx: int, sy: int, offsets, force: bool = False):
+        """First candidate position whose box is free; None if all collide (unless forced)."""
+        w, h = img.get_size()
+        first = None
+        for dx, dy in offsets:
+            x = sx - 7 - w if dx == "l" else sx - w // 2 if dx == "c" else sx + dx
+            y = sy - h - 6 if dy == "a" else sy + 6 if dy == "b" else sy + dy
+            r = pygame.Rect(x, y, w, h)
+            if first is None:
+                first = r
+            if r.collidelist(self._occ) < 0:
+                self._occ.append(r.inflate(4, 2))
+                return r
+        if force and first is not None:
+            self._occ.append(first.inflate(4, 2))
+            return first
+        return None
+
     def _build_base(self) -> pygame.Surface:
         th = self.theme
         w = self.world
@@ -214,14 +235,29 @@ class MapView:
                     continue
                 pts = [tp(seg[i], seg[i + 1]) for i in range(0, len(seg), 2)]
                 pygame.draw.lines(surf, col, False, pts, wd)
-        # cities
-        for c in w.cities:
+        # cities: the biggest get first choice of label position; crowded small ones go unlabelled
+        self._occ = []
+        for sd in w.radars.values():          # keep the space next to site symbols for their names
+            ssx, ssy = tp(sd.x, sd.y)
+            self._occ.append(pygame.Rect(ssx - 6, ssy - 7, 12, 13))
+        for b in w.airbases.values():
+            if b.side == "blue":
+                bsx, bsy = tp(b.x, b.y)
+                self._occ.append(pygame.Rect(bsx - 7, bsy - 4, 14, 8))
+        for c in sorted(w.cities, key=lambda c: -c["size"]):
             sx, sy = tp(c["x"], c["y"])
             col = (176, 180, 150) if board else (70, 170, 170)
             pygame.draw.circle(surf, col, (sx, sy), 2 + c["size"], 0 if c["size"] >= 2 else 1)
-            if self.layers["labels"]:
-                surf.blit(TEXT.render(self._nm(c), 12 + (1 if c["size"] >= 2 else 0), col, "eng" if board else "ui"),
-                          (sx + 6, sy - 8))
+            self._occ.append(pygame.Rect(sx - 3 - c["size"], sy - 3 - c["size"], 6 + 2 * c["size"], 6 + 2 * c["size"]))
+        for c in sorted(w.cities, key=lambda c: -c["size"]):
+            if not self.layers["labels"]:
+                break
+            sx, sy = tp(c["x"], c["y"])
+            col = (176, 180, 150) if board else (70, 170, 170)
+            img = TEXT.render(self._nm(c), 12 + (1 if c["size"] >= 2 else 0), col, "eng" if board else "ui")
+            r = self._place(img, sx, sy, [(6, -8), ("l", -8), ("c", "a"), ("c", "b")], force=c["size"] >= 3)
+            if r is not None:
+                surf.blit(img, r)
         # zones
         if self.layers["zones"]:
             for z in w.zones.values():
@@ -235,7 +271,12 @@ class MapView:
                     pts = [tp(*p) for p in z["poly"]]
                     _dashed_poly(surf, col, pts)
                 lx, ly = (tp(z["x"], z["y"]) if z["shape"] == "circle" else tp(*z["poly"][0]))
-                surf.blit(TEXT.render(self._nm(z), 11, col, "eng_r" if board else "ui"), (lx + 4, ly + 4))
+                img = TEXT.render(self._nm(z), 11, col, "eng_r" if board else "ui")
+                r = self._place(img, lx, ly, [(4, 4), (4, -18), ("l", 4)])
+                if r is not None:
+                    surf.blit(img, r)
+        ox_, oy_ = self.rect.topleft
+        self._base_labels = [r.move(ox_, oy_) for r in self._occ]
         return surf
 
     # ------------------------------------------------------------ draw
@@ -253,6 +294,21 @@ class MapView:
         if self.layers["coverage"]:
             self._draw_coverage(screen)
         board = th.map_style == "board"
+        # labels: what the base layer holds, plus the tracks' and flights' data blocks, come first
+        self._occ = list(self._base_labels)
+        for tk in w.tracks.values():
+            if board:
+                lx, ly = self.w2s(tk.x, tk.y)
+                self._occ.append(pygame.Rect(lx + 12, ly - 16, 110, 40))
+            else:
+                px, py = tracking.predicted(tk, w.t)
+                tsx, tsy = self.w2s(px, py)
+                self._occ.append(pygame.Rect(tsx - 8, tsy - 22, 96, 38))
+        for f in w.flights.values():
+            a = w.aircraft.get(f.members[0]) if f.members else None
+            if a is not None and a.state == "airborne" and f.state not in ("landed", "lost", "scrambling"):
+                fsx, fsy = self.w2s(a.x, a.y)
+                self._occ.append(pygame.Rect(fsx - 8, fsy - 9, 120, 28))
         # static sites
         if self.layers["sites"]:
             for s in w.radars.values():
@@ -264,7 +320,10 @@ class MapView:
                 col = th.map_coast if b.kind == "military" else th.map_line
                 pygame.draw.line(screen, col, (sx - 6, sy + 3), (sx + 6, sy - 3), 3)
                 if self.layers["labels"] and b.kind == "military":
-                    screen.blit(TEXT.render(self._nm(b), 11, col, "eng_r" if board else "ui"), (sx + 8, sy + 5))
+                    img = TEXT.render(self._nm(b), 11, col, "eng_r" if board else "ui")
+                    r = self._place(img, sx, sy, [(8, 5), ("l", 5), ("c", "b"), (8, -16)])
+                    if r is not None:
+                        screen.blit(img, r)
             for sm in w.sams.values():
                 self._sam(screen, sm, sel)
         # range rings for selected radar
@@ -374,7 +433,11 @@ class MapView:
         pygame.draw.polygon(screen, col, pts, 1 if not s.gci else 0)
         if self.layers["labels"]:
             lab = self._nm(s).replace("Radar company ", "").replace(" guidance point", " GP")
-            screen.blit(TEXT.render(lab, 11, col, "eng_r" if th.map_style == "board" else "ui"), (sx + 7, sy - 5))
+            img = TEXT.render(lab, 11, col, "eng_r" if th.map_style == "board" else "ui")
+            r = self._place(img, sx, sy, [(7, -5), ("l", -5), ("c", "a"), ("c", "b")],
+                            force=sel.get("site") == s.id)
+            if r is not None:
+                screen.blit(img, r)
 
     def _sam(self, screen, s, sel) -> None:
         th = self.theme

@@ -178,6 +178,9 @@ def _launch(world: "World", site: SamSite, st, tgt) -> None:
     site.ready_missiles -= 1
     site.fired += 1
     world.stats.missiles += 1
+    if world.battle.active:
+        from .battle.core import note_shot
+        note_shot(world, site.side, tgt)
     if site.reloads > 0:
         site.reloads -= 1
         site.reloading.append(world.t + st.reload_min * 60.0)

@@ -85,6 +85,7 @@ class Aircraft:
     evade_t: float = -1.0                # defensive manoeuvre against a missile until
     t_max: float = -1.0                  # anti-ship missile: self-destruct time
     route: list[list[float]] = field(default_factory=list)   # cruise missile: waypoints before the aim point
+    pilot: str = ""                      # battles: who is flying it (BattleState.pilots)
 
 
 @dataclass
@@ -608,6 +609,21 @@ class Decision:
 
 
 @dataclass
+class Pilot:
+    """A named airman of one of our squadrons; in a war he carries his record from battle to battle."""
+    id: str
+    name: str                            # "CDR Jack 'Hollywood' Harlan"
+    squadron: str
+    rank: str = ""
+    surname: str = ""
+    kills: int = 0                       # over the whole war
+    sorties: int = 0
+    status: str = "active"               # active | flying | rescued | missing | kia
+    aircraft: str = ""                   # while flying
+    note: str = ""                       # what happened to him tonight
+
+
+@dataclass
 class BattleState:
     active: bool = False
     spectator: bool = False
@@ -634,3 +650,4 @@ class BattleState:
     end_t: float = -1.0
     outcome: str = ""
     view: list[float] = field(default_factory=list)                     # [x, y, km across] at the start
+    pilots: dict[str, Pilot] = field(default_factory=dict)              # our aircrew, by id

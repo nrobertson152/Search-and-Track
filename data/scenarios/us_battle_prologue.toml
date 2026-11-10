@@ -1,0 +1,79 @@
+base = "us_battle_bering"
+id = "us_battle_prologue"
+title = "The Bear Watch"
+subtitle = "Bering Sea, 19 October 1987, the last afternoon of peace — hypothetical"
+summary = "DEFCON 2. Soviet BEARs come to look at the Carl Vinson, as they have a hundred times before — only this time the teletype has not stopped all day. Intercept and escort, show them the flag, do not fire. Then the FLASH."
+order = 5
+start = "1987-10-19T15:20:00"
+seed = 1919
+duration_min = 60
+photo = ["F-14A", "Tu-95RT"]
+photo_caption = "F-14A escorting a Tu-95RT BEAR D over the North Pacific (file photograph)"
+
+briefing = """
+TASK FORCE 77.4 — CARL VINSON BATTLE GROUP, BERING SEA. 19 OCTOBER 1987, 1520 LOCAL. THIS SCENARIO IS HYPOTHETICAL.
+
+SITUATION. Nine days of crisis. The Soviet Pacific Fleet has sortied from Petropavlovsk and Vladivostok, the Long Range Aviation regiments have dispersed, and two hours ago the United States went to DEFCON 2. We are still at peace. The BEAR D reconnaissance aircraft will come to look at us today, as they always do — but this time what they see will be used.
+
+YOUR ORDERS. Intercept every Soviet aircraft that approaches the battle group and escort it with a pair of fighters for as long as it stays. Weapons tight: nobody fires unless fired upon, and nobody on our side fires first. Your staff will send the escorts; you decide everything else.
+
+WARNING. Washington expects a decision within hours. If the FLASH comes, the aircraft our fighters are sitting behind become targets. So do we.
+"""
+
+# ---- forces: the shadowers come first, a BADGER raid in the first hour of the war
+group_drop = ["alpha", "prowler", "alpha_escort", "ew_south", "ew_north", "backfire_a"]
+group_patch = [
+  { id = "foxhound", role = "escort", target = "bear1", commit_km = 90.0 },
+  { id = "escort_a", target = "badger_g" },
+  { id = "badger_g", n = 6, entry = { x = -740.0, y = -360.0, alt_m = 9500.0 }, exit = { x = -740.0, y = -360.0 }, route = [{ x = -640.0, y = -420.0 }] },
+  { id = "backfire_b", n = 4, name = "BACKFIRE flight (568th MRAP)" },
+]
+trigger = []
+
+objective_drop = ["carrier", "group", "archers", "hawkeye", "frunze", "deny"]
+objective_add = [
+  { id = "intercept", text = "Intercept both BEARs before they close within 150 km of the carrier", kind = "intercept_groups", params = { groups = ["bear1", "bear2"], before_km = 150.0 }, points = 25 },
+  { id = "holdfire", text = "Not one shot from our side before the FLASH", kind = "hold_fire", params = {}, points = 15 },
+  { id = "shadowers", text = "When the war comes, the BEARs do not go home", kind = "kill_fraction", params = { groups = ["bear1", "bear2"], frac = 1.0 }, points = 15 },
+  { id = "badgers", text = "Destroy half the bombers of the first raid", kind = "kill_fraction", params = { groups = ["badger_g", "backfire_b"], frac = 0.5 }, points = 20 },
+  { id = "carrier", text = "Carl Vinson survives", kind = "ship_survives", params = { ship = "cvn70" }, points = 15 },
+  { id = "group", text = "Lose no ship", kind = "ships_survive", params = { max = 0 }, points = 10 },
+]
+
+[weather]
+k_factor = 1.333
+wind_from = 300.0
+wind_kmh = 40.0
+ceiling_m = 1500.0
+visibility_km = 25.0
+night = false
+sea_state = 4.0
+
+[battle]
+war = false
+reinforcement = []
+
+[[battle.phase]]
+id = "watch"
+name = "PHASE I — THE BEAR WATCH"
+earliest_min = 0.0
+text = "Two BEAR Ds airborne from Anadyr, one coming down the Strait. A pair of FOXHOUNDs is up with the first. Intercept, escort, weapons tight."
+actions = [{ do = "launch", groups = ["bear1"], delay_s = 60.0 }, { do = "launch", groups = ["foxhound"], delay_s = 150.0 }, { do = "launch", groups = ["bear2"], delay_s = 240.0 }]
+
+[[battle.phase]]
+id = "flash"
+name = "PHASE II — FLASH"
+earliest_min = 15.0
+latest_min = 19.0
+when = { type = "intercepted", groups = ["bear1", "bear2"] }
+text = "FLASH FLASH FLASH. From CINCPAC: hostilities have commenced. Soviet forces have attacked NATO in Europe and our forces in the Pacific. Weapons free."
+actions = [{ do = "decision", kind = "war", title = "FLASH — THE BEARS?", text = "We are at war. Our fighters are sitting behind two BEAR Ds that have been photographing the battle group for twenty minutes. They will go home and tell Anadyr exactly where we are — or they will not go home at all. Their crews have done nothing yet but their job.", options = ["WEAPONS FREE", "LET THEM GO"], default = "WEAPONS FREE", timeout_s = 45.0, effects = { "WEAPONS FREE" = [{ do = "war", text = "FLASH — HOSTILITIES. Weapons free. Escorts engage the BEARs." }], "LET THEM GO" = [{ do = "war", spare = true, text = "FLASH — HOSTILITIES. Weapons free — the BEARs are allowed to turn for home." }] } }]
+
+[[battle.phase]]
+id = "first"
+name = "PHASE III — FIRST BLOOD"
+earliest_min = 24.0
+latest_min = 30.0
+when = { type = "quiet", s = 120.0 }
+text = "Raid warning: six BADGERs with KSR-5 missiles from the west, MiG-31s with them. The first raid of the war is coming for the Carl Vinson."
+actions = [{ do = "launch", groups = ["badger_g", "escort_a"] }, { do = "standing", emcon = false }, { do = "launch", groups = ["backfire_b"], delay_s = 420.0 }, { do = "say", kind = "intel", delay_s = 0, text = "Intelligence: a BACKFIRE regiment at Alekseyevka is fuelling. Expect it behind the BADGERs.", level = 2 }]

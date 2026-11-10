@@ -54,7 +54,7 @@ def start_phase(w: "World", i: int) -> None:
 # ------------------------------------------------------------------ actions
 
 ACTIONS = {"launch", "group", "decision", "standing", "reinforcement", "reinforce", "aew_withdraw", "fleet", "ready",
-           "located", "end_battle", "surge", "cap_station", "salvo", "ship_salvo"}
+           "located", "end_battle", "surge", "cap_station", "salvo", "ship_salvo", "war", "ceasefire", "say"}
 
 
 def act(w: "World", a: dict) -> None:
@@ -152,10 +152,102 @@ def act(w: "World", a: dict) -> None:
     elif k == "ship_salvo":
         from . import naval
         naval.ship_salvo(w, a)
+    elif k == "war":
+        spare = a.get("spare", [])
+        if spare is True:                    # the shadowers: whoever we were escorting that cannot hurt us
+            spare = [g.id for g in b.groups.values() if g.side != w.own_side and g.role in ("recon", "ew", "elint")
+                     and g.state not in ("pending", "done")]
+        start_war(w, spare=list(spare or []), text=a.get("text", ""))
+    elif k == "spare":
+        spare_groups(w, list(a.get("groups", [])), a.get("text", ""))
+    elif k == "ceasefire":
+        ceasefire(w, a.get("text", ""))
+    elif k == "say":
+        event(w, a.get("kind", "story"), a["text"], a.get("ref", ""), level=int(a.get("level", 2)))
     elif k == "end_battle":
         b.end_t = w.t + float(a.get("delay_s", 30.0))
     else:
         scenario_act(w, a)
+
+
+def start_war(w: "World", spare: Optional[list] = None, text: str = "") -> None:
+    """FLASH: hostilities. Weapons free on both sides; the escorts become the hunters --
+    except over the aircraft the commander lets go home."""
+    from .. import commands
+    b = w.battle
+    b.standing["roe"] = "war"
+    b.red_plan["roe"] = "war"
+    b.standing["sam"] = "FREE"
+    w.hq.weapons_status = "FREE"
+    w.vars["war"] = 1.0
+    w.vars["t_war"] = w.t
+    w.vars["war_spared"] = 1.0 if spare else 0.0
+    event(w, "war", text or "FLASH — HOSTILITIES HAVE BEGUN. Weapons free.", "", level=3)
+    if spare:
+        spare_groups(w, spare)
+    for fl in list(w.flights.values()):
+        if fl.state in ("landed", "lost") or not fl.target:
+            continue
+        if fl.task in ("shadow", "id"):
+            commands.run(w, "task", flight=fl.id, task="intercept")
+            commands.run(w, "weapons_free", flight=fl.id, on=True)
+            w.vars[f"atk_{fl.id}"] = -1.0       # they were sitting on him: the first shot is theirs to take
+
+
+def spared(w: "World", trk) -> bool:
+    """The track is one of the aircraft the commander let go."""
+    from ..tracking import truth_of
+    a = w.aircraft.get(truth_of(trk) or "") if trk is not None else None
+    return a is not None and bool(a.group) and bool(w.vars.get(f"spared_{a.group}"))
+
+
+def spare_groups(w: "World", gids: list, text: str = "") -> None:
+    """Mercy: these go home. Our escorts break off and nobody on our side fires at them again."""
+    b = w.battle
+    names = []
+    for gid in gids:
+        g = b.groups.get(gid)
+        if g is None:
+            continue
+        w.vars[f"spared_{gid}"] = w.t
+        if g.state not in ("pending", "done"):
+            g.state, g.t_state = "egress", w.t
+            names.append(g.callsign or g.name)
+    if not names:
+        return
+    w.vars["mercy"] = w.vars.get("mercy", 0.0) + 1.0
+    for fl in list(w.flights.values()):
+        if fl.state in ("landed", "lost") or not fl.target:
+            continue
+        if spared(w, w.tracks.get(fl.target)):
+            from .. import gci
+            lead = gci.lead_of(w, fl)
+            fl.target, fl.contact, fl.weapons_free = "", "", False
+            fl.task, fl.state = "cap", "cap"
+            if lead is not None:
+                fl.cap_x, fl.cap_y = lead.x, lead.y
+            w.radio(fl, "breaking off — he's going home" if w.faction == "US" else
+                    "Breaking off. He is turning for home.", 1)
+    event(w, "mercy", text or f"{', '.join(names)} allowed to go home. Our fighters break off.", "", level=2)
+
+
+def ceasefire(w: "World", text: str = "") -> None:
+    """The guns fall silent at the hour -- the missiles already in the air do not."""
+    from .. import commands
+    b = w.battle
+    b.standing["roe"] = "ceasefire"
+    b.red_plan["roe"] = "ceasefire"
+    w.hq.weapons_status = "HOLD"
+    w.vars["t_ceasefire"] = w.t
+    w.vars["cf_air_shots"] = b.counters.get(f"air_shots_{w.own_side}", 0.0)
+    for fl in list(w.flights.values()):
+        if fl.state not in ("landed", "lost") and fl.target:
+            commands.run(w, "rtb", flight=fl.id)
+    for g in b.groups.values():
+        if g.state not in ("pending", "done", "egress", "rtb") and not g.id.startswith("stray"):
+            g.state, g.t_state = "egress", w.t
+    event(w, "ceasefire", text or "FLASH — CEASEFIRE IN EFFECT. All units cease fire; defend only against "
+          "weapons already in the air.", "", level=3)
 
 
 def surge(w: "World", a: dict) -> int:
@@ -245,6 +337,11 @@ def cond(w: "World", c: dict) -> Optional[bool]:
     if t == "installation":
         from . import land
         return land.is_destroyed(w, c["id"]) if c.get("is", "out") == "destroyed" else land.is_out(w, c["id"])
+    if t == "intercepted":                   # our fighters have been alongside every one of these groups
+        return all(w.vars.get(f"intercepted_{gid}") for gid in c["groups"])
+    if t == "roe":
+        from .core import roe
+        return roe(w, c.get("side", w.own_side)) in c["is"]
     return None
 
 
@@ -297,6 +394,35 @@ def objective(w: "World", o: "Objective", final: bool) -> Optional[str]:
         if b.counters.get(f"aircraft_lost_{w.own_side}", 0.0) > float(p.get("n", 6)):
             return "failed"
         return "done" if final else None
+    if k == "hold_fire":                     # not one shot at an aircraft before the war / after the ceasefire
+        shots = b.counters.get(f"air_shots_{w.own_side}", 0.0)
+        if p.get("after") == "ceasefire":
+            if "t_ceasefire" in w.vars and shots > w.vars.get("cf_air_shots", 0.0):
+                return "failed"
+            return ("done" if "t_ceasefire" in w.vars else "failed") if final else None
+        if not w.vars.get("war") and shots > 0:
+            return "failed"
+        return "done" if (final or w.vars.get("war")) else None
+    if k == "intercept_groups":              # each of these gets fighters alongside before it comes close
+        from .staff import defended_points
+        pts = defended_points(w, aew=False)
+        for gid in p["groups"]:
+            g = b.groups.get(gid)
+            if g is None or w.vars.get(f"intercepted_{gid}"):
+                continue
+            if g.state == "pending":
+                if final:
+                    continue
+                return None
+            for mid in g.members:
+                m = w.aircraft.get(mid)
+                if m is not None and m.state == "airborne" and pts and \
+                        min(math.hypot(m.x - x, m.y - y) for x, y in pts) < float(p.get("before_km", 150.0)):
+                    return "failed"
+            if g.state == "done" or final:
+                return "failed"
+            return None
+        return "done"
     if k == "prevent_salvo":                 # the enemy ship is put out of action before it can fire
         if b.counters.get(f"salvo_{p['ship']}", 0.0) > 0:
             return "failed"

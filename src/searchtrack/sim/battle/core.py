@@ -53,6 +53,18 @@ def alt_of(spec: dict, default: float = 0.0) -> float:
     return default
 
 
+def roe(w: "World", side: str) -> str:
+    """'war', 'peace' (shadow and escort, hold fire) or 'ceasefire' (break off; missiles may still be shot)."""
+    b = w.battle
+    return (b.standing if side == w.own_side else b.red_plan).get("roe", "war")
+
+
+def note_shot(w: "World", side: str, tgt, n: int = 1) -> None:
+    """Shots at aircraft (not at missiles) -- what the rules of engagement are about."""
+    if tgt is not None and not getattr(tgt, "aim", None) and getattr(tgt, "kind", "aircraft") == "aircraft":
+        counter(w, f"air_shots_{side}", n)
+
+
 def counter(w: "World", key: str, n: float = 1.0) -> None:
     w.battle.counters[key] = w.battle.counters.get(key, 0.0) + n
 
@@ -110,6 +122,13 @@ def setup(w: "World", sc: dict) -> None:
     if bd.get("war", True):
         w.hq.weapons_status = bd.get("weapons_status", "FREE")
         w.vars["war"] = 1.0
+    else:                                       # it starts in peacetime: intercept, escort, do not shoot
+        b.standing["roe"] = "peace"
+        b.red_plan["roe"] = "peace"
+        b.standing["sam"] = "HOLD"
+        w.hq.weapons_status = "HOLD"
+    from .. import pilots
+    pilots.ensure_roster(w)
 
 
 def _airborne_cap(w: "World", st: dict, fuel_frac: float) -> None:

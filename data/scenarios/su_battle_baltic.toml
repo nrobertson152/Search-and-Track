@@ -1,0 +1,461 @@
+id = "su_battle_baltic"
+title = "The Baltic Front"
+subtitle = "6th Air Defense Army, Estonia and Leningrad, 21 October 1987 — hypothetical"
+summary = "The Americans open a second front in the north-west. F-111s at sixty metres over the Gulf of Riga, Wild Weasels hunting the missile battalions, EF-111 jammers blinding the radar line, Eagles ahead of them all — and B-52 cruise missiles behind. Keep Leningrad's shield up."
+faction = "USSR"
+kind = "battle"
+photo = ["Su-27", "F-111F"]
+photo_caption = "Su-27 FLANKER — the newest interceptor of the Air Defense Forces (file photograph)"
+era = "1980s"
+difficulty = 4
+order = 7
+theater = "baltic_moscow"
+start = "1987-10-21T23:20:00"
+tz = "MSK"
+duration_min = 80
+seed = 2187
+reliability = 6.0
+
+briefing = """
+COMMAND POST, 6th SEPARATE AIR DEFENSE ARMY — LENINGRAD. 21 OCTOBER 1987, 2320 MOSCOW TIME. THIS SCENARIO IS HYPOTHETICAL.
+
+SITUATION. Two nights of war on the Kola. Tonight NATO opens the north-west: the United States Air Force in England and Germany has been seen preparing a strike across the Baltic. Its targets will be the air defence of the Leningrad direction — the fighter airfields at Tapa and Gromovo, the radar companies on the coast, the S-200 at Kingisepp and the new S-300 battalion that covers the city. If they break the shield, the bombers will follow.
+
+YOUR FORCES. The 656th Fighter Regiment (MiG-23P) at Tapa; Su-27s of the 177th at Gromovo, the newest aircraft we have; MiG-25PDs at Andreapol. Radar companies from Kohtla-Järve to Pskov. S-125 at Tallinn and Narva, S-200 at Kingisepp, S-300PT at Leningrad. Patrol zones WEST and SOUTH are manned.
+
+COMMAND. You command the air defense of the direction. The duty staff identifies, commits the regiments by your standing orders and gives the battalions their targets. You set the posture, single out priority targets (right-click a track), answer the decisions and take over wherever you see better.
+
+THE ENEMY. F-111F: terrain-following radar, 60 metres at night, 900 km/h, glide bombs. Our companies see it late. F-4G: listens for every missile radar and fires HARMs into it. EF-111A: noise jamming along the whole axis. F-15C: the best fighter they have, sent ahead to clear the way.
+"""
+
+[[intel]]
+title = "F-111F"
+text = "Swing-wing strike aircraft, terrain-following radar, 60-150 m above the ground at 900 km/h. Releases GBU-15 glide bombs from about 20 km and steers them onto the target. Radar companies see it at 30-40 km; the Su-27's look-down radar sees it at 60."
+
+[[intel]]
+title = "Wild Weasels"
+text = "F-4G with the APR-38: it hears a missile radar long before the radar sees it, and fires AGM-88 HARMs into it. A battalion that switches off when a HARM is reported usually survives — and does not shoot either. Kill the Weasels and the battalions can fight."
+
+[[intel]]
+title = "EF-111A"
+text = "The ALQ-99E jamming system in an F-111 airframe. It stands off over the Baltic and blinds the radar companies along its bearing. A hard, fast target — and a legitimate one."
+
+[[intel]]
+title = "Su-27"
+text = "Ten missiles, look-down radar, fuel for a long fight. The regiment at Gromovo has had it for a year. It is the one interceptor we have that can meet an F-15 as an equal."
+
+[faction_override]
+report_delay_s = [12.0, 30.0]
+report_interval_s = 12.0
+company_capacity = 30
+report_error_rate = 0.01
+
+[automation]
+surveil = true
+ident = true
+height = true
+tech = false
+
+[weather]
+k_factor = 1.333
+wind_from = 240.0
+wind_kmh = 40.0
+ceiling_m = 1200.0
+visibility_km = 10.0
+night = true
+sea_state = 4.0
+
+[hq]
+name = "6th AIR DEFENSE ARMY"
+readiness = "FULL"
+alert = ""
+weapons_status = "FREE"
+[hq.policy]
+response_s = [20.0, 50.0]
+declare_hostile = "grant"
+engage = "grant"
+ram = "deny"
+special_release = "deny"
+weapons_status_FREE = "grant"
+iff_period = "WAR"
+track_start = 6001
+
+[[link]]
+id = "A_net"
+name = "Automated reporting net (ASU)"
+kind = "data"
+delay_s = 8.0
+[[link]]
+id = "T_gp"
+name = "Guidance point lines"
+[[link]]
+id = "T_airfields"
+name = "Airfield alert lines"
+[[link]]
+id = "T_sam"
+name = "SAM brigade line"
+
+[[radar]]
+site = "rlr_kohtla"
+type = "5N84"
+link = "A_net"
+[[radar]]
+site = "rlr_kingisepp"
+type = "5N84"
+hf = ["PRV-13"]
+link = "A_net"
+[[radar]]
+site = "rlr_pskov"
+type = "ST-68U"
+link = "A_net"
+[[radar]]
+site = "rlr_dno"
+type = "P-18"
+link = "A_net"
+[[radar]]
+site = "rlr_staraya"
+type = "ST-68U"
+link = "A_net"
+[[radar]]
+site = "gp_tapa"
+type = "P-37"
+hf = ["PRV-13"]
+gci = true
+link = "T_gp"
+[[radar]]
+site = "gp_andreapol"
+type = "P-37"
+gci = true
+link = "T_gp"
+
+[[airbase]]
+site = "tapa"
+link = "T_airfields"
+[[airbase]]
+site = "gromovo"
+link = "T_airfields"
+[[airbase]]
+site = "andreapol"
+link = "T_airfields"
+
+[[squadron]]
+id = "tapa_iap"
+name = "656th IAP, Tapa"
+base = "tapa"
+type = "MiG-23P"
+callsign = "315"
+ready = { "3" = 4, "7" = 4 }
+pilots = 10
+turnaround_min = 30.0
+iff_codes = { period = "WAR" }
+
+[[squadron]]
+id = "gromovo_iap"
+name = "177th IAP, Gromovo"
+base = "gromovo"
+type = "Su-27"
+callsign = "170"
+ready = { "3" = 4, "7" = 4, "20" = 4 }
+pilots = 14
+turnaround_min = 35.0
+iff_codes = { period = "WAR" }
+
+[[squadron]]
+id = "andreapol_iap"
+name = "Andreapol IAP"
+base = "andreapol"
+type = "MiG-25PD"
+callsign = "540"
+ready = { "3" = 2, "7" = 4 }
+pilots = 8
+turnaround_min = 30.0
+iff_codes = { period = "WAR" }
+
+[[sam]]
+site = "s125_tallinn"
+type = "S-125"
+link = "T_sam"
+missiles = 8
+reloads = 8
+auto = true
+[[sam]]
+site = "s125_narva"
+type = "S-125"
+link = "T_sam"
+missiles = 8
+reloads = 8
+auto = true
+[[sam]]
+site = "s200_kingisepp"
+type = "S-200"
+link = "T_sam"
+missiles = 6
+reloads = 4
+auto = true
+[[sam]]
+site = "s300_leningrad"
+type = "S-300PT"
+link = "T_sam"
+missiles = 12
+reloads = 12
+auto = true
+
+# ====================================================================== the battle
+
+[battle]
+post = "6th AIR DEFENSE ARMY — COMMAND POST"
+post_sub = "LENINGRAD · NORTH-WEST DIRECTION"
+red_target = ""
+vital = []
+hostile_west_of_lon = 24.6
+hostile_line_lat = 59.0
+defended = ["tapa", "gromovo", "andreapol"]
+view = { lat = 59.0, lon = 27.4, km = 640.0 }
+standing = { posture = "balanced", fighters = "auto", sam = "FREE", emcon = false, reserve = 2 }
+
+[[battle.red_sensor]]
+name = "NATO E-3A over the Baltic"
+lat = 58.4
+lon = 21.6
+mast_m = 9000.0
+range_km = 400.0
+
+[[battle.cap]]
+id = "west"
+name = "PATROL ZONE WEST (Narva Bay)"
+lat = 59.25
+lon = 27.0
+alt_m = 9000.0
+squadron = "gromovo_iap"
+n = 2
+airborne = true
+fuel_frac = 0.85
+
+[[battle.cap]]
+id = "south"
+name = "PATROL ZONE SOUTH (Lake Peipus)"
+lat = 58.5
+lon = 27.3
+alt_m = 7000.0
+squadron = "tapa_iap"
+n = 2
+airborne = true
+fuel_frac = 0.8
+
+[[battle.reinforcement]]
+id = "khotilovo"
+name = "MiG-31s from Khotilovo"
+text = "The Moscow District can send four MiG-31s of the 790th regiment to Andreapol. They will be on three-minute alert there in about ten minutes."
+actions = [{ do = "ready", squadron = "andreapol_iap", add = { "3" = 4 } }]
+
+[[battle.phase]]
+id = "storm"
+name = "PHASE I — JAMMING IN THE WEST"
+earliest_min = 0.0
+text = "Noise jamming on every radar company along the coast, bearing west. A NATO radar aircraft is orbiting over Gotland. Fighters forming up over the Baltic — four of them, fast and high. Expect the strike behind."
+actions = [
+  { do = "launch", groups = ["raven_n", "raven_s"] },
+  { do = "launch", groups = ["sweep"], delay_s = 120.0 },
+]
+
+[[battle.phase]]
+id = "low"
+name = "PHASE II — LOW LEVEL"
+earliest_min = 6.0
+latest_min = 10.0
+when = { type = "quiet", s = 120.0 }
+text = "The coastal company at Kohtla-Järve reports low targets over the Gulf of Riga, eight or more, very fast, at the edge of its screen. Missile radars on the coast are being listened to: Weasels with them."
+actions = [
+  { do = "launch", groups = ["f111_a", "weasels"] },
+  { do = "launch", groups = ["f111_b"], delay_s = 90.0 },
+  { do = "decision", kind = "emcon", title = "KINGISEPP — RADIATE OR HIDE?", text = "The S-200 at Kingisepp and the S-125s on the coast can light their fire-control radars now and be ready when the F-111s pop up — and be heard by every Wild Weasel over the Baltic. Or stay dark until the targets are close, and fight later and shorter.", options = ["LIGHT THEM UP", "STAY DARK"], default = "STAY DARK", timeout_s = 45.0, effects = { "LIGHT THEM UP" = [{ do = "standing", sam = "FREE" }], "STAY DARK" = [{ do = "standing", sam = "TIGHT" }] } },
+]
+
+[[battle.phase]]
+id = "second"
+name = "PHASE III — THE SECOND WAVE"
+earliest_min = 22.0
+latest_min = 28.0
+when = { type = "quiet", s = 150.0 }
+text = "Long-range radar reports missile launches far to the west over the Baltic: B-52s, cruise missiles, a dozen. Behind them a second group of F-111s with Eagles in escort. Their target is the S-300 battalion that covers the city."
+actions = [
+  { do = "standing", sam = "FREE" },
+  { do = "salvo", weapon = "AGM-86C", n = 10, from = { lat = 58.9, lon = 23.3 }, route = [{ lat = 59.05, lon = 25.5 }], targets = ["rlr_kohtla", "gp_tapa", "rlr_kingisepp", "rlr_pskov", "tapa"], stream_km = 7.0 },
+  { do = "launch", groups = ["f111_c", "escort"], delay_s = 240.0 },
+  { do = "decision", kind = "allocation", title = "THE FLANKERS — THE MISSILES OR THE BOMBERS?", text = "Gromovo's Su-27s on seven-minute alert can go west now: to hunt the cruise missiles over the coast before they reach the radars and the airfields, or to a patrol line over Narva Bay to meet the second wave of F-111s and their Eagles.", options = ["HUNT THE MISSILES", "MEET THE BOMBERS"], default = "MEET THE BOMBERS", timeout_s = 50.0, effects = { "HUNT THE MISSILES" = [{ do = "ready", squadron = "gromovo_iap", move = { "7" = "3" } }, { do = "surge", squadrons = ["gromovo_iap"], lat = 59.3, lon = 26.0, alt_m = 5000.0, max_flights = 2 }], "MEET THE BOMBERS" = [{ do = "ready", squadron = "gromovo_iap", move = { "7" = "3", "20" = "7" } }, { do = "surge", squadrons = ["gromovo_iap"], lat = 59.2, lon = 27.4, alt_m = 8000.0, max_flights = 2 }] } },
+  { do = "reinforcement", id = "khotilovo" },
+]
+
+# ---- the enemy
+[[group]]
+id = "raven_n"
+name = "EF-111A Raven (north)"
+callsign = "RAVEN 1"
+side = "red"
+role = "ew"
+type = "EF-111A"
+n = 1
+entry = { lat = 59.5, lon = 23.2, alt_m = 9000.0 }
+exit = { lat = 59.5, lon = 23.2 }
+station = { lat = 59.45, lon = 24.0, alt_m = 9000.0, r_km = 16.0 }
+trigger = "phase"
+
+[[group]]
+id = "raven_s"
+name = "EF-111A Raven (south)"
+callsign = "RAVEN 2"
+side = "red"
+role = "ew"
+type = "EF-111A"
+n = 1
+entry = { lat = 58.3, lon = 23.2, alt_m = 9000.0 }
+exit = { lat = 58.3, lon = 23.2 }
+station = { lat = 58.35, lon = 24.1, alt_m = 9000.0, r_km = 16.0 }
+trigger = "phase"
+
+[[group]]
+id = "sweep"
+name = "F-15C fighter sweep (36th TFW)"
+callsign = "CHEVY"
+side = "red"
+role = "sweep"
+type = "F-15C"
+n = 4
+entry = { lat = 59.0, lon = 23.2, alt_m = 10500.0 }
+exit = { lat = 59.0, lon = 23.2 }
+route = [{ lat = 59.1, lon = 25.5, alt_m = 10500.0 }]
+station = { lat = 59.2, lon = 26.6, alt_m = 10500.0, r_km = 30.0 }
+commit_km = 120.0
+trigger = "phase"
+
+[[group]]
+id = "f111_a"
+name = "F-111F strike on Tapa (48th TFW)"
+callsign = "KARMA"
+side = "red"
+role = "strike"
+type = "F-111F"
+n = 4
+alt_m = 150.0
+entry = { lat = 58.3, lon = 23.2, alt_m = 150.0 }
+exit = { lat = 58.6, lon = 23.2 }
+route = [{ lat = 58.45, lon = 24.4, alt_m = 150.0 }, { lat = 58.85, lon = 25.3, alt_m = 150.0 }]
+target = "tapa"
+launch_km = 20.0
+abort_frac = 0.5
+trigger = "phase"
+
+[[group]]
+id = "f111_b"
+name = "F-111F strike on Kingisepp (48th TFW)"
+callsign = "JUMPER"
+side = "red"
+role = "strike"
+type = "F-111F"
+n = 4
+alt_m = 150.0
+entry = { lat = 58.15, lon = 23.2, alt_m = 150.0 }
+exit = { lat = 58.4, lon = 23.2 }
+route = [{ lat = 58.3, lon = 25.0, alt_m = 150.0 }, { lat = 58.75, lon = 27.4, alt_m = 150.0 }, { lat = 59.1, lon = 28.2, alt_m = 150.0 }]
+target = "s200_kingisepp"
+launch_km = 20.0
+abort_frac = 0.5
+trigger = "phase"
+
+[[group]]
+id = "weasels"
+name = "F-4G Wild Weasels (52nd TFW)"
+callsign = "WEASEL"
+side = "red"
+role = "sead"
+type = "F-4G"
+n = 4
+entry = { lat = 58.6, lon = 23.2, alt_m = 6000.0 }
+exit = { lat = 58.8, lon = 23.2 }
+route = [{ lat = 58.8, lon = 25.0, alt_m = 6000.0 }]
+station = { lat = 59.0, lon = 26.4, alt_m = 6000.0, r_km = 20.0 }
+target = "f111_b"
+commit_km = 40.0
+trigger = "phase"
+
+[[group]]
+id = "f111_c"
+name = "F-111F strike on the S-300 (second wave)"
+callsign = "CLAMP"
+side = "red"
+role = "strike"
+type = "F-111F"
+n = 3
+alt_m = 150.0
+entry = { lat = 59.55, lon = 23.2, alt_m = 150.0 }
+exit = { lat = 59.6, lon = 23.2 }
+route = [{ lat = 59.65, lon = 25.5, alt_m = 150.0 }, { lat = 59.8, lon = 27.8, alt_m = 150.0 }, { lat = 59.95, lon = 28.9, alt_m = 150.0 }]
+target = "s300_leningrad"
+launch_km = 22.0
+abort_frac = 0.5
+trigger = "phase"
+
+[[group]]
+id = "escort"
+name = "F-15C escort (second wave)"
+callsign = "BUICK"
+side = "red"
+role = "escort"
+type = "F-15C"
+n = 4
+entry = { lat = 59.6, lon = 23.2, alt_m = 9500.0 }
+exit = { lat = 59.6, lon = 23.2 }
+target = "f111_c"
+commit_km = 90.0
+trigger = "phase"
+
+# ====================================================================== objectives
+
+[[objective]]
+id = "strikers"
+text = "Shoot down four in ten of the F-111s"
+kind = "kill_fraction"
+params = { groups = ["f111_a", "f111_b", "f111_c"], frac = 0.4 }
+points = 25
+
+[[objective]]
+id = "shield"
+text = "The S-300 battalion that covers Leningrad survives"
+kind = "radars_survive"
+params = { sites = ["s300_leningrad"], max_destroyed = 0 }
+points = 15
+
+[[objective]]
+id = "runways"
+text = "Never more than one fighter airfield closed at once"
+kind = "runways"
+params = { bases = ["tapa", "gromovo", "andreapol"], max_closed = 1 }
+points = 15
+
+[[objective]]
+id = "radars"
+text = "Lose no more than three radars destroyed"
+kind = "radars_survive"
+params = { max_destroyed = 3 }
+points = 15
+
+[[objective]]
+id = "weasels"
+text = "Shoot down half the Wild Weasels"
+kind = "kill_fraction"
+params = { groups = ["weasels"], frac = 0.5 }
+points = 10
+
+[[objective]]
+id = "ravens"
+text = "Shoot down one of the jammers"
+kind = "kill_fraction"
+params = { groups = ["raven_n", "raven_s"], frac = 0.5 }
+points = 10
+
+[[objective]]
+id = "losses"
+text = "Lose no more than eight interceptors"
+kind = "lose_at_most"
+params = { n = 8 }
+points = 10

@@ -6,7 +6,7 @@
 
 A battle is the Cold War turned hot: a hypothetical night in 1987 when the raids come for real. Both sides fight on their own. Enemy bombers, jammers, shadowers, escorts and cruise missiles fly their missions; ships steam in formation, turn away from missiles and fire chaff; missile battalions and ship fire channels pick their targets; your interceptors are committed, relieved and recalled by your staff. Everything works from the radar picture: what the radars do not see, nobody can shoot.
 
-A battle runs in phases — the search, the electronic attack, the raid, the counterstrike — and lasts about an hour of game time, fifteen minutes at the default 4×. Each phase opens when the situation calls for it (or when nothing has happened for a while), so the story keeps moving. Inside the phases nothing is scripted: who finds whom and who gets through is computed.
+A battle runs in phases — the search, the electronic attack, the raid, the counterstrike — and lasts an hour or more of game time, fifteen to twenty-five minutes at the default 4×. Each phase opens when the situation calls for it (or when nothing has happened for a while), so the story keeps moving. Inside the phases nothing is scripted: who finds whom and who gets through is computed.
 
 It ends when the last raiders have gone home, when the time runs out, or when you lose what you were there to protect. The debrief gives VICTORY, DRAW or DEFEAT, the score against the objectives, what each side lost, every decision and who made it, and a newspaper.
 
@@ -51,16 +51,32 @@ A radar that radiates can be heard far beyond the range at which it sees. Shadow
 
 Missile carriers need a fix to fire from long range. With a fresh fix they launch from maximum range; with an old one they press in closer; with nothing but the briefing's guess they have to come in close, into your fighters and missiles. A ship that has to fire on a fix will not fire at all without one.
 
+## Peace, the FLASH and the ceasefire
+
+Some battles begin before the war does. In **peacetime** nobody fires: strangers that approach are met by a pair of fighters, escorted and photographed, and the staff sends the escorts on its own (*weapons tight*). The objective is to be alongside every shadower before it comes close — and not to fire a single shot. Then the **FLASH** comes: hostilities. The escorts that were sitting beside the enemy are suddenly in the best firing position of their lives, and so are his escorts beside them.
+
+The last battle ends with a **ceasefire** at a fixed hour. From that minute nobody fires at an aircraft: missile batteries defend only against weapons already in flight, the jammers fall silent, and the enemy's raids turn for home. Missiles fired a minute before the hour still arrive.
+
+**Mercy.** Twice in each war the choice is yours alone: what to do with an enemy who cannot hurt you. At the FLASH the shadowers your fighters are escorting can be shot down — or allowed to go home and report where you are. After the ceasefire a damaged straggler comes out of the dark: let it go, or give the order that breaks the ceasefire. Neither is free. Mercy costs objectives and can cost you the next night; the order costs the ceasefire objective and something the war remembers.
+
+## The aircrews
+
+Every interceptor of yours is flown by someone with a name and a rank. A kill is credited to the flight leader; at five he is an **ace**. A pilot who is shot down ejects and is picked up, goes missing, or is killed — the radio says which. A flight's card names its crew and their kills. The debrief names the pilot of the night and every aircrew that was shot down.
+
+In a war the roster carries over: the aces of the first night lead the flights of the next, the dead do not fly again, and some of the missing are found between the battles (more of them if mercy was shown). Kills bring decorations — from the Air Medal to the Navy Cross, from the Medal for Combat Merit to the Gold Star — and the best are promoted in the field.
+
 ## The war
 
-**THE WAR** on the title screen is a short campaign of battles fought by the same forces, night after night.
+**THE WAR** on the title screen is a campaign of five battles, from the last hours of peace to the ceasefire, fought by the same forces.
 
-- Aircraft shot down stay lost; replacements arrive between battles.
-- Damaged ships are only partly repaired; a crippled ship is in the dockyard; a sunk one is gone. A war can end early if you lose what the force cannot fight without.
+- Aircraft shot down stay lost; replacements arrive between battles. Before the second night the Pacific Fleet sends the battle group two more escorts, USS Mobile Bay and USS Callaghan; they stay with it for the rest of the war, if they live.
+- Damaged ships are only partly repaired; a crippled ship is in the dockyard; a sunk one is gone. If the carrier is lost, the battle group's war ends with her: the battles at sea that needed her are not fought (the war diary says why), but the war goes on ashore — her surviving aircraft fly from Alaska, and Bears over the Pole is still yours to fight. The night she goes down is told in pages of its own, the ending knows she is gone, and without her the war is a draw at best.
 - Radars that were destroyed stay destroyed.
 - The enemy's losses carry over too. A regiment cut in half on the first night comes back at half strength; an enemy cruiser put out of action fires no missiles the next night.
 
-The war room shows the war diary, what is left of the order of battle and the next battle. Each battle of a war can also be played on its own from BATTLES, starting from the losses its scenario assumes.
+Between the battles the war is told in its own papers: teletypes and orders, intelligence summaries, letters home from a sailor or a radar operator, the newspaper of the battle group or the army, the letters to the families of the fallen, the honours list. What they say depends on what happened — the outcome, the losses, the names of your aces and your dead, the choices you made. The war ends with an epilogue, the honours of the war and the roll of the fallen. **THE STORY SO FAR** in the war room reads every page again.
+
+The war room shows the war diary, what is left of the order of battle, the aces and the fallen, and the next battle. Each battle of a war can also be played on its own from BATTLES, starting from the losses its scenario assumes.
 
 ## Difficulty
 
@@ -70,9 +86,15 @@ Set in SETTINGS, applied when a watch begins. RECRUIT: every crew position works
 
 | Battle | Side | What happens |
 |---|---|---|
+| The Bear Watch | US | The last hours of peace: escort the BEAR Ds weapons tight, then the FLASH — and the first raid of the war, BADGERs and BACKFIREs. |
 | The Outer Air Battle | US | Bering Sea: BEAR D shadowers, BADGER jammers, two squadrons of BACKFIREs against the Carl Vinson group; an alpha strike on the FRUNZE. |
 | The Second Raid | US | The second night: the regiment's survivors and a fresh squadron down the Bering Strait; the FRUNZE closing with Granits. |
+| Bears over the Pole | US | Alaska: BEAR H carriers with AS-15 cruise missiles against the radar line and the Eagles' bases, FOXHOUNDs hunting the Sentries, a regiment over the top. |
+| The Last Night | US | One hour to the ceasefire and the Pacific Fleet throws everything it has left; then a straggler after the guns have stopped. |
+| Shadows on the Border | PVO | The last hours of peace on the Kola: escort the RC-135, the Orion and the Blackbird; then the war, and the first Tomahawks. |
 | The Northern Bastion | PVO | Kola: Tomahawks over Finnmark, a carrier strike with HARM shooters and jammers on the bases and the KIROV group, then B-52s with Harpoons. |
 | The Second Strike | PVO | The second night: ALCMs from the north, Tomcats sent deep for the A-50, then the second strike. |
+| The Baltic Front | PVO | Leningrad: F-111s at 60 metres over the Gulf of Riga, Wild Weasels, EF-111 jammers, F-15C sweeps and B-52 cruise missiles; Su-27s at Gromovo. |
+| The Capital | PVO | The last hour before the ceasefire: B-52s with cruise missiles for Moscow's air defence; then a crippled bomber over Estonia after seven o'clock. |
 
 All of them are hypothetical. The forces, sites and weapons are approximately right for 1987; the war is not.

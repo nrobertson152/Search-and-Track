@@ -33,7 +33,7 @@ How work gets done on Search and Track. One page; keep it that way.
 python -m pip install -e ".[dev]"
 python -m pytest -q                                   # full suite, headless
 python -m searchtrack --screenshot out.png --scenario <id> --seconds <t> [--mode scope|net] [--console N]
-python -m searchtrack --screenshot out.png --scene title|briefing|debrief|campaign|alert|operations|manual
+python -m searchtrack --screenshot out.png --scene title|briefing|debrief|campaign|alert|operations|manual|war|story
 python tools/sync_manual.py                           # after editing data/manual
 tools/build_appimage.sh                               # Linux AppImage in dist/ (needs desktop-file-utils)
 python tools/build_theater.py data/theaters/<id> --ne <natural-earth> --dem <etopo.nc>

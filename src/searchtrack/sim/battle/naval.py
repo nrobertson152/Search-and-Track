@@ -357,6 +357,10 @@ def red_sam_step(w: "World", site: SamSite, dt: float) -> None:
     sh = w.ships.get(site.carrier) if site.carrier else None
     if site.status != "ok" or (sh is not None and sh.state in ("sunk", "crippled")):
         return
+    from .core import roe
+    rules = roe(w, site.side)
+    if rules == "peace":
+        return
     tgt = w.aircraft.get(site.lock) if site.lock else None
     valid = tgt is not None and tgt.state == "airborne" and \
         math.hypot(tgt.x - site.x, tgt.y - site.y) <= st.fc_range_km and _los(site, tgt)
@@ -374,6 +378,8 @@ def red_sam_step(w: "World", site: SamSite, dt: float) -> None:
             d = math.hypot(a.x - site.x, a.y - site.y)
             if d > st.fc_range_km or not (st.alt_min_m <= a.alt <= st.alt_max_m) or not _los(site, a):
                 continue
+            if rules == "ceasefire" and not a.aim:
+                continue                                         # ceasefire: only a missile coming at the ship
             if jammers and d > st.fc_range_km * jam_factor(w, site.x, site.y, a.x, a.y, jammers) * 0.7:
                 continue                                         # the fire-control radar is jammed on that bearing
             if locks.get(a.id, 0) >= (3 if a.aim else 2) or not _in_envelope(w, site, st, a):

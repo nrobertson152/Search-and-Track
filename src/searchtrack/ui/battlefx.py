@@ -881,6 +881,12 @@ class BattleFX:
                 fuel = ms[0].fuel / at.fuel_kg * 100
                 wpn = ", ".join(f"{n}× {k}" for k, n in sorted(ms[0].weapons.items()) if n) or "winchester"
                 rows.append((f"Fuel {fuel:.0f}%{' BINGO' if fl.bingo else ''} · {wpn}", (200, 210, 214)))
+            crew = [w.battle.pilots[a.pilot] for a in ms if a.pilot and a.pilot in w.battle.pilots]
+            if crew:                             # who is flying it, and what they have done in this war
+                rows.append(("Crew: " + ", ".join(
+                    (f"{p.rank} {p.surname}".strip() or p.name) +
+                    (f" ({p.kills}{' ACE' if p.kills >= 5 else ''})" if p.kills else "") for p in crew),
+                    (236, 214, 160)))
             sq = w.squadrons.get(fl.squadron_id)
             if sq is not None:
                 rows.append((f"{sq.name} · shots {fl.shots} · kills {len(fl.kills)}", (200, 210, 214)))

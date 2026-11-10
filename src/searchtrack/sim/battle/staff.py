@@ -31,6 +31,12 @@ CRUISE_MPS = 330.0                  # a missile track slower than this is a crui
 REACH_KM = {"aggressive": 950.0, "balanced": 600.0, "defensive": 320.0}
 
 
+def spared(w: "World", trk) -> bool:
+    """One of the aircraft the commander let go home (see director.spare_groups)."""
+    from .director import spared as _spared
+    return _spared(w, trk)
+
+
 # ------------------------------------------------------------------ classification
 
 def classify(w: "World", trk) -> str:
@@ -50,10 +56,10 @@ def classify(w: "World", trk) -> str:
     return "unknown"
 
 
-def defended_points(w: "World") -> list[tuple[float, float]]:
+def defended_points(w: "World", aew: bool = True) -> list[tuple[float, float]]:
     pts = [(s.x, s.y) for s in w.ships.values() if s.side == w.own_side and s.state != "sunk"]
     for g in w.battle.groups.values():
-        if g.side == w.own_side and g.role == "awacs" and g.members:
+        if aew and g.side == w.own_side and g.role == "awacs" and g.members:
             a = w.aircraft.get(g.members[0])
             if a is not None and a.state == "airborne":
                 pts.append((a.x, a.y))
@@ -76,13 +82,148 @@ def step(w: "World") -> None:
     _emcon(w)
     _identify(w)
     _cap(w)
+    rules = b.standing.get("roe", "war")
     if b.standing.get("fighters", "auto") == "auto":
-        _commit(w)
-        _recall(w)
-    _self_defense(w)
-    if b.standing.get("sam", "FREE") != "HOLD":
-        _sams(w)
+        if rules == "war":
+            _commit(w)
+            _recall(w)                            # in peacetime nobody shoots: escorts go wherever the stranger goes
+        elif rules == "peace":
+            _escorts(w)
+        elif rules == "ceasefire" and any(k.startswith("cleared_") for k in w.vars):
+            from .director import authorize_cleared
+            authorize_cleared(w)                  # new tracks on an aircraft we were ordered to shoot down
+            _commit(w, only_cleared=True)
+    if rules == "war":
+        _self_defense(w)
+    if b.standing.get("sam", "FREE") != "HOLD" or rules == "ceasefire":
+        _sams(w, missiles_only=rules != "war")       # (and whatever higher command has ordered shot down)
     _aew(w)
+    if w.tick % 3 == 0:
+        _intercepts(w)
+
+
+def _escorts(w: "World") -> None:
+    """Peacetime: every stranger coming our way gets a pair of fighters on its tail -- identify it,
+    escort it, show it the flag. Nobody fires."""
+    from .. import commands
+    b = w.battle
+    if w.tick % 3:
+        return
+    pts = defended_points(w)
+    if not pts:
+        return
+    reach = 380.0
+    done = 0
+    own = _controlled(w)
+    for trk in sorted(w.tracks.values(), key=lambda t: t.id):
+        if done >= 2:
+            break
+        if trk.lost or trk.identity not in ("hostile", "suspect") or own_correlation(w, trk, own):
+            continue                              # only strangers the battle rules have marked
+        if classify(w, trk) in ("missile", "debris"):
+            continue
+        px, py = predicted(trk, w.t)
+        d = min(math.hypot(px - x, py - y) for x, y in pts)
+        if d > reach and trk.id not in b.priority:
+            continue
+        if any(fl.target == trk.id and fl.state not in ("landed", "lost") for fl in w.flights.values()):
+            continue
+        if _company(w, trk, px, py, own):
+            continue                              # a second track on a stranger who already has company
+        if w.t - w.vars.get(f"esc_{trk.id}", -1e9) < 150.0:
+            continue                              # sent someone a moment ago: give them time to find him
+        ok, msg = commands.run(w, "quick", track=trk.id, order="shadow", n=2)
+        if not ok:
+            continue
+        w.vars[f"esc_{trk.id}"] = w.t
+        done += 1
+        callsign = "fighters"
+        for fl in w.flights.values():
+            if fl.target == trk.id and fl.state not in ("landed", "lost"):
+                callsign = fl.callsign
+                fl.order_throttle = "ab"          # burners out to the stranger, then match his speed
+        event(w, "commit", f"{callsign} sent to intercept and escort {trk.id} ({d:.0f} km out) — weapons tight",
+              trk.id, px, py, w.own_side, 1)
+
+
+def _company(w: "World", trk, px: float, py: float, own: list) -> bool:
+    """Already escorted: another track with an escort on it within a few km, or one of our
+    fighters on a target sitting right there."""
+    near = 12.0 + math.hypot(trk.vx, trk.vy) * 25.0   # a fast mover's tracks lag and split further apart
+    for fl in w.flights.values():
+        if not fl.target or fl.target == trk.id or fl.state in ("landed", "lost", "rtb"):
+            continue
+        o = w.tracks.get(fl.target)
+        if o is not None and not o.lost:
+            ox, oy = predicted(o, w.t)
+            if math.hypot(ox - px, oy - py) < near:
+                return True
+        lead = gci.lead_of(w, fl)
+        if lead is not None and fl.contact and math.hypot(lead.x - px, lead.y - py) < 8.0:
+            return True
+    return False
+
+
+ALONGSIDE_US = {
+    "recon": "tail gunner's waving at us — cameras up in the blisters, they're shooting the whole formation",
+    "patrol": "crew's at the windows taking pictures, sonobuoy chutes in the back",
+    "elint": "antenna farm on the belly, they're listening to everything we radiate",
+    "ew": "jammer pods on the wingtips, just sitting there humming",
+    "interceptor": "four big missiles under the belly — he's watching me watch him",
+    "fighter": "carrying a full load of missiles, he's flying good formation on us",
+    "strike": "missiles on the pylons — that's a live load, not training rounds",
+    "bomber": "big as a house — and that's a live load under the wings",
+}
+ALONGSIDE_SU = {
+    "recon": "Crew is photographing us through the window. Antennas everywhere.",
+    "patrol": "Patrol aircraft, low over the water. The crew waved.",
+    "elint": "Electronic reconnaissance aircraft. Listening to our radars.",
+    "ew": "Jamming aircraft, pods under the wings.",
+    "interceptor": "Fighter, full missile load. He is holding formation on us.",
+    "fighter": "Fighter, missiles on the rails. He sees us.",
+    "strike": "Strike aircraft with weapons on the pylons. Live load.",
+    "bomber": "Bomber, weapons under the wings.",
+}
+
+
+def _nick(name: str) -> str:
+    """"Tu-95RTs (BEAR D)" -> "BEAR D"."""
+    if "(" in name and ")" in name:
+        return name[name.index("(") + 1:name.index(")")]
+    return name
+
+
+def _intercepts(w: "World") -> None:
+    """Which of the enemy's groups have had one of our fighters alongside (for the peacetime objectives)."""
+    b = w.battle
+    if b.standing.get("roe", "war") != "peace":
+        return                                    # in a war, being alongside is not an intercept
+    own = [a for a in w.aircraft.values() if a.side == w.own_side and a.state == "airborne" and a.kind == "aircraft"
+           and not a.aim and a.flight_id]
+    if not own:
+        return
+    for g in b.groups.values():
+        if g.side == w.own_side or g.state in ("pending", "done") or w.vars.get(f"intercepted_{g.id}"):
+            continue
+        for mid in g.members:
+            m = w.aircraft.get(mid)
+            if m is None or m.state != "airborne":
+                continue
+            near = [a for a in own if math.hypot(a.x - m.x, a.y - m.y) < 6.0 and abs(a.alt - m.alt) < 2500.0]
+            if not near:
+                continue
+            w.vars[f"intercepted_{g.id}"] = w.t
+            fl = w.flights.get(near[0].flight_id)
+            at = w.catalog.aircraft.get(g.type_id)
+            role = at.role if at is not None else "unknown"
+            what = _nick(at.name) if at is not None else g.name
+            cs = fl.callsign if fl is not None else "our fighters"
+            if w.faction == "US":
+                txt = f"{cs} alongside the {what} — {ALONGSIDE_US.get(role, 'we have him')}"
+            else:
+                txt = f"{cs} alongside the {what}. {ALONGSIDE_SU.get(role, 'Holding formation.')}"
+            event(w, "intercepted", txt, g.id, m.x, m.y, w.own_side, 2)
+            break
 
 
 def _emcon(w: "World") -> None:
@@ -128,12 +269,23 @@ def _identify(w: "World") -> None:
     hy = b.red_plan.get("hostile_y")
     vamp = []
     own = _controlled(w)
+    on_target: dict[str, list] = {}
+    for a in own:
+        fl = w.flights.get(a.flight_id) if a.flight_id else None
+        if fl is not None and fl.target:
+            on_target.setdefault(fl.target, []).append(a)
     for trk in w.tracks.values():
         if trk.lost:
             continue
         cls = classify(w, trk)
+        seen = w.vid_reports.get(trk.id)
+        if seen is not None and seen[0] not in (w.own_side, "civil", "neutral") and cls != "debris":
+            if trk.identity != "hostile":         # the pilot alongside has seen the red stars
+                w.set_identity(trk.id, "hostile", f"VID: {seen[1]}", authority=True)
+            continue
         if trk.identity in ("pending", "unknown", "hostile") and trk.id not in b.priority and cls != "missile":
-            mine = own_correlation(w, trk, own)
+            escorts = on_target.get(trk.id, [])  # our fighters sitting on it are not it
+            mine = own_correlation(w, trk, [a for a in own if a not in escorts] if escorts else own)
             if mine is not None and iff_assessment(w, trk)[0] != "invalid":
                 if trk.identity != "friend":
                     w.set_identity(trk.id, "friend", f"own aircraft {mine} (data link)", authority=True)
@@ -226,9 +378,9 @@ def _hvaa_threats(w: "World") -> dict[str, float]:
     return out
 
 
-def _commit(w: "World") -> None:
+def _commit(w: "World", only_cleared: bool = False) -> None:
     b = w.battle
-    pts = defended_points(w)
+    pts = defended_points(w, aew=False)          # reach is measured from what we defend, not from the radar aircraft
     reach = REACH_KM.get(b.standing.get("posture", "balanced"), 600.0)
     hvaa = _hvaa_threats(w)
     cand = []
@@ -238,8 +390,12 @@ def _commit(w: "World") -> None:
         cls = classify(w, trk)
         if cls == "missile" and math.hypot(trk.vx, trk.vy) * 1000.0 < CRUISE_MPS and w.t - trk.t_init > 20.0:
             cls = "cruise"                   # subsonic and low: an interceptor with look-down radar can catch it
-        if cls in ("missile", "debris"):
+        if cls in ("missile", "debris") or spared(w, trk):
             continue
+        if only_cleared:
+            from .director import cleared
+            if not cleared(w, trk):
+                continue
         px, py = predicted(trk, w.t)
         d = min(math.hypot(px - x, py - y) for x, y in pts)
         if cls == "cruise" and d > 260.0 and trk.id not in b.priority:
@@ -247,6 +403,9 @@ def _commit(w: "World") -> None:
         prio = trk.id in b.priority or trk.id in hvaa
         if d > reach and not prio:
             continue
+        if d > 250.0 and not prio and cls in ("strike", "bomber", "recon", "ew", "patrol") and \
+                _opening(trk, px, py, pts):
+            continue                         # a raider going home far out is not worth the fuel
         if cls in ("interceptor", "fighter") and not prio and \
                 d > (reach if b.standing.get("posture") == "aggressive" else 230.0):
             continue                         # a fighter sweep far out is bait: keep the interceptors for bombers
@@ -286,6 +445,12 @@ def _commit(w: "World") -> None:
               w.own_side, 1)
 
 
+def _opening(trk, px: float, py: float, pts: list) -> bool:
+    """The track is moving away from the nearest point we defend."""
+    cx, cy = min(pts, key=lambda p: math.hypot(p[0] - px, p[1] - py))
+    return (px - cx) * trk.vx + (py - cy) * trk.vy > 0.0 and math.hypot(trk.vx, trk.vy) > 0.05
+
+
 def _cap(w: "World") -> None:
     b = w.battle
     for fl in w.flights.values():                  # surge and recalled flights orbit their patrol point
@@ -298,9 +463,15 @@ def _cap(w: "World") -> None:
         alive = fl is not None and fl.state not in ("landed", "lost", "rtb")
         if alive and fl.task != "cap":
             tgt = w.tracks.get(fl.target) if fl.target else None
+            key = f"caplost_{fl.id}"
             if tgt is None or tgt.lost or fl.state == "hold":
-                fl.task, fl.target, fl.contact = "cap", "", ""     # job done: back to the station
-                w.radio(fl, f"returning to {st['name']}" if w.faction == "US" else "Returning to patrol.")
+                w.vars.setdefault(key, w.t)
+                if tgt is None or w.t - w.vars[key] >= 45.0:     # a flickering track is not a lost one
+                    w.vars.pop(key, None)
+                    fl.task, fl.target, fl.contact = "cap", "", ""     # job done: back to the station
+                    w.radio(fl, f"returning to {st['name']}" if w.faction == "US" else "Returning to patrol.")
+            else:
+                w.vars.pop(key, None)
         if alive and fl.task == "cap" and not fl.target and fl.state in ("airborne", "vector", "hold"):
             fl.state = "cap"
         if alive and fl.task == "cap":
@@ -406,7 +577,7 @@ def _self_defense(w: "World") -> None:
                   w.own_side, 1)
 
 
-def _sams(w: "World") -> None:
+def _sams(w: "World", missiles_only: bool = False) -> None:
     b = w.battle
     tight = b.standing.get("sam", "FREE") == "TIGHT"
     ships = defended_points(w)
@@ -419,12 +590,16 @@ def _sams(w: "World") -> None:
         if trk.lost or trk.identity not in ("hostile",):
             continue
         cls = classify(w, trk)
-        if cls == "debris":
+        if cls == "debris" or (cls != "missile" and spared(w, trk)):
             continue
         px, py = predicted(trk, w.t)
         near_ship = min((math.hypot(px - x, py - y) for x, y in ships), default=1e9)
         if tight and cls != "missile" and near_ship > 60.0:
             continue
+        if missiles_only and cls != "missile":
+            from .director import cleared
+            if not cleared(w, trk):
+                continue                             # ceasefire: only what is already coming at us
         live.append((trk, cls, px, py, near_ship))
     for site in w.sams.values():
         if site.side != w.own_side or site.status != "ok" or site.hold or w.t < site.t_ready:
@@ -472,6 +647,19 @@ def _aew(w: "World") -> None:
         if a is None or a.state != "airborne":
             continue
         near = [t for t in fighters if math.hypot(t.x - a.x, t.y - a.y) < 230.0]
+        home = b.red_plan.get("aew_home", {}).get(g.id)
+        if home is not None and g.station and not any(math.hypot(t.x - home[0], t.y - home[1]) < 320.0
+                                                      for t in fighters):
+            key = f"aew_clear_{g.id}"             # the threat has gone: back to the station it left
+            w.vars.setdefault(key, w.t)
+            if w.t - w.vars[key] >= 240.0:
+                g.station = list(home)
+                del b.red_plan["aew_home"][g.id]
+                w.vars.pop(key, None)
+                event(w, "aew", f"{g.name} back on its station — the fighters that drove it off are gone", g.id,
+                      level=1)
+        elif home is not None:
+            w.vars.pop(f"aew_clear_{g.id}", None)
         if not near:
             continue
         if any(d.kind == "aew" and d.ref == g.id and (not d.chosen or w.t - d.t_chosen < 360.0)

@@ -90,6 +90,9 @@ def launch(world: "World", fl: Flight) -> None:
         world.aircraft[ac.id] = ac
         fl.members.append(ac.id)
     fl.state = "vector" if (fl.target or fl.order_hdg is not None) else "airborne"
+    if world.battle.active:
+        from . import pilots
+        pilots.crew(world, fl)
     if fl.order_alt is None:
         fl.order_alt = DEFAULT_ALT
     for mid in fl.members:
@@ -434,6 +437,8 @@ def _terminal(world: "World", fl: Flight, lead: Aircraft, at, c: Aircraft, dt: f
                 a.cmd_hdg = hdg
                 a.cmd_alt = min(c.alt + (60.0 if not fl.vid_done else 150.0), zoom)
                 a.cmd_spd = (c.spd + max(-45.0, min(along * 30.0, 120.0))) if close < 12.0 else None
+                if fl.order_throttle == "ab" and at.ff_ab:
+                    a.throttle = "mil" if close < 12.0 else "ab"     # dash out, then sit on his wing
         else:
             sol = intercept.lead_collision(c.x, c.y, cvx, cvy, lead.x, lead.y, max(lead.spd, 150.0) / 1000.0) \
                 if fl.task != "ram" else intercept.pursuit(c.x, c.y, lead.x, lead.y)
@@ -554,6 +559,9 @@ def _attack(world: "World", fl: Flight, lead: Aircraft, at, c: Aircraft, d3: flo
             world.stats.aam_shots += 1
             fl.shots += 1
             fl.state = "attack"
+            if world.battle.active:
+                from .battle.core import note_shot
+                note_shot(world, world.own_side, c)
             world.vars[key] = world.t + 6.0
             tvx, tvy = ground_velocity(world, c)
             slow = 2.2 if math.hypot(tvx, tvy) < 80.0 else 1.0      # a drifting balloon or a light aircraft
@@ -580,8 +588,9 @@ def _attack(world: "World", fl: Flight, lead: Aircraft, at, c: Aircraft, d3: flo
         fl.state = "attack"
         world.vars[key] = world.t + (8.0 if world.battle.active and wt.max_km > 30.0 else 25.0)
         if world.battle.active:
-            from .battle.core import counter, event
+            from .battle.core import counter, event, note_shot
             counter(world, f"aam_shots_{world.own_side}", shots)
+            note_shot(world, world.own_side, c, shots)
             event(world, "aam", f"{fl.callsign}: {shots}× {wt.name.split(' (')[0]} away at {c.callsign or 'a bandit'}",
                   fl.id, lead.x, lead.y, world.own_side, 1)
         world.radio(fl, f"fox, {shots} {wt.name}" if world.faction_def.id == "US" else f"Launch, {shots} missiles.",
@@ -663,6 +672,9 @@ def _rtb_step(world: "World", fl: Flight, lead: Aircraft, at) -> None:
                 a.state = "landed"
                 landed += 1
                 sq.recovering.append(world.t + sq.turnaround_min * 60.0)
+                if world.battle.active and a.pilot:
+                    from . import pilots
+                    pilots.landed(world, a)
         sq.airborne = max(0, sq.airborne - landed)
         sq.pilots += landed
         fl.state = "landed"

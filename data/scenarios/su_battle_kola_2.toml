@@ -38,11 +38,11 @@ objective_drop = ["kirov", "ships", "strikers", "runways", "radars", "tomahawks"
 
 objective_add = [
   { id = "kirov", text = "KIROV survives", kind = "ship_survives", params = { ship = "kirov" }, points = 20 },
-  { id = "radars", text = "No more than three radars destroyed in the whole war", kind = "radars_survive", params = { max_destroyed = 3 }, points = 15 },
+  { id = "radars", text = "No more than four radars destroyed in the whole war", kind = "radars_survive", params = { max_destroyed = 4 }, points = 15 },
   { id = "runways", text = "Never more than two fighter airfields closed at once", kind = "runways", params = { bases = ["kilpyavr", "monchegorsk", "afrikanda", "severomorsk3"], max_closed = 2 }, points = 15 },
-  { id = "missiles", text = "Shoot down 40% of the cruise missiles", kind = "missiles_stopped", params = { types = ["AGM-86C", "TLAM-C"], frac = 0.4, planned = 20 }, points = 15 },
+  { id = "missiles", text = "Shoot down 30% of the cruise missiles", kind = "missiles_stopped", params = { types = ["AGM-86C", "TLAM-C"], frac = 0.3, planned = 20 }, points = 15 },
   { id = "mainstay", text = "Keep the A-50 flying", kind = "protect_group", params = { group = "a50" }, points = 15 },
-  { id = "strikers", text = "Shoot down half the strike aircraft", kind = "kill_fraction", params = { groups = ["a6_ship", "a6_land"], frac = 0.5 }, points = 15 },
+  { id = "strikers", text = "Shoot down a third of the strike aircraft", kind = "kill_fraction", params = { groups = ["a6_ship", "a6_land"], frac = 0.34 }, points = 15 },
   { id = "hidden", text = "Deny NATO a fix on the fleet for fifteen minutes", kind = "deny_location", params = { before_min = 15.0 }, points = 5 },
 ]
 
@@ -75,7 +75,7 @@ text = "Two groups of Tomcats over the Barents, coming south-east fast. Jammers 
 actions = [
   { do = "launch", groups = ["ew_ship", "ew_land"] },
   { do = "launch", groups = ["sweep", "sweep_2"], delay_s = 30.0 },
-  { do = "decision", kind = "aew", title = "MAINSTAY — STAY UP OR LAND?", text = "Eight Tomcats are coming for the A-50. It can stay up, pulled back south-east over the tundra with MiG-31s between it and the Tomcats — or land at Olenya and be safe, leaving us the coastal companies and the guidance points alone for the strike that will follow.", options = ["STAY UP", "LAND IT"], default = "STAY UP", timeout_s = 50.0, effects = { "STAY UP" = [{ do = "group", group = "a50", station = { lat = 67.55, lon = 35.2, alt_m = 9000.0, r_km = 25.0 } }, { do = "surge", squadrons = ["monch_iap"], lat = 68.6, lon = 33.3, alt_m = 10000.0, max_flights = 2 }], "LAND IT" = [{ do = "group", group = "a50", state = "egress" }] } },
+  { do = "decision", kind = "aew", title = "MAINSTAY — STAY UP OR LAND?", text = "Eight Tomcats are coming for the A-50. It can stay up, pulled back south-east over the tundra with MiG-31s between it and the Tomcats — or land at Olenya and be safe, leaving us the coastal companies and the guidance points alone for the strike that will follow.", options = ["STAY UP", "LAND IT"], default = "STAY UP", timeout_s = 50.0, effects = { "STAY UP" = [{ do = "group", group = "a50", station = { lat = 67.55, lon = 35.2, alt_m = 9000.0, r_km = 25.0 } }, { do = "ready", squadron = "monch_iap", move = { "7" = "3", "20" = "3" } }, { do = "surge", squadrons = ["monch_iap", "kilp_iap"], lat = 68.6, lon = 33.3, alt_m = 10000.0, max_flights = 3 }], "LAND IT" = [{ do = "group", group = "a50", state = "egress" }] } },
 ]
 
 [[battle.phase]]

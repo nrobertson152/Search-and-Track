@@ -119,6 +119,10 @@ def try_shot(w: "World", shooter: Aircraft, tgt: Aircraft, owner: str) -> Option
     key = f"aishot_{shooter.id}"
     if w.t < w.vars.get(key, -1.0):
         return None
+    from .core import roe
+    side_roe = roe(w, shooter.side)
+    if side_roe == "peace" or (side_roe == "ceasefire" and not tgt.aim):
+        return None                                    # rules of engagement: no shots
     wid = best_shot(w, shooter, tgt)
     if wid is None:
         return None
@@ -127,6 +131,8 @@ def try_shot(w: "World", shooter: Aircraft, tgt: Aircraft, owner: str) -> Option
     n = 2 if (big and wt.max_km > 30.0) else 1
     shots = fire(w, shooter, tgt, wid, owner, n)
     if shots:
+        from .core import note_shot
+        note_shot(w, shooter.side, tgt, shots)
         w.vars[key] = w.t + (5.0 if wt.kind == "gun" else 9.0 if wt.kind == "aam_ir" else 14.0)
         return wid
     return None
@@ -244,7 +250,13 @@ def on_destroyed(w: "World", ac: Aircraft, cause: str, shooter: str) -> None:
     name = at.name.split(" (")[0] if at else ac.type_id
     lvl = 2 if (ac.side == w.own_side or role in BIG_ROLES) else 1
     head = "SPLASH" if w.faction == "US" else "TARGET DESTROYED"
-    event(w, "kill", f"{head} — {ac.callsign} ({name}) shot down by {by}", ac.id, ac.x, ac.y, ac.side, lvl)
+    from .. import pilots
+    ace = pilots.credit(w, shooter, ac) if ac.side != w.own_side else None
+    if ace is not None:
+        by += f" ({pilots.short(ace)}, {pilots.ordinal(ace.kills)} kill)"
+    fate = pilots.shot_down(w, ac) if ac.side == w.own_side and ac.pilot else ""
+    event(w, "kill", f"{head} — {ac.callsign} ({name}) shot down by {by}" + (f" — {fate}" if fate else ""),
+          ac.id, ac.x, ac.y, ac.side, lvl)
     fl = w.flights.get(shooter)
     if fl is not None and w.faction_def.id == "US":
         w.radio(fl, f"splash one {name.split()[0]}", 1)

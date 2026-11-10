@@ -19,18 +19,25 @@ Two services share one simulation and play nothing alike:
 
 ## Battles and the war
 
-Then the Cold War turns hot. In a **battle** both sides fight on their own — bombers, jammers, shadowers, escorts, cruise missiles, ships that steam, turn and fire — and you command the air defense from the radar picture: standing orders, priority targets, decisions with a deadline, reinforcements, and any order you like by hand. Your staff runs the routine. Or **spectate** and watch it unfold; take command whenever you like. **The war** strings battles together: what you lose stays lost, what you destroy does not come back the next night.
+Then the Cold War turns hot. In a **battle** both sides fight on their own — bombers, jammers, shadowers, escorts, cruise missiles, ships that steam, turn and fire — and you command the air defense from the radar picture: standing orders, priority targets, decisions with a deadline, reinforcements, and any order you like by hand. Your staff runs the routine. Or **spectate** and watch it unfold; take command whenever you like. **The war** strings five battles together, from the last hours of peace to the ceasefire: what you lose stays lost, what you destroy does not come back the next night, your pilots have names, and the story between the battles is written by what you did.
 
 | Battle | Side | |
 |---|---|---|
+| The Bear Watch | US | Escort the BEARs weapons tight — then the FLASH, and the first raid of the war |
 | The Outer Air Battle | US | BACKFIRE regiment against the Carl Vinson group in the Bering Sea |
 | The Second Raid | US | The regiment's survivors, a fresh squadron down the Strait, the FRUNZE closing with Granits |
+| Bears over the Pole | US | BEAR H carriers with cruise missiles against Alaska's bases; FOXHOUNDs hunting the Sentries |
+| The Last Night | US | One hour to the ceasefire; then a straggler after the guns have stopped |
+| Shadows on the Border | PVO | Escort the RC-135, the Orion and the Blackbird — then the war, and the first Tomahawks |
 | The Northern Bastion | PVO | Tomahawks low over Finnmark, a carrier strike with HARM shooters, B-52s with Harpoons for the KIROV |
 | The Second Strike | PVO | ALCMs from the north, Tomcats sent deep for the A-50, the second carrier strike |
+| The Baltic Front | PVO | F-111s at 60 metres, Wild Weasels, EF-111 jammers and F-15Cs against Leningrad's shield |
+| The Capital | PVO | B-52 cruise missiles for Moscow's air defence in the last hour; then a crippled bomber after seven |
 
 ![A battle at sea](docs/images/battle.jpg)
 ![A battle over the Kola Peninsula](docs/images/battle_pvo.jpg)
 ![The war room](docs/images/war.jpg)
+![Between the battles: the battle group's newspaper](docs/images/story.jpg)
 
 ## What is in it
 
@@ -42,7 +49,7 @@ Then the Cold War turns hot. In a **battle** both sides fight on their own — b
 - **A network that fails.** Data lines and telephone lines, the AN/FSQ-7 duplex and its switchover, radar faults and maintenance, alerts awaiting acknowledgement.
 - **Eras and content.** Ten historically inspired watches from Genetrix (1956) to Rust's flight to Red Square (1987); six instructor-led training lessons; procedurally generated Alert Duty on real orders of battle; a career campaign with a service record; a full operator's manual.
 - **Battles.** Autonomous air groups with missions, fuel, weapons and nerve; ships in formation with missile channels, close-in guns and chaff; anti-ship, land-attack and anti-radiation missiles; cratered runways and wrecked radars; a battle staff that identifies, commits and keeps the patrols manned; a director that paces each battle through its phases; spectator mode, an umpire's view, unit stories and a tactical replay.
-- **The war.** Battles fought one after another by the same forces, with losses, repairs and replacements carried over on both sides.
+- **The war.** Five battles a side, from the last hours of peace to the ceasefire, fought by the same forces — losses, repairs and replacements carried over on both sides — and told between the battles in teletypes, letters home and newspapers that name your aces and your dead. Named aircrews with kills, decorations and promotions; mercy that the war remembers.
 - **Debrief.** A truth replay of the whole shift, detection and identification timings, why each miss was missed, grades, and the next morning's newspaper.
 - **Music** synthesized as you play, following the situation from a quiet watch to a raid; three difficulty levels.
 
@@ -98,7 +105,7 @@ Everything the simulation knows is plain text in `data/`:
 
 - `aircraft.toml`, `radars.toml`, `sams.toml`, `weapons.toml`, `jammers.toml`, `factions.toml`: equipment, each entry tagged with its provenance.
 - `scenarios/*.toml`: forces, flights and routes, triggers, objectives, intelligence, briefings, newspaper headlines. Training lessons are `[[lesson]]` steps, each with a `done` condition; see `data/scenarios/us_training_intercept.toml`. Battles add `[battle]`, `[[ship]]` and `[[group]]` tables and phases; a scenario can be written as changes to another (`base = "..."` with `group_patch`, `group_add`, `objective_drop`…), see `data/scenarios/us_battle_bering_2.toml`.
-- `campaigns/*.toml`: the wars — which battles, in what order, with what replacements and repairs between them.
+- `campaigns/*.toml`: the wars — which battles, in what order, with what replacements, reinforcing ships (`ship_join`) and repairs between them, which ships the force cannot fight without (`vital`, `skip_without`), and the story: `[cast]`, `[[intro]]`, `[[mission.page]]` (before, after or next; `when` an outcome, a choice, a ship or a radar lost), `[[lost]]` pages for the night a vital ship goes down and `[[epilogue]]` pages, with `{ace}`, `{fallen}`, `{kills}` and the like filled in from what happened.
 - `ships.toml`: warships with their radars, missile channels and close-in guns.
 - `theaters/*`: coastlines, borders, cities, sites and terrain, built by `tools/build_theater.py` from Natural Earth and ETOPO1.
 - `manual/*.md`: the operator's manual; run `python tools/sync_manual.py` to refresh `docs/manual`.

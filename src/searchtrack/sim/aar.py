@@ -108,6 +108,8 @@ def battle_summary(world: "World") -> dict[str, Any]:
         f"Our anti-ship missiles: {int(c.get(f'asm_{own}', 0))} fired, {int(c.get(f'asm_hits_{own}', 0))} hits",
         f"Air-to-air missiles: ours {int(c.get(f'aam_shots_{own}', 0))}, theirs {int(c.get(f'aam_shots_{foe}', 0))}",
     ]
+    from .pilots import night
+    summary += night(world)
     decisions = [f"{_fmt(world, d.t)} {d.title}: {d.chosen}{' (staff)' if d.by != 'player' else ''}"
                  for d in b.decisions if d.chosen]
     return {"outcome": b.outcome, "summary": summary, "decisions": decisions,

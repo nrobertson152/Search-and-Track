@@ -2,6 +2,38 @@
 
 All notable changes to Search and Track. Versions follow [Semantic Versioning](https://semver.org/).
 
+## [Unreleased] — feature/war-story
+
+The war becomes a story: five battles a side, from the last hours of peace to the ceasefire, told in its own papers, with aircrews who have names.
+
+### The story
+- Each war is five battles long. US: The Bear Watch (prologue), The Outer Air Battle, The Second Raid, Bears over the Pole (Alaska), The Last Night. PVO: Shadows on the Border (prologue), The Northern Bastion, The Second Strike, The Baltic Front, The Capital.
+- Between the battles the war is told in teletypes, orders, intelligence summaries, letters home, the newspaper of the battle group or the army, reports and diaries — chosen by what happened (outcome, losses, mercy shown or not) and filled in with the real names of the aces and the fallen. An epilogue, the honours of the war and the roll of the dead at the end. A named cast on each side: an admiral and his air wing commander, a sailor writing home to San Diego; a general, a duty officer, a radar operator writing home to Samarkand.
+- Reinforcements: before the second night USS Mobile Bay and USS Callaghan join the battle group and stay with it (campaign key `ship_join`). The Bear Watch's first raid is smaller (two BACKFIREs), and the carrier takes about five heavy missile hits to put out of action instead of three: in headless wars the battle group was being wiped out by the second night.
+- Losing the carrier no longer ends the US war: the battles that need her are passed over, the night she goes down is told in pages of its own, the Eagles of Alaska still fight Bears over the Pole, and the ending knows she is gone; without her the war is a draw at best (campaign keys `vital`, `skip_without`, `lost`). The radar operator's letters know whether his radar was destroyed (`down_<site>` page conditions).
+- The interlude: story pages typed out one by one on paper of their own (teletype strip, letter, notebook, memo, newspaper with a file photograph and the small news of the day); THE STORY SO FAR in the war room reads them again.
+
+### Peace, the FLASH, the ceasefire and mercy
+- Battles can start in peacetime: the staff escorts every stranger weapons tight; objectives for intercepting the shadowers and for not firing a shot. The FLASH turns escorts into hunters — or lets the shadowers go home.
+- Ceasefires at a fixed hour: nobody fires at an aircraft, missile batteries defend only against weapons in flight, jammers fall silent, the raids turn back. A damaged straggler after the ceasefire: let it ditch (or escort it out), or order it shot down.
+- Mercy is remembered: some of the missing come home, and the war's epilogue changes.
+
+### The aircrews
+- Every interceptor is flown by a named pilot with a rank; kills go to the flight leader, five make an ace; a pilot shot down is picked up, missing or killed. Names are unique across the battle.
+- In a war the roster carries over; decorations from the Air Medal to the Navy Cross and from the Medal for Combat Merit to the Gold Star; field promotions; letters to the families of the fallen. The war room lists the aces and the fallen; a flight's card names its crew; the debrief names the pilot of the night.
+
+### New battles and equipment
+- Bears over the Pole: BEAR H regiments with AS-15s against Alaska's radar line and the Eagles at Galena and King Salmon, FOXHOUNDs hunting the Sentries, a third regiment over the top.
+- The Baltic Front: F-111Fs at 60 m over the Gulf of Riga, F-4G Wild Weasels, EF-111A jammers, F-15C sweeps and B-52 cruise missiles against the Leningrad direction; Su-27s at Gromovo (new theater sites: Gromovo, S-300 Leningrad, S-125 Narva).
+- Catalog: F-15C, F-111F, EF-111A, F-4G, Su-27, GBU-15 glide bomb, Kh-55 (the AS-15 now flies as a land-attack missile in battles), AIM-7M, R-27R, R-73, GSh-30-1; silhouettes for the new aircraft and the F-14A.
+
+### Battle mechanics
+- Missiles fly the last two seconds before the target in small steps and their warhead gets one chance per pass: no more kilometre-wide misses on non-manoeuvring targets from the 1 s step. Missiles are deadlier on both sides; The Second Strike's objectives were eased to match.
+- Air-launched cruise missiles leave the launcher in a stream instead of a clump.
+- Staff: a pilot's visual identification settles the track; the escort alongside is not mistaken for the stranger; a patrol flight rides out a flickering track; reach is measured from what is defended; raiders going home far out are left alone; radar aircraft return to station when the fighters that drove them off are gone.
+- A wrecked radar or battalion stays wrecked when hit again; repeated hits are reported quietly.
+- Director: any action can wait (`after_s`); new actions `war`, `ceasefire`, `spare`, `engage`, `say`; new objective kinds `hold_fire` and `intercept_groups`; the `stray` group role (ditches or leaves).
+
 ## [Unreleased] — feature/fun-and-pvo
 
 The Cold War turned hot: whole air battles fought by both sides, a war that remembers, music.

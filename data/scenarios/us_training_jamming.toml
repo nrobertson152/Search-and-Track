@@ -1,0 +1,257 @@
+id = "us_training_jamming"
+title = "Training: Jamming and the Radar Scope"
+subtitle = "Bangor Air Defense Sector — instructor-led"
+summary = "Read raw radar video, find a jammer by its strobes, beat a spot jammer by changing frequency, and identify the bomber behind the noise."
+faction = "US"
+kind = "training"
+photo = ["B-47E", "F-101B"]
+photo_caption = "B-47E Stratojet of Strategic Air Command, ECM aggressor for the exercise"
+era = "1960s"
+difficulty = 1
+order = 2
+theater = "gulf_of_maine"
+start = "1960-09-08T14:00:00"
+tz = "Z"
+duration_min = 60
+seed = 1960
+reliability = 50.0
+exercise = true
+
+briefing = """
+DIRECTION CENTER DC-05, TOPSHAM AFS — TRAINING SHIFT, ELECTRONIC COUNTERMEASURES
+
+Strategic Air Command has lent us a B-47E with a spot noise jammer aboard. It will come up from the south over the Gulf of Maine and try to hide in its own noise while it runs on Bangor. It is an exercise aircraft playing the enemy: a FAKER.
+
+What you will learn:
+  1. The radar scope: raw video, sweep by sweep, before the computer has interpreted it.
+  2. Jamming strobes, and how bearings from two sites make a jammer track.
+  3. Spot jamming is narrow: change your radar's frequency channel and the jammer has to hunt for you again.
+  4. One spot jammer, two radars: put them on different channels and the jammer cannot cover both.
+
+The instructor's card is pinned to the display. Surveillance automation is ON, identification is yours.
+"""
+
+[automation]
+surveil = true
+ident = false
+height = false
+tech = true
+
+[weather]
+k_factor = 1.333
+wind_from = 250.0
+wind_kmh = 60.0
+ceiling_m = 3000.0
+visibility_km = 40.0
+night = false
+sea_state = 3.0
+
+[hq]
+name = "26 AIR DIV"
+readiness = "DEFCON 5"
+alert = "WHITE"
+weapons_status = "HOLD"
+[hq.policy]
+response_s = [40.0, 90.0]
+declare_hostile = "deny"
+engage = "deny"
+special_release = "deny"
+mode1_valid = ["23", "41"]
+track_start = 1
+
+[[link]]
+id = "L_charleston"
+name = "Charleston data line"
+kind = "data"
+delay_s = 3.0
+
+[[link]]
+id = "L_bucks"
+name = "Bucks Harbor data line"
+kind = "data"
+delay_s = 3.0
+
+[[link]]
+id = "L_dow"
+name = "Dow AFB scramble line"
+kind = "voice"
+delay_s = 8.0
+
+[[radar]]
+site = "charleston"
+type = "AN/FPS-20A"
+hf = ["AN/FPS-6"]
+link = "L_charleston"
+
+[[radar]]
+site = "bucks_harbor"
+type = "AN/FPS-20A"
+hf = ["AN/FPS-6"]
+link = "L_bucks"
+
+[[airbase]]
+site = "dow"
+link = "L_dow"
+
+[[airbase]]
+site = "loring"
+
+[[squadron]]
+id = "75fis"
+name = "75th FIS"
+base = "dow"
+type = "F-101B"
+callsign = "COBRA"
+ready = { "5" = 2, "15" = 2 }
+pilots = 6
+
+[[flight]]
+id = "tophat"
+type = "B-47E"
+callsign = "TOP HAT 21"
+side = "blue"
+spawn_t = 20.0
+truth_label = "B-47E (SAC ECM aggressor)"
+markings = "USAF, Strategic Air Command"
+jammer = "ECM-SPOT-L"
+jamming = true
+start = { lat = 41.9, lon = -66.4, alt_m = 10000.0, kmh = 760.0 }
+route = [
+  { lat = 42.2, lon = -66.8, alt_m = 10000.0, kmh = 760.0 },
+  { lat = 43.3, lon = -68.2, alt_m = 10000.0, kmh = 760.0 },
+  { lat = 44.6, lon = -68.9, alt_m = 9500.0, kmh = 740.0 },
+  { lat = 46.2, lon = -68.6, alt_m = 10000.0, kmh = 760.0, action = "jam_off" },
+  { lat = 47.6, lon = -66.0, alt_m = 10500.0, kmh = 760.0, action = "remove" },
+]
+transponder = { system = "sif", on = false }
+
+[[traffic]]
+count = 3
+routes = [["Boston", "Bangor"], ["Boston", "Portland"], ["Portland", "Halifax"]]
+alt_m = [4500.0, 7500.0]
+t_window = [0.0, 2400.0]
+
+# ---------------------------------------------------------------- instructor
+[[lesson]]
+title = "Raw video"
+text = "The situation display shows what the computer has made of the radar data. The scope shows the data itself: every echo, every patch of clutter and every watt of jamming, painted sweep by sweep on a long-persistence tube."
+action = "Press M, or the RADAR SCOPE key, to see the raw video"
+mode = "scope"
+highlight = ["RADAR SCOPE"]
+done = { type = "ui", event = "mode_scope" }
+
+[[lesson]]
+title = "The strobe"
+text = "The bright spoke is a jamming strobe. Noise fills every range cell on the jammer's bearing, so you know its direction but not its range. Each radar hears the jammer on its own bearing. Look at both sites."
+action = "Step between Charleston and Bucks Harbor with < and > (or , and .)"
+mode = "scope"
+highlight = ["<", ">"]
+mark = "tophat"
+mark_label = "JAMMER"
+done = { type = "all", of = [{ type = "ui", event = "scope_charleston" }, { type = "ui", event = "scope_bucks_harbor" }] }
+
+[[lesson]]
+title = "Triangulation"
+text = "Where strobes from two sites cross, the computer builds a jammer track. It has no height, and its range is only as good as the crossing angle, but it is something to commit fighters against. Jammer tracks are marked with a J."
+action = "Wait for the JAMMING alert, then select the jammer track on TRACKS F1"
+console = "TRACKS"
+highlight = ["TABLE tracks"]
+mark = "tophat"
+mark_label = "JAMMER"
+done = { type = "tracked", ac = "tophat" }
+
+[[lesson]]
+title = "Identify the faker"
+text = "The bomber is SAC's, playing the enemy for the exercise. An exercise aircraft simulating a hostile is a FAKER."
+action = "TRACKS F1: select the jammer track, press FAKER"
+console = "TRACKS"
+highlight = ["FAKER", "TABLE tracks"]
+mark = "tophat"
+mark_label = "JAMMER"
+done = { type = "identity", ac = "tophat", is = ["faker"] }
+
+[[lesson]]
+title = "Change frequency"
+text = "A spot jammer puts all its power on one radar channel: strong, but narrow. Move one of the jammed radars to its other channel. The jammer can only sit on one channel at a time, and it hunts for the nearest radar. The FPS-6 height finders work in another band and are not jammed at all."
+action = "RADAR F4: select a jammed site, click the FREQ CHANNEL knob"
+console = "RADAR"
+highlight = ["FREQ CHANNEL", "TABLE radars"]
+done = { type = "any", of = [{ type = "site", site = "charleston", attr = "channel", op = "!=", value = 0 }, { type = "site", site = "bucks_harbor", attr = "channel", op = "!=", value = 0 }] }
+
+[[lesson]]
+title = "Skin paint"
+text = "With your two radars on different channels the jammer can cover only one of them. The clean site paints the bomber's echo, and the computer starts a new track on it, with a speed and a heading this time. The jammer track fades when its strobes stop crossing. Identify the new track."
+action = "TRACKS F1: select the new track on the bomber, press FAKER"
+console = "TRACKS"
+highlight = ["FAKER", "TABLE tracks"]
+mark = "tophat"
+mark_label = "TOP HAT 21"
+done = { type = "identity", ac = "tophat", is = ["faker"], skin = true }
+
+[[lesson]]
+title = "Commit"
+text = "Send a pair of Voodoos from Dow for an identification pass on the skin track. Keep the radars on different channels and the track will hold."
+action = "WEAPONS F2: ×2, ID PASS, STERN, then SCRAMBLE ON the track"
+console = "WEAPONS"
+highlight = ["×2", "ID PASS", "STERN", "SCRAMBLE*"]
+mark = "dow"
+mark_label = "DOW AFB · 75th FIS"
+done = { type = "scrambled", n = 1 }
+
+[[lesson]]
+title = "The intercept"
+text = "Watch the scope: the strobe stays on the site the jammer is hunting, the echo shows on the other. Close in, the echo would beat the noise anyway: it grows with the inverse fourth power of range, the noise with the square. Speed up time while the fighters climb."
+action = "Press 8× (or +) and watch the flight close"
+highlight = ["8×", "TABLE fl"]
+mark = "tophat"
+mark_label = "TOP HAT 21"
+done = { type = "vid", ac = "tophat" }
+
+[[lesson]]
+title = "Recover the flight"
+text = "Visual identification complete: a SAC B-47, the faker. Bring the fighters home."
+action = "WEAPONS F2: select the flight, press RTB"
+console = "WEAPONS"
+highlight = ["RTB", "TABLE fl"]
+done = { type = "any", of = [{ type = "flight", state = "rtb" }, { type = "flights_home" }] }
+
+[lesson_end]
+title = "Lesson complete"
+text = "Jamming hides a bomber's range, not its bearing. Cross the strobes, spread your radars across their channels, and the bomber shows. Next: Rules of Engagement."
+reason = "Lesson complete"
+
+# ---------------------------------------------------------------- scoring
+[[objective]]
+id = "jtrack"
+text = "Hold a track on the jammer"
+kind = "identify"
+params = { ac = "tophat", correct = ["pending", "unknown", "faker", "friend", "suspect"], from = "track" }
+points = 20
+
+[[objective]]
+id = "faker"
+text = "Identify the bomber as a FAKER"
+kind = "identify"
+params = { ac = "tophat", correct = ["faker"], wrong = ["friend"] }
+points = 30
+
+[[objective]]
+id = "vid"
+text = "Identify it visually before it reaches Bangor"
+kind = "vid"
+params = { ac = "tophat" }
+points = 30
+
+[[objective]]
+id = "nociv"
+text = "No civil aircraft losses"
+kind = "no_civil_losses"
+points = 10
+penalty = 100
+
+[[objective]]
+id = "nofrat"
+text = "Do not fire on friendly aircraft"
+kind = "no_fratricide"
+points = 10
+penalty = 50

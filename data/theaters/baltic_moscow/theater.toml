@@ -1,0 +1,421 @@
+id = "baltic_moscow"
+name = "Gulf of Finland to Moscow — 6th Army and Moscow Air Defense District"
+provenance = "approximate"
+
+[projection]
+lat0 = 57.6
+lon0 = 31.0
+extent_km = [-460.0, 520.0, -320.0, 380.0]
+
+[build]
+simplify_km = 0.6
+terrain_spacing_km = 4.0
+state_lines_countries = ["Russia", "Finland"]
+merge_countries = ["RUS", "EST", "LVA", "LTU", "BLR", "UKR"]
+lake_max_rank = 8.0
+river_max_rank = 6.0
+
+# 6th Army / Moscow District sites approximate and fictionalized.
+
+[[radar_site]]
+id = "rlr_kohtla"
+name = "Radar company Kohtla-Järve"
+name_ru = "РЛР Кохтла-Ярве"
+lat = 59.4
+lon = 27.28
+elev_m = 60.0
+mast_m = 15.0
+
+[[radar_site]]
+id = "rlr_kingisepp"
+name = "Radar company Kingisepp"
+name_ru = "РЛР Кингисепп"
+lat = 59.37
+lon = 28.6
+elev_m = 40.0
+mast_m = 15.0
+
+[[radar_site]]
+id = "rlr_pskov"
+name = "Radar company Pskov"
+name_ru = "РЛР Псков"
+lat = 57.8
+lon = 28.3
+elev_m = 60.0
+mast_m = 15.0
+
+[[radar_site]]
+id = "rlr_dno"
+name = "Radar company Dno"
+name_ru = "РЛР Дно"
+lat = 57.83
+lon = 29.97
+elev_m = 80.0
+mast_m = 15.0
+
+[[radar_site]]
+id = "rlr_staraya"
+name = "Radar company Staraya Russa"
+name_ru = "РЛР Старая Русса"
+lat = 57.99
+lon = 31.36
+elev_m = 40.0
+mast_m = 15.0
+
+[[radar_site]]
+id = "rlr_ostashkov"
+name = "Radar company Ostashkov"
+name_ru = "РЛР Осташков"
+lat = 57.15
+lon = 33.1
+elev_m = 250.0
+mast_m = 15.0
+
+[[radar_site]]
+id = "rlr_torzhok"
+name = "Radar company Torzhok"
+name_ru = "РЛР Торжок"
+lat = 57.04
+lon = 34.96
+elev_m = 160.0
+mast_m = 15.0
+
+[[radar_site]]
+id = "rlr_rzhev"
+name = "Radar company Rzhev"
+name_ru = "РЛР Ржев"
+lat = 56.26
+lon = 34.33
+elev_m = 200.0
+mast_m = 15.0
+
+[[radar_site]]
+id = "rlr_klin"
+name = "Radar company Klin"
+name_ru = "РЛР Клин"
+lat = 56.33
+lon = 36.73
+elev_m = 170.0
+mast_m = 15.0
+
+[[radar_site]]
+id = "gp_tapa"
+name = "Tapa guidance point"
+name_ru = "ПН Тапа"
+lat = 59.24
+lon = 25.97
+elev_m = 80.0
+mast_m = 12.0
+
+[[radar_site]]
+id = "gp_andreapol"
+name = "Andreapol guidance point"
+name_ru = "ПН Андреаполь"
+lat = 56.65
+lon = 32.25
+elev_m = 200.0
+mast_m = 12.0
+
+[[radar_site]]
+id = "gp_khotilovo"
+name = "Khotilovo guidance point"
+name_ru = "ПН Хотилово"
+lat = 57.65
+lon = 34.1
+elev_m = 200.0
+mast_m = 12.0
+
+[[airbase]]
+id = "tapa"
+name = "Tapa"
+name_ru = "Тапа"
+lat = 59.24
+lon = 25.97
+elev_m = 80.0
+kind = "military"
+
+[[airbase]]
+id = "andreapol"
+name = "Andreapol"
+name_ru = "Андреаполь"
+lat = 56.65
+lon = 32.25
+elev_m = 200.0
+kind = "military"
+
+[[airbase]]
+id = "khotilovo"
+name = "Khotilovo"
+name_ru = "Хотилово"
+lat = 57.65
+lon = 34.1
+elev_m = 200.0
+kind = "military"
+
+[[airbase]]
+id = "sheremetyevo"
+name = "Moscow Sheremetyevo"
+name_ru = "Шереметьево"
+lat = 55.97
+lon = 37.41
+elev_m = 190.0
+kind = "civil"
+
+[[airbase]]
+id = "pulkovo"
+name = "Leningrad Pulkovo"
+name_ru = "Пулково"
+lat = 59.8
+lon = 30.26
+elev_m = 24.0
+kind = "civil"
+
+[[airbase]]
+id = "helsinki"
+name = "Helsinki-Malmi (Finland)"
+lat = 60.25
+lon = 25.04
+elev_m = 17.0
+kind = "foreign"
+
+[[airbase]]
+id = "vnukovo"
+name = "Moscow Vnukovo"
+name_ru = "Внуково"
+lat = 55.6
+lon = 37.27
+elev_m = 209.0
+kind = "civil"
+
+[[airbase]]
+id = "red_square"
+name = "Red Square, Moscow"
+name_ru = "Красная площадь"
+lat = 55.754
+lon = 37.62
+elev_m = 140.0
+kind = "civil"
+
+[[airbase]]
+id = "torzhok"
+name = "Torzhok helicopter base"
+name_ru = "Торжок"
+lat = 57.06
+lon = 34.92
+elev_m = 160.0
+kind = "military"
+
+[[sam_site]]
+id = "s25_nw1"
+name = "S-25 regiment Lobnya"
+name_ru = "ЗРП С-25 Лобня"
+lat = 56.05
+lon = 37.45
+elev_m = 180.0
+unit = ""
+
+[[sam_site]]
+id = "s25_nw2"
+name = "S-25 regiment Istra"
+name_ru = "ЗРП С-25 Истра"
+lat = 55.95
+lon = 36.85
+elev_m = 190.0
+unit = ""
+
+[[sam_site]]
+id = "s25_n"
+name = "S-25 regiment Solnechnogorsk"
+name_ru = "ЗРП С-25 Солнечногорск"
+lat = 56.2
+lon = 37.0
+elev_m = 200.0
+unit = ""
+
+[[sam_site]]
+id = "s300_moscow"
+name = "S-300PT battalion Zelenograd"
+name_ru = "ЗРДН С-300 Зеленоград"
+lat = 56.0
+lon = 37.2
+elev_m = 200.0
+unit = ""
+
+[[sam_site]]
+id = "s125_tallinn"
+name = "S-125 battalion Tallinn"
+name_ru = "ЗРДН С-125 Таллин"
+lat = 59.4
+lon = 24.85
+elev_m = 30.0
+unit = ""
+
+[[sam_site]]
+id = "s200_kingisepp"
+name = "S-200 battalion Kingisepp"
+name_ru = "ЗРДН С-200 Кингисепп"
+lat = 59.35
+lon = 28.65
+elev_m = 40.0
+unit = ""
+
+[[city]]
+name = "Moscow"
+name_ru = "Москва"
+lat = 55.75
+lon = 37.62
+size = 3
+
+[[city]]
+name = "Leningrad"
+name_ru = "Ленинград"
+lat = 59.94
+lon = 30.31
+size = 3
+
+[[city]]
+name = "Tallinn"
+name_ru = "Таллин"
+lat = 59.44
+lon = 24.75
+size = 2
+
+[[city]]
+name = "Helsinki"
+lat = 60.17
+lon = 24.94
+size = 2
+
+[[city]]
+name = "Pskov"
+name_ru = "Псков"
+lat = 57.82
+lon = 28.33
+size = 2
+
+[[city]]
+name = "Novgorod"
+name_ru = "Новгород"
+lat = 58.52
+lon = 31.27
+size = 2
+
+[[city]]
+name = "Staraya Russa"
+name_ru = "Старая Русса"
+lat = 57.99
+lon = 31.36
+size = 1
+
+[[city]]
+name = "Kalinin"
+name_ru = "Калинин"
+lat = 56.86
+lon = 35.9
+size = 2
+
+[[city]]
+name = "Torzhok"
+name_ru = "Торжок"
+lat = 57.04
+lon = 34.96
+size = 1
+
+[[city]]
+name = "Bologoye"
+name_ru = "Бологое"
+lat = 57.88
+lon = 34.05
+size = 1
+
+[[city]]
+name = "Rzhev"
+name_ru = "Ржев"
+lat = 56.26
+lon = 34.33
+size = 1
+
+[[city]]
+name = "Velikiye Luki"
+name_ru = "Великие Луки"
+lat = 56.34
+lon = 30.54
+size = 1
+
+[[city]]
+name = "Kohtla-Järve"
+name_ru = "Кохтла-Ярве"
+lat = 59.4
+lon = 27.28
+size = 1
+
+[[city]]
+name = "Narva"
+name_ru = "Нарва"
+lat = 59.38
+lon = 28.19
+size = 1
+
+[[city]]
+name = "Tartu"
+name_ru = "Тарту"
+lat = 58.38
+lon = 26.72
+size = 1
+
+[[city]]
+name = "Ostashkov"
+name_ru = "Осташков"
+lat = 57.15
+lon = 33.1
+size = 1
+
+[[city]]
+name = "Klin"
+name_ru = "Клин"
+lat = 56.33
+lon = 36.73
+size = 1
+
+[[city]]
+name = "Zelenograd"
+name_ru = "Зеленоград"
+lat = 55.99
+lon = 37.19
+size = 1
+
+[[zone]]
+id = "finland"
+name = "Finland"
+name_ru = "Финляндия"
+kind = "foreign"
+shape = "poly"
+points = [[61.0, 23.0], [61.0, 28.6], [60.55, 27.75], [60.1, 26.6], [59.95, 25.0], [59.85, 23.0]]
+
+[[zone]]
+id = "moscow_district"
+name = "Moscow Air Defense District"
+name_ru = "Московский округ ПВО"
+kind = "defended"
+shape = "circle"
+lat = 55.75
+lon = 37.62
+r_km = 150.0
+
+[[zone]]
+id = "moscow_center"
+name = "Central Moscow"
+name_ru = "Центр Москвы"
+kind = "defended"
+shape = "circle"
+lat = 55.754
+lon = 37.62
+r_km = 8.0
+
+[[zone]]
+id = "ussr_coast"
+name = "USSR state border (Gulf of Finland)"
+name_ru = "Государственная граница СССР"
+kind = "territory"
+shape = "poly"
+points = [[59.7, 23.0], [59.8, 25.0], [59.92, 26.6], [60.15, 27.7], [60.55, 28.6], [61.0, 29.5], [61.0, 40.0], [54.6, 40.0], [54.6, 23.0]]

@@ -1,0 +1,333 @@
+id = "south_florida"
+name = "South Florida — Miami Air Defense Sector"
+provenance = "approximate"
+
+[projection]
+lat0 = 25.3
+lon0 = -80.9
+extent_km = [-380.0, 360.0, -340.0, 380.0]
+
+[build]
+simplify_km = 0.5
+terrain_spacing_km = 4.0
+state_lines_countries = ["United States of America"]
+lake_max_rank = 7.0
+river_max_rank = 6.0
+
+# Florida Straits: approximate site positions; unit allocations historically inspired.
+
+[[radar_site]]
+id = "richmond"
+name = "Richmond AFS (Miami)"
+lat = 25.61
+lon = -80.42
+elev_m = 3.0
+mast_m = 30.0
+unit = "Z-209 (approx.)"
+
+[[radar_site]]
+id = "key_west"
+name = "Key West NAS radar"
+lat = 24.58
+lon = -81.69
+elev_m = 2.0
+mast_m = 30.0
+
+[[radar_site]]
+id = "macdill"
+name = "MacDill AFB radar"
+lat = 27.85
+lon = -82.52
+elev_m = 5.0
+mast_m = 30.0
+
+[[radar_site]]
+id = "patrick"
+name = "Patrick AFB radar"
+lat = 28.24
+lon = -80.61
+elev_m = 3.0
+mast_m = 30.0
+
+[[radar_site]]
+id = "naples_gf"
+name = "Naples gap filler"
+lat = 26.15
+lon = -81.78
+elev_m = 3.0
+mast_m = 25.0
+
+[[radar_site]]
+id = "cudjoe"
+name = "Cudjoe Key aerostat"
+lat = 24.68
+lon = -81.5
+elev_m = 2.0
+mast_m = 3000.0
+
+[[airbase]]
+id = "homestead"
+name = "Homestead AFB"
+lat = 25.49
+lon = -80.38
+elev_m = 2.0
+kind = "military"
+
+[[airbase]]
+id = "macdill_ab"
+name = "MacDill AFB"
+lat = 27.85
+lon = -82.52
+elev_m = 5.0
+kind = "military"
+
+[[airbase]]
+id = "key_west_nas"
+name = "NAS Key West"
+lat = 24.575
+lon = -81.69
+elev_m = 2.0
+kind = "military"
+
+[[airbase]]
+id = "miami_intl"
+name = "Miami International"
+lat = 25.79
+lon = -80.29
+elev_m = 3.0
+kind = "civil"
+
+[[airbase]]
+id = "fll"
+name = "Fort Lauderdale"
+lat = 26.07
+lon = -80.15
+elev_m = 3.0
+kind = "civil"
+
+[[airbase]]
+id = "tampa_intl"
+name = "Tampa International"
+lat = 27.98
+lon = -82.53
+elev_m = 8.0
+kind = "civil"
+
+[[airbase]]
+id = "pbi"
+name = "Palm Beach International"
+lat = 26.68
+lon = -80.1
+elev_m = 6.0
+kind = "civil"
+
+[[airbase]]
+id = "havana"
+name = "José Martí (Havana)"
+lat = 22.99
+lon = -82.41
+elev_m = 64.0
+kind = "foreign"
+
+[[airbase]]
+id = "san_antonio"
+name = "San Antonio de los Baños"
+lat = 22.87
+lon = -82.51
+elev_m = 50.0
+kind = "foreign"
+
+[[sam_site]]
+id = "hm03"
+name = "Nike HM-03 Carol City"
+lat = 25.94
+lon = -80.27
+elev_m = 3.0
+unit = "Army Nike Hercules"
+
+[[sam_site]]
+id = "hm12"
+name = "Nike HM-12 Krome Avenue"
+lat = 25.74
+lon = -80.5
+elev_m = 3.0
+unit = "Army Nike Hercules"
+
+[[sam_site]]
+id = "hm40"
+name = "Nike HM-40 Key Largo"
+lat = 25.18
+lon = -80.37
+elev_m = 2.0
+unit = "Army Nike Hercules"
+
+[[sam_site]]
+id = "hm69"
+name = "Nike HM-69 Everglades"
+lat = 25.4
+lon = -80.66
+elev_m = 2.0
+unit = "Army Nike Hercules"
+
+[[sam_site]]
+id = "kw10"
+name = "Hawk KW-10 Boca Chica"
+lat = 24.58
+lon = -81.68
+elev_m = 2.0
+unit = "Army Hawk"
+
+[[sam_site]]
+id = "kw65"
+name = "Hawk KW-65 Big Coppitt"
+lat = 24.6
+lon = -81.66
+elev_m = 2.0
+unit = "Army Hawk"
+
+[[city]]
+name = "Miami"
+lat = 25.77
+lon = -80.19
+size = 3
+
+[[city]]
+name = "Fort Lauderdale"
+lat = 26.12
+lon = -80.14
+size = 2
+
+[[city]]
+name = "West Palm Beach"
+lat = 26.71
+lon = -80.05
+size = 2
+
+[[city]]
+name = "Naples"
+lat = 26.14
+lon = -81.79
+size = 1
+
+[[city]]
+name = "Fort Myers"
+lat = 26.64
+lon = -81.87
+size = 2
+
+[[city]]
+name = "Tampa"
+lat = 27.95
+lon = -82.46
+size = 3
+
+[[city]]
+name = "Sarasota"
+lat = 27.34
+lon = -82.53
+size = 1
+
+[[city]]
+name = "Orlando"
+lat = 28.54
+lon = -81.38
+size = 2
+
+[[city]]
+name = "Key West"
+lat = 24.56
+lon = -81.78
+size = 2
+
+[[city]]
+name = "Marathon"
+lat = 24.71
+lon = -81.09
+size = 1
+
+[[city]]
+name = "Homestead"
+lat = 25.47
+lon = -80.48
+size = 1
+
+[[city]]
+name = "Havana"
+lat = 23.11
+lon = -82.37
+size = 3
+
+[[city]]
+name = "Matanzas"
+lat = 23.04
+lon = -81.58
+size = 2
+
+[[city]]
+name = "Varadero"
+lat = 23.15
+lon = -81.25
+size = 1
+
+[[city]]
+name = "Santa Clara"
+lat = 22.41
+lon = -79.96
+size = 2
+
+[[city]]
+name = "Nassau"
+lat = 25.05
+lon = -77.35
+size = 2
+
+[[city]]
+name = "Freeport"
+lat = 26.53
+lon = -78.7
+size = 1
+
+[[city]]
+name = "Bimini"
+lat = 25.73
+lon = -79.3
+size = 1
+
+[[zone]]
+id = "adiz"
+name = "Florida ADIZ (approx.)"
+kind = "adiz"
+shape = "poly"
+points = [[28.7, -79.6], [27.5, -79.3], [26.3, -79.4], [25.3, -79.6], [24.5, -80.2], [24.0, -81.0], [24.0, -82.2], [24.3, -83.2], [25.6, -83.4], [27.0, -83.5], [28.7, -83.6], [28.7, -81.0]]
+
+[[zone]]
+id = "miami_da"
+name = "Miami Defense Area"
+kind = "defended"
+shape = "circle"
+lat = 25.7
+lon = -80.4
+r_km = 60.0
+
+[[zone]]
+id = "homestead_da"
+name = "Homestead AFB (VIP aircraft on the ramp)"
+kind = "defended"
+shape = "circle"
+lat = 25.49
+lon = -80.38
+r_km = 15.0
+
+[[zone]]
+id = "florida_coast"
+name = "Florida coast (12 nm)"
+kind = "territory"
+shape = "poly"
+points = [[24.85, -80.55], [25.1, -80.0], [25.8, -80.05], [26.8, -79.95], [28.6, -80.45], [28.6, -82.7], [27.0, -82.75], [26.0, -81.9], [25.2, -81.25], [24.9, -80.9], [24.45, -81.9], [24.4, -81.3]]
+
+[[zone]]
+id = "cuba"
+name = "Cuban airspace"
+kind = "foreign"
+shape = "poly"
+points = [[23.25, -83.5], [23.3, -82.0], [23.25, -80.5], [22.9, -79.0], [22.0, -79.0], [22.0, -83.5]]

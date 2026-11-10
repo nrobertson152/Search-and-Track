@@ -1,0 +1,310 @@
+id = "alaska"
+name = "Western Alaska — Alaskan NORAD Region"
+provenance = "approximate"
+
+[projection]
+lat0 = 63.8
+lon0 = -158.5
+extent_km = [-740.0, 600.0, -620.0, 560.0]
+
+[build]
+simplify_km = 0.8
+terrain_spacing_km = 5.0
+state_lines_countries = ["United States of America", "Russia"]
+lake_max_rank = 6.0
+river_max_rank = 5.0
+
+# Alaskan Air Command sites (positions approximate); 1980s Seek Igloo era.
+
+[[radar_site]]
+id = "tin_city"
+name = "Tin City AFS"
+lat = 65.56
+lon = -167.92
+elev_m = 600.0
+mast_m = 15.0
+
+[[radar_site]]
+id = "cape_romanzof"
+name = "Cape Romanzof AFS"
+lat = 61.79
+lon = -166.04
+elev_m = 700.0
+mast_m = 15.0
+
+[[radar_site]]
+id = "cape_newenham"
+name = "Cape Newenham AFS"
+lat = 58.65
+lon = -162.07
+elev_m = 600.0
+mast_m = 15.0
+
+[[radar_site]]
+id = "kotzebue_r"
+name = "Kotzebue AFS"
+lat = 66.86
+lon = -162.6
+elev_m = 30.0
+mast_m = 20.0
+
+[[radar_site]]
+id = "campion"
+name = "Campion AFS"
+lat = 64.7
+lon = -156.68
+elev_m = 400.0
+mast_m = 15.0
+
+[[radar_site]]
+id = "indian_mtn"
+name = "Indian Mountain AFS"
+lat = 66.07
+lon = -153.68
+elev_m = 1300.0
+mast_m = 15.0
+
+[[radar_site]]
+id = "tatalina"
+name = "Tatalina AFS"
+lat = 62.92
+lon = -155.97
+elev_m = 1000.0
+mast_m = 15.0
+
+[[radar_site]]
+id = "sparrevohn"
+name = "Sparrevohn AFS"
+lat = 61.1
+lon = -155.57
+elev_m = 1000.0
+mast_m = 15.0
+
+[[radar_site]]
+id = "king_salmon_r"
+name = "King Salmon radar"
+lat = 58.68
+lon = -156.65
+elev_m = 20.0
+mast_m = 20.0
+
+[[radar_site]]
+id = "murphy_dome"
+name = "Murphy Dome AFS"
+lat = 64.95
+lon = -148.36
+elev_m = 870.0
+mast_m = 15.0
+
+[[radar_site]]
+id = "fire_island"
+name = "Fire Island AFS"
+lat = 61.15
+lon = -150.21
+elev_m = 50.0
+mast_m = 20.0
+
+[[airbase]]
+id = "elmendorf"
+name = "Elmendorf AFB"
+lat = 61.25
+lon = -149.8
+elev_m = 65.0
+kind = "military"
+
+[[airbase]]
+id = "galena"
+name = "Galena FOL"
+lat = 64.74
+lon = -156.94
+elev_m = 47.0
+kind = "military"
+
+[[airbase]]
+id = "king_salmon"
+name = "King Salmon FOL"
+lat = 58.68
+lon = -156.65
+elev_m = 20.0
+kind = "military"
+
+[[airbase]]
+id = "eielson"
+name = "Eielson AFB"
+lat = 64.67
+lon = -147.1
+elev_m = 167.0
+kind = "military"
+
+[[airbase]]
+id = "anchorage_intl"
+name = "Anchorage International"
+lat = 61.17
+lon = -149.99
+elev_m = 46.0
+kind = "civil"
+
+[[airbase]]
+id = "fairbanks_intl"
+name = "Fairbanks International"
+lat = 64.82
+lon = -147.86
+elev_m = 132.0
+kind = "civil"
+
+[[airbase]]
+id = "nome_ap"
+name = "Nome"
+lat = 64.51
+lon = -165.44
+elev_m = 11.0
+kind = "civil"
+
+[[airbase]]
+id = "bethel_ap"
+name = "Bethel"
+lat = 60.78
+lon = -161.84
+elev_m = 38.0
+kind = "civil"
+
+[[airbase]]
+id = "kotzebue_ap"
+name = "Kotzebue"
+lat = 66.88
+lon = -162.6
+elev_m = 5.0
+kind = "civil"
+
+[[airbase]]
+id = "provideniya"
+name = "Provideniya (USSR)"
+name_ru = "Бухта Провидения"
+lat = 64.38
+lon = -173.24
+elev_m = 22.0
+kind = "foreign"
+
+[[city]]
+name = "Anchorage"
+lat = 61.22
+lon = -149.9
+size = 3
+
+[[city]]
+name = "Fairbanks"
+lat = 64.84
+lon = -147.72
+size = 2
+
+[[city]]
+name = "Nome"
+lat = 64.5
+lon = -165.41
+size = 2
+
+[[city]]
+name = "Bethel"
+lat = 60.79
+lon = -161.76
+size = 2
+
+[[city]]
+name = "Kotzebue"
+lat = 66.9
+lon = -162.6
+size = 1
+
+[[city]]
+name = "Galena"
+lat = 64.74
+lon = -156.93
+size = 1
+
+[[city]]
+name = "King Salmon"
+lat = 58.69
+lon = -156.66
+size = 1
+
+[[city]]
+name = "Dillingham"
+lat = 59.04
+lon = -158.46
+size = 1
+
+[[city]]
+name = "Unalakleet"
+lat = 63.88
+lon = -160.79
+size = 1
+
+[[city]]
+name = "McGrath"
+lat = 62.95
+lon = -155.6
+size = 1
+
+[[city]]
+name = "Gambell"
+lat = 63.78
+lon = -171.74
+size = 1
+
+[[city]]
+name = "Wales"
+lat = 65.61
+lon = -168.09
+size = 1
+
+[[city]]
+name = "Provideniya"
+name_ru = "Провидения"
+lat = 64.42
+lon = -173.23
+size = 2
+
+[[city]]
+name = "Lavrentiya"
+name_ru = "Лаврентия"
+lat = 65.58
+lon = -170.99
+size = 1
+
+[[city]]
+name = "Uelen"
+name_ru = "Уэлен"
+lat = 66.16
+lon = -169.81
+size = 1
+
+[[zone]]
+id = "adiz"
+name = "Alaskan ADIZ (approx.)"
+kind = "adiz"
+shape = "poly"
+points = [[57.6, -158.0], [57.6, -165.0], [59.5, -169.5], [62.0, -172.5], [64.0, -172.0], [65.2, -169.2], [66.8, -169.0], [68.8, -169.5], [68.8, -161.0], [66.4, -160.0], [63.6, -161.5], [60.2, -162.0], [58.4, -159.0]]
+
+[[zone]]
+id = "ussr"
+name = "Soviet airspace"
+name_ru = "Воздушное пространство СССР"
+kind = "foreign"
+shape = "poly"
+points = [[68.8, -168.97], [65.5, -168.97], [64.8, -171.5], [62.5, -174.0], [58.2, -176.0], [58.2, -180.0], [68.8, -180.0]]
+
+[[zone]]
+id = "anchorage_da"
+name = "Anchorage defended area"
+kind = "defended"
+shape = "circle"
+lat = 61.2
+lon = -149.9
+r_km = 80.0
+
+[[zone]]
+id = "alaska_coast"
+name = "Alaska coast (12 nm)"
+kind = "territory"
+shape = "poly"
+points = [[58.5, -157.4], [58.55, -162.3], [59.9, -165.0], [61.8, -166.7], [63.3, -164.9], [64.4, -166.6], [65.6, -168.3], [66.6, -164.6], [68.8, -166.6], [68.8, -150.0], [58.5, -150.0]]

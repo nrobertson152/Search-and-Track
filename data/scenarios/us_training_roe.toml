@@ -1,0 +1,311 @@
+id = "us_training_roe"
+title = "Training: Rules of Engagement"
+subtitle = "Bangor Air Defense Sector — instructor-led exercise"
+summary = "Fakers may be engaged under exercise rules; nothing else may. Hand a faker to a Nike battery, ask higher authority for a hostile declaration, and identify an unknown before anyone fires."
+faction = "US"
+kind = "training"
+photo = ["B-47E", "F-101B"]
+photo_caption = "Exercise faker over the Loring Defense Area"
+era = "1960s"
+difficulty = 1
+order = 3
+theater = "gulf_of_maine"
+start = "1961-03-14T15:00:00"
+tz = "Z"
+duration_min = 75
+seed = 1403
+reliability = 50.0
+exercise = true
+
+briefing = """
+DIRECTION CENTER DC-05, TOPSHAM AFS — EXERCISE SHIFT
+
+An air defense exercise is running over the Loring Defense Area. SAC bombers playing the enemy are FAKERs: under exercise rules you may engage them, and the kills are simulated and scored by the umpires. Everything that is not a faker is real.
+
+What you will learn:
+  1. Exercise rules: who may be engaged, and who may not.
+  2. The Nike Hercules batteries: designating a target through the Army Air Defense Command Post.
+  3. Higher authority: what it takes to have a track declared HOSTILE.
+  4. Identification before engagement, always.
+
+The instructor's card is pinned to the display. Surveillance automation is ON, identification is yours.
+"""
+
+[automation]
+surveil = true
+ident = false
+height = true
+tech = true
+
+[weather]
+k_factor = 1.333
+wind_from = 290.0
+wind_kmh = 50.0
+ceiling_m = 3500.0
+visibility_km = 35.0
+night = false
+sea_state = 2.0
+
+[hq]
+name = "26 AIR DIV"
+readiness = "DEFCON 5"
+alert = "WHITE"
+weapons_status = "HOLD"
+[hq.policy]
+response_s = [45.0, 80.0]
+declare_hostile = "evidence"
+engage = "evidence"
+special_release = "deny"
+mode1_valid = ["23", "41"]
+track_start = 1
+
+[[link]]
+id = "L_charleston"
+name = "Charleston data line"
+kind = "data"
+delay_s = 3.0
+
+[[link]]
+id = "L_caswell"
+name = "Caswell data line"
+kind = "data"
+delay_s = 3.0
+
+[[link]]
+id = "L_bucks"
+name = "Bucks Harbor data line"
+kind = "data"
+delay_s = 3.0
+
+[[link]]
+id = "L_dow"
+name = "Dow AFB scramble line"
+kind = "voice"
+delay_s = 8.0
+
+[[link]]
+id = "V_aadcp"
+name = "Loring AADCP line"
+kind = "voice"
+delay_s = 6.0
+
+[[radar]]
+site = "charleston"
+type = "AN/FPS-20A"
+hf = ["AN/FPS-6"]
+link = "L_charleston"
+
+[[radar]]
+site = "caswell"
+type = "AN/FPS-20A"
+hf = ["AN/FPS-6"]
+link = "L_caswell"
+
+[[radar]]
+site = "bucks_harbor"
+type = "AN/FPS-20A"
+hf = ["AN/FPS-6"]
+link = "L_bucks"
+
+[[airbase]]
+site = "dow"
+link = "L_dow"
+
+[[airbase]]
+site = "loring"
+
+[[airbase]]
+site = "portland"
+
+[[squadron]]
+id = "75fis"
+name = "75th FIS"
+base = "dow"
+type = "F-101B"
+callsign = "COBRA"
+ready = { "5" = 2, "15" = 2 }
+pilots = 6
+
+[[sam]]
+site = "nike_l13"
+type = "NIKE-H"
+link = "V_aadcp"
+missiles = 8
+reloads = 4
+
+[[sam]]
+site = "nike_l58"
+type = "NIKE-H"
+link = "V_aadcp"
+missiles = 8
+reloads = 4
+
+[[flight]]
+id = "faker1"
+type = "B-47E"
+callsign = "BUZZER 31"
+side = "blue"
+spawn_t = 15.0
+truth_label = "B-47E (exercise faker)"
+markings = "USAF, Strategic Air Command"
+start = { lat = 48.3, lon = -65.0, alt_m = 9500.0, kmh = 760.0 }
+route = [
+  { lat = 47.6, lon = -66.4, alt_m = 9500.0, kmh = 760.0 },
+  { lat = 46.95, lon = -67.9, alt_m = 9000.0, kmh = 740.0 },
+  { lat = 45.6, lon = -70.5, alt_m = 10000.0, kmh = 760.0 },
+  { lat = 44.6, lon = -73.5, alt_m = 10000.0, kmh = 760.0, action = "remove" },
+]
+transponder = { system = "sif", on = false }
+
+[[flight]]
+id = "lost"
+type = "C172"
+callsign = "N7413K"
+side = "civil"
+spawn = "trigger"
+truth_label = "Cessna 172, lost private pilot"
+markings = "civil registration N7413K"
+nationality = "US"
+start = { lat = 43.2, lon = -67.7, alt_m = 1800.0, kmh = 200.0 }
+route = [
+  { lat = 43.55, lon = -69.2, alt_m = 1800.0, kmh = 200.0 },
+  { lat = 43.65, lon = -70.31, alt_m = 300.0, kmh = 150.0, action = "land" },
+]
+transponder = { system = "atc", failed = true }
+fuel_frac = 3.0
+
+[[traffic]]
+count = 3
+routes = [["Boston", "Bangor"], ["Boston", "Portland"], ["Portland", "Halifax"]]
+alt_m = [4500.0, 7500.0]
+t_window = [0.0, 3000.0]
+
+[[trigger]]
+id = "spawn_lost"
+cond = { type = "var", name = "lesson_step", op = ">=", value = 4.0 }
+actions = [{ do = "spawn", flight = "lost" }]
+
+# ---------------------------------------------------------------- instructor
+[[lesson]]
+title = "Exercise rules"
+text = "Today's exercise has two kinds of target. FAKERs are SAC bombers playing the enemy: you may engage them, and the umpires score simulated kills. Everything else is real. The first faker is coming in from the north-east toward Loring."
+action = "TRACKS F1: select its track, press FAKER"
+mode = "map"
+console = "TRACKS"
+highlight = ["FAKER", "TABLE tracks"]
+mark = "faker1"
+mark_label = "BUZZER 31"
+done = { type = "identity", ac = "faker1", is = ["faker"] }
+
+[[lesson]]
+title = "The Nike batteries"
+text = "The Army's Nike Hercules batteries defend Loring. The AADCP passes them targets from your tracks, then each battery's own radars lock on. It accepts a target within about 300 km of the battery; the battery fires inside about 140 km, and holds fire while friendly fighters are near the target."
+action = "MISSILES F3: select Nike L-13 or L-58, then DESIGNATE the faker's track"
+console = "MISSILES"
+highlight = ["TABLE sams", "DESIGNATE*"]
+mark = "nike_l58"
+mark_label = "NIKE L-58"
+done = { type = "any", of = [{ type = "site", site = "nike_l13", attr = "assigned", op = "!=", value = "" }, { type = "site", site = "nike_l58", attr = "assigned", op = "!=", value = "" }] }
+
+[[lesson]]
+title = "Simulated engagement"
+text = "The battery acquires the faker on its own radars and fires when it comes within range. In an exercise the umpires assess the kill and the bomber flies on, scored dead. A miss leaves the battery waiting for orders unless re-engagement is automatic."
+action = "MISSILES F3: switch AUTO RE-ENG on, then press 8× (or +) and watch"
+console = "MISSILES"
+highlight = ["AUTO RE-ENG", "8×"]
+mark = "faker1"
+mark_label = "BUZZER 31"
+done = { type = "sim_killed", ac = "faker1" }
+
+[[lesson]]
+title = "An unknown"
+text = "A slow return without IFF is coming in from the sea toward Portland. Nobody has seen it, so it is not a faker: it is an UNKNOWN, and exercise rules do not cover it."
+action = "TRACKS F1: select the new track, press UNKNOWN"
+console = "TRACKS"
+highlight = ["UNKNOWN", "TABLE tracks"]
+mark = "lost"
+mark_label = "UNKNOWN"
+done = { type = "identity", ac = "lost", is = ["unknown"] }
+
+[[lesson]]
+title = "Higher authority"
+text = "Only 26th Air Division can declare a track HOSTILE while weapons are on HOLD. Ask them, and see what they want before they will."
+action = "COMMS F6: with the unknown selected, press HOSTILE"
+console = "COMMS"
+highlight = ["HOSTILE*"]
+done = { type = "request", kind = "declare_hostile", answered = true }
+
+[[lesson]]
+title = "Go and look"
+text = "Higher authority wants evidence: a visual identification, an active jammer, or a hostile act. Send a pair of Voodoos for an identification pass. Weapons stay on HOLD."
+action = "WEAPONS F2: ×2, ID PASS, then SCRAMBLE ON the unknown"
+console = "WEAPONS"
+highlight = ["×2", "ID PASS", "SCRAMBLE*"]
+mark = "dow"
+mark_label = "DOW AFB · 75th FIS"
+done = { type = "scrambled", n = 1 }
+
+[[lesson]]
+title = "Tally"
+text = "A slow, low target is hard to find: the fighters must slow down and come in behind it. Speed up time while they fly."
+action = "Press 8× (or +) and watch the flight close"
+highlight = ["8×", "TABLE fl"]
+mark = "lost"
+done = { type = "vid", ac = "lost" }
+
+[[lesson]]
+title = "A lost pilot"
+text = "The pilots report a Cessna 172, civil registration N7413K, with a dead transponder: a private pilot lost over the water. Re-identify the track FRIEND and the controllers will talk him down at Portland."
+action = "TRACKS F1: press FRIEND"
+console = "TRACKS"
+highlight = ["FRIEND"]
+done = { type = "identity", ac = "lost", is = ["friend"] }
+
+[[lesson]]
+title = "Recover the flight"
+text = "Bring the Voodoos home."
+action = "WEAPONS F2: select the flight, press RTB"
+console = "WEAPONS"
+highlight = ["RTB", "TABLE fl"]
+done = { type = "any", of = [{ type = "flight", state = "rtb" }, { type = "flights_home" }] }
+
+[lesson_end]
+title = "Lesson complete"
+text = "Exercise rules covered the faker. Everything else needed a positive identification first, and higher authority wanted evidence before it would call anything hostile. That is the whole of the rules of engagement."
+reason = "Lesson complete"
+
+# ---------------------------------------------------------------- scoring
+[[objective]]
+id = "kill"
+text = "Score a simulated kill on the faker"
+kind = "sim_kills"
+params = { ac = "faker1" }
+points = 30
+
+[[objective]]
+id = "unk"
+text = "Identify the light aircraft as UNKNOWN, then FRIEND"
+kind = "identify"
+params = { ac = "lost", correct = ["friend"], wrong = ["hostile", "faker", "suspect"] }
+points = 30
+
+[[objective]]
+id = "vid"
+text = "Identify the unknown visually"
+kind = "vid"
+params = { ac = "lost" }
+points = 20
+
+[[objective]]
+id = "nociv"
+text = "No civil aircraft engaged (real or simulated)"
+kind = "no_civil_losses"
+points = 10
+penalty = 100
+
+[[objective]]
+id = "nofrat"
+text = "Do not fire on friendly aircraft"
+kind = "no_fratricide"
+points = 10
+penalty = 50

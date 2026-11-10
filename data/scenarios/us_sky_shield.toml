@@ -1,0 +1,431 @@
+id = "us_sky_shield"
+title = "Sky Shield"
+subtitle = "Bangor Air Defense Sector, exercise night, October 1961"
+summary = "The whole continent has gone quiet: every civil aircraft is grounded while Strategic Air Command and the RAF throw their bombers at NORAD. The kills are simulated, the jamming is real, and the generals are counting."
+faction = "US"
+kind = "scenario"
+photo = ["B-52G", "F-101B"]
+photo_caption = "B-52 attacking under an F-101B during an air defense exercise (file photograph)"
+era = "1960s"
+difficulty = 3
+order = 5
+theater = "gulf_of_maine"
+start = "1961-10-14T05:00:00"
+tz = "Z"
+duration_min = 110
+seed = 1961
+reliability = 2.5
+exercise = true
+
+briefing = """
+DIRECTION CENTER DC-05, TOPSHAM AFS — EXERCISE NIGHT
+
+SITUATION. Exercise SKY SHIELD is in progress across North America. All civil flights in the United States and Canada are grounded for the duration. Strategic Air Command B-52s and B-47s, and Royal Air Force Vulcans, will attack the sector as the enemy. They do not squawk, they jam, and some of them will come in very low.
+
+EXERCISE RULES. Raiders are FAKERS. Identify them as FAKER and engage under exercise rules: an interceptor in a firing position, or a missile battery tracking to intercept, scores a simulated kill. Nobody fires anything that explodes. A raider that reaches its target unengaged scores against us.
+
+FORCES. Long-range radars at Charleston, Bucks Harbor, Caswell, North Truro, St. Albans and Texas Tower 2, Pinetree stations at Barrington and St. Margarets, gap fillers at Mount Desert and Boothbay. 75th FIS (F-101B, Dow), 27th FIS (F-106A, Loring), F-106 detachment at Otis. Nike Hercules batteries for Boston and Loring through the AADCP.
+
+TASKS.
+  • Score simulated kills: the Region expects at least six.
+  • Keep the raiders off Boston and Loring.
+  • One mercy flight is exempted from the grounding: identify it and do not attack it.
+  • Hand the next shift interceptors on alert.
+
+Watch the low approaches: the B-47 crews know where our radars cannot see.
+"""
+
+[[intel]]
+title = "Red force"
+text = "Expect B-52G cells at high altitude behind barrage jamming from the east, B-47s at low level over the Gulf of Maine, and RAF Vulcans very high from the northeast. Jamming strobes from two or more radars can be triangulated into jammer tracks."
+
+[[intel]]
+title = "Grounding exemption"
+text = "EASTERN 609, a Lockheed Super Constellation, is cleared Boston to Halifax on an organ-transport mercy flight, Mode 1 code 41, filed flight plan. It is the only civil aircraft authorized aloft."
+
+[automation]
+surveil = true
+ident = true
+height = true
+tech = false
+
+[weather]
+k_factor = 1.333
+wind_from = 270.0
+wind_kmh = 80.0
+ceiling_m = 3000.0
+visibility_km = 20.0
+night = true
+sea_state = 3.0
+
+[hq]
+name = "26 NORAD REGION (EXERCISE)"
+readiness = "DEFCON 5"
+alert = "WHITE"
+weapons_status = "TIGHT"
+[hq.policy]
+response_s = [45.0, 120.0]
+declare_hostile = "grant"
+engage = "grant"
+ram = "deny"
+special_release = "deny"
+weapons_status_FREE = "deny"
+alert_RED = "deny"
+mode1_valid = ["41"]
+track_start = 201
+
+# ---------------------------------------------------------------- communications
+[[link]]
+id = "D_charleston"
+name = "Charleston data line"
+kind = "data"
+delay_s = 3.0
+[[link]]
+id = "D_bucks"
+name = "Bucks Harbor data line"
+kind = "data"
+delay_s = 3.0
+[[link]]
+id = "D_caswell"
+name = "Caswell data line"
+kind = "data"
+delay_s = 3.0
+[[link]]
+id = "D_truro"
+name = "North Truro data line"
+kind = "data"
+delay_s = 3.0
+[[link]]
+id = "D_albans"
+name = "St. Albans data line"
+kind = "data"
+delay_s = 3.5
+[[link]]
+id = "D_tt2"
+name = "Texas Tower 2 cable"
+kind = "data"
+delay_s = 4.0
+[[link]]
+id = "D_pinetree"
+name = "Pinetree cross-tell"
+kind = "data"
+delay_s = 6.0
+[[link]]
+id = "V_dow"
+name = "Dow AFB alert line"
+kind = "voice"
+delay_s = 8.0
+[[link]]
+id = "V_loring"
+name = "Loring AFB alert line"
+kind = "voice"
+delay_s = 8.0
+[[link]]
+id = "V_otis"
+name = "Otis AFB alert line"
+kind = "voice"
+delay_s = 10.0
+[[link]]
+id = "V_aadcp"
+name = "AADCP Missile Master"
+kind = "voice"
+delay_s = 6.0
+
+# ---------------------------------------------------------------- radars
+[[radar]]
+site = "charleston"
+type = "AN/FPS-20A"
+hf = ["AN/FPS-6", "AN/FPS-6"]
+link = "D_charleston"
+[[radar]]
+site = "bucks_harbor"
+type = "AN/FPS-20A"
+hf = ["AN/FPS-6"]
+link = "D_bucks"
+[[radar]]
+site = "caswell"
+type = "AN/FPS-20A"
+hf = ["AN/FPS-6"]
+link = "D_caswell"
+[[radar]]
+site = "north_truro"
+type = "AN/FPS-20A"
+hf = ["AN/FPS-6"]
+link = "D_truro"
+[[radar]]
+site = "st_albans"
+type = "AN/FPS-20A"
+hf = ["AN/FPS-6"]
+link = "D_albans"
+[[radar]]
+site = "tt2"
+type = "AN/FPS-20A"
+hf = ["AN/FPS-6"]
+link = "D_tt2"
+channel = 1
+[[radar]]
+site = "barrington"
+type = "AN/FPS-20A"
+hf = ["AN/FPS-6"]
+link = "D_pinetree"
+[[radar]]
+site = "st_margarets"
+type = "AN/FPS-20A"
+link = "D_pinetree"
+channel = 1
+[[radar]]
+site = "desert_gf"
+type = "AN/FPS-14"
+link = "D_charleston"
+[[radar]]
+site = "boothbay_gf"
+type = "AN/FPS-14"
+link = "D_charleston"
+
+# ---------------------------------------------------------------- bases & forces
+[[airbase]]
+site = "dow"
+link = "V_dow"
+[[airbase]]
+site = "loring"
+link = "V_loring"
+[[airbase]]
+site = "otis"
+link = "V_otis"
+[[airbase]]
+site = "pease"
+[[airbase]]
+site = "brunswick"
+
+[[squadron]]
+id = "75fis"
+name = "75th FIS"
+base = "dow"
+type = "F-101B"
+callsign = "COBRA"
+ready = { "5" = 4, "15" = 4, "30" = 2 }
+pilots = 14
+
+[[squadron]]
+id = "27fis"
+name = "27th FIS"
+base = "loring"
+type = "F-106A"
+callsign = "SABER"
+ready = { "5" = 4, "15" = 4 }
+pilots = 12
+
+[[squadron]]
+id = "otis_det"
+name = "F-106 det. Otis"
+base = "otis"
+type = "F-106A"
+callsign = "DAGGER"
+ready = { "5" = 2, "15" = 2 }
+pilots = 6
+
+[[sam]]
+site = "nike_l13"
+type = "NIKE-H"
+link = "V_aadcp"
+missiles = 8
+reloads = 8
+[[sam]]
+site = "nike_l58"
+type = "NIKE-H"
+link = "V_aadcp"
+missiles = 8
+reloads = 8
+[[sam]]
+site = "nike_b15"
+type = "NIKE-H"
+link = "V_aadcp"
+missiles = 8
+reloads = 8
+[[sam]]
+site = "nike_b55"
+type = "NIKE-H"
+link = "V_aadcp"
+missiles = 8
+reloads = 8
+
+# ---------------------------------------------------------------- the raid
+[[flight]]
+id = "skyw1"
+type = "B-52G"
+callsign = "RAIDER 1"
+side = "red"
+count = 3
+spacing_km = 6.0
+spawn_t = 480.0
+truth_label = "B-52G (SAC, exercise)"
+markings = "USAF, Strategic Air Command — exercise FAKER"
+jammer = "ECM-BARRAGE-LS"
+start = { lat = 43.7, lon = -61.8, alt_m = 12000.0, kmh = 860.0 }
+route = [
+  { lat = 43.3, lon = -64.2, alt_m = 12000.0, kmh = 860.0, action = "jam_on" },
+  { lat = 42.6, lon = -68.4, alt_m = 11500.0, kmh = 860.0 },
+  { lat = 42.36, lon = -71.06, alt_m = 11000.0, kmh = 860.0 },
+  { lat = 42.9, lon = -73.5, alt_m = 11000.0, kmh = 860.0, action = "remove" },
+]
+transponder = { system = "none" }
+
+[[flight]]
+id = "skyw2"
+type = "B-47E"
+callsign = "RAIDER 2"
+side = "red"
+count = 2
+spacing_km = 4.0
+spawn_t = 1300.0
+truth_label = "B-47E (SAC, exercise, low level)"
+markings = "USAF, Strategic Air Command — exercise FAKER"
+start = { lat = 41.9, lon = -65.6, alt_m = 300.0, kmh = 720.0 }
+route = [
+  { lat = 42.6, lon = -68.2, alt_m = 250.0, kmh = 720.0 },
+  { lat = 43.5, lon = -70.1, alt_m = 300.0, kmh = 700.0 },
+  { lat = 42.36, lon = -71.06, alt_m = 600.0, kmh = 700.0 },
+  { lat = 41.8, lon = -72.6, alt_m = 3000.0, kmh = 750.0, action = "remove" },
+]
+transponder = { system = "none" }
+
+[[flight]]
+id = "skyw3"
+type = "Vulcan B2"
+callsign = "RAIDER 3"
+side = "red"
+count = 2
+spacing_km = 8.0
+spawn_t = 2300.0
+truth_label = "Avro Vulcan B.2 (RAF, exercise)"
+markings = "RAF roundels, white anti-flash finish — exercise FAKER"
+jammer = "ECM-SPOT-L"
+start = { lat = 48.6, lon = -61.6, alt_m = 17000.0, kmh = 950.0 }
+route = [
+  { lat = 47.9, lon = -64.4, alt_m = 17000.0, kmh = 950.0, action = "jam_on" },
+  { lat = 46.95, lon = -67.89, alt_m = 16500.0, kmh = 950.0 },
+  { lat = 45.8, lon = -71.5, alt_m = 16500.0, kmh = 950.0, action = "remove" },
+]
+transponder = { system = "none" }
+
+[[flight]]
+id = "skyw4"
+type = "B-52G"
+callsign = "RAIDER 4"
+side = "red"
+count = 4
+spacing_km = 7.0
+spawn_t = 3700.0
+truth_label = "B-52G (SAC, exercise)"
+markings = "USAF, Strategic Air Command — exercise FAKER"
+jammer = "ECM-BARRAGE-LS"
+start = { lat = 49.4, lon = -67.2, alt_m = 11500.0, kmh = 860.0 }
+route = [
+  { lat = 48.4, lon = -67.6, alt_m = 11500.0, kmh = 860.0, action = "jam_on" },
+  { lat = 46.95, lon = -67.89, alt_m = 11000.0, kmh = 860.0 },
+  { lat = 44.8, lon = -68.8, alt_m = 11000.0, kmh = 860.0 },
+  { lat = 43.0, lon = -69.6, alt_m = 11000.0, kmh = 860.0, action = "remove" },
+]
+transponder = { system = "none" }
+
+[[flight]]
+id = "mercy"
+type = "L-1049"
+callsign = "EASTERN 609"
+side = "civil"
+spawn_t = 900.0
+truth_label = "Lockheed Super Constellation, Eastern Air Lines (mercy flight)"
+markings = "Eastern Air Lines, N6218C"
+start = { lat = 42.5, lon = -70.6, alt_m = 6000.0, kmh = 520.0 }
+route = [
+  { lat = 43.6, lon = -66.5, alt_m = 6000.0, kmh = 520.0 },
+  { lat = 44.65, lon = -63.6, alt_m = 1200.0, kmh = 400.0, action = "land" },
+]
+transponder = { system = "sif", codes = { "1" = "41", "3" = "0410" } }
+flight_plan = { kind = "IFR", mode3 = "0410", note = "mercy flight, exempt from grounding" }
+
+# ---------------------------------------------------------------- events
+[[trigger]]
+id = "open"
+cond = { type = "time", t = 5.0 }
+actions = [
+  { do = "message", channel = "tty", sender = "26 NORAD REGION", ack = true, kind = "order", text = "EXERCISE SKY SHIELD IN EFFECT. CIVIL TRAFFIC GROUNDED. RAIDERS ARE FAKERS: IDENTIFY AS FAKER, ENGAGE UNDER EXERCISE RULES. ONE EXEMPT MERCY FLIGHT, EASTERN 609, MODE 1 CODE 41. REPORT SIMULATED KILLS." },
+]
+
+[[trigger]]
+id = "wave1_warn"
+cond = { type = "time", t = 600.0 }
+actions = [{ do = "message", channel = "tty", sender = "26 NORAD REGION", ack = true, kind = "order", text = "PINETREE REPORTS MULTIPLE JAMMING STROBES EAST OF NOVA SCOTIA. EXPECT HIGH RAID APPROACHING FROM THE EAST." }]
+
+[[trigger]]
+id = "tt2_line"
+cond = { type = "time", t = 2000.0 }
+actions = [{ do = "link", id = "D_tt2", up = false, minutes = 25.0, text = "TEXAS TOWER 2 CABLE FAULT — NO DATA FROM TT-2." }]
+
+[[trigger]]
+id = "low_warn"
+cond = { type = "time", t = 1900.0 }
+actions = [{ do = "message", channel = "voice", sender = "26 NORAD REGION", ack = true, kind = "order", text = "Region has a fleeting return from Texas Tower 2 heading west at very low level. Possible low-level penetrators. Check your gap fillers." }]
+
+[[trigger]]
+id = "computer"
+cond = { type = "time", t = 4300.0 }
+actions = [{ do = "computer_fail", side = "A" }]
+
+[[trigger]]
+id = "close"
+cond = { type = "time", t = 6400.0 }
+actions = [{ do = "message", channel = "tty", sender = "26 NORAD REGION", text = "SKY SHIELD RAID PHASE ENDS 0650Z. FORWARD SIMULATED KILL CLAIMS FOR ASSESSMENT." }]
+
+# ---------------------------------------------------------------- objectives
+[[objective]]
+id = "kills"
+text = "Score at least six simulated kills"
+kind = "sim_kills"
+params = { min = 6 }
+points = 30
+
+[[objective]]
+id = "boston"
+text = "No more than two raiders reach the Boston Defense Area unengaged"
+kind = "max_in_zone"
+params = { ac = ["skyw1", "skyw2"], zone = "boston_da", max = 2 }
+points = 20
+
+[[objective]]
+id = "loring"
+text = "No more than one raider over the Loring Defense Area unengaged"
+kind = "max_in_zone"
+params = { ac = ["skyw3", "skyw4"], zone = "loring_da", max = 1 }
+points = 20
+
+[[objective]]
+id = "mercy"
+text = "Identify the exempted mercy flight as FRIEND"
+kind = "identify"
+params = { ac = "mercy", correct = ["friend"], wrong = ["faker", "hostile", "suspect"], from = "track" }
+points = 10
+
+[[objective]]
+id = "civil"
+text = "No simulated attacks on civil aircraft"
+kind = "no_civil_losses"
+points = 10
+penalty = 30
+
+[[objective]]
+id = "alert"
+text = "Hand over at least four interceptors on alert"
+kind = "keep_ready"
+params = { min = 4 }
+points = 10
+
+[[headline]]
+cond = { type = "var", name = "sim_kills", op = ">=", value = 6.0 }
+text = "SKY SHIELD: AIR DEFENSE STOPS THE BOMBERS"
+sub = "Region credits the Bangor sector with a strong night; SAC crews grumble about the jamming."
+
+[[headline]]
+cond = { type = "time", t = 0.0 }
+text = "SKY SHIELD: BOMBERS GET THROUGH"
+sub = "Exercise results classified, but observers say the raiders reached their targets."

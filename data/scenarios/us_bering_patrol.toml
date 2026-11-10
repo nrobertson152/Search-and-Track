@@ -1,0 +1,411 @@
+id = "us_bering_patrol"
+title = "Bering Patrol"
+subtitle = "Alaskan NORAD Region, 12 March 1984"
+summary = "Bears come out of Anadyr almost every week now. Your Seek Igloo radars are new, your Eagles sit on alert at Galena and King Salmon, and an AWACS is orbiting over the Yukon. Today the Soviets are probing low — and the airliners on R-20 are still nervous after last September."
+faction = "US"
+kind = "scenario"
+photo = ["Tu-95MS", "F-15A"]
+photo_caption = "F-15A Eagle escorting a Tu-95 BEAR H off the Alaskan coast (file photograph)"
+era = "1980s"
+difficulty = 3
+order = 30
+theater = "alaska"
+start = "1984-03-12T20:00:00"
+tz = "Z"
+duration_min = 120
+seed = 1984
+reliability = 4.0
+
+briefing = """
+ALASKAN NORAD REGION — ROCC ELMENDORF, 12 MARCH 1984, DAY SHIFT
+
+SITUATION. Soviet Long-Range Aviation is exercising against Alaska. BEAR H cruise-missile carriers and BEAR D reconnaissance aircraft have been probing the Air Defense Identification Zone, some descending low over the Bering Sea where the coastal radars lose them. Since the loss of KAL 007 last September, airliners on the North Pacific routes report every deviation; the Soviets are jumpy too.
+
+YOUR NETWORK. Minimally attended radars at Tin City, Cape Romanzof, Cape Newenham, Kotzebue (AN/FPS-117, 3D) and the older stations inland, feeding the Region Operations Control Center. An E-3A Sentry (callsign DARKSTAR) orbits over the Yukon delta: its pulse-Doppler radar sees low flyers over sea and land.
+
+FORCES. 43rd TFS F-15A Eagles: two on five-minute alert at Galena, two at King Salmon, more at Elmendorf.
+
+TASKS.
+  • Intercept and visually identify every BEAR. Escort them; weapons HOLD.
+  • Keep them outside 12 miles of the coast until identified.
+  • Identify the commercial traffic correctly. Do not chase airliners.
+"""
+
+[[intel]]
+title = "AWACS"
+text = "DARKSTAR's APY-1 rejects ground clutter by Doppler filtering. A target flying exactly across the radar's line of sight (zero radial speed) falls into the clutter notch and fades. Move the orbit, or use the ground radars, to cover the notch."
+
+[[intel]]
+title = "BEAR tactics"
+text = "BEARs approach at high altitude, then some descend to a few hundred metres over the sea, below the coastal radars' horizon. They turn away once escorted."
+
+[automation]
+surveil = true
+ident = true
+height = true
+tech = true
+
+[weather]
+k_factor = 1.333
+wind_from = 320.0
+wind_kmh = 70.0
+ceiling_m = 1500.0
+visibility_km = 30.0
+night = false
+sea_state = 4.0
+
+[hq]
+name = "ALASKAN NORAD REGION"
+readiness = "DEFCON 5"
+alert = "WHITE"
+weapons_status = "HOLD"
+[hq.policy]
+response_s = [45.0, 120.0]
+declare_hostile = "deny"
+engage = "deny"
+ram = "deny"
+special_release = "deny"
+weapons_status_FREE = "deny"
+weapons_status_TIGHT = "deny"
+alert_RED = "deny"
+mode1_valid = ["24", "61"]
+track_start = 401
+
+[[link]]
+id = "D_west"
+name = "West coast radar microwave"
+kind = "data"
+delay_s = 2.0
+[[link]]
+id = "D_interior"
+name = "Interior radar microwave"
+kind = "data"
+delay_s = 2.0
+[[link]]
+id = "D_awacs"
+name = "AWACS JTIDS link"
+kind = "data"
+delay_s = 1.0
+[[link]]
+id = "V_galena"
+name = "Galena FOL line"
+kind = "voice"
+delay_s = 5.0
+[[link]]
+id = "V_kingsalmon"
+name = "King Salmon FOL line"
+kind = "voice"
+delay_s = 5.0
+[[link]]
+id = "V_elmendorf"
+name = "Elmendorf line"
+kind = "voice"
+delay_s = 4.0
+
+[[radar]]
+site = "tin_city"
+type = "AN/FPS-117"
+link = "D_west"
+[[radar]]
+site = "cape_romanzof"
+type = "AN/FPS-117"
+link = "D_west"
+[[radar]]
+site = "cape_newenham"
+type = "AN/FPS-117"
+link = "D_west"
+[[radar]]
+site = "kotzebue_r"
+type = "AN/FPS-117"
+link = "D_west"
+[[radar]]
+site = "campion"
+type = "AN/FPS-20A"
+hf = ["AN/FPS-6"]
+link = "D_interior"
+[[radar]]
+site = "tatalina"
+type = "AN/FPS-20A"
+hf = ["AN/FPS-6"]
+link = "D_interior"
+[[radar]]
+site = "king_salmon_r"
+type = "ARSR-3"
+link = "D_interior"
+[[radar]]
+site = "fire_island"
+type = "ARSR-3"
+link = "D_interior"
+[[radar]]
+id = "darkstar_r"
+name = "DARKSTAR (E-3A)"
+type = "AN/APY-1"
+carrier = "awacs"
+link = "D_awacs"
+
+[[airbase]]
+site = "elmendorf"
+link = "V_elmendorf"
+[[airbase]]
+site = "galena"
+link = "V_galena"
+[[airbase]]
+site = "king_salmon"
+link = "V_kingsalmon"
+[[airbase]]
+site = "eielson"
+[[airbase]]
+site = "anchorage_intl"
+[[airbase]]
+site = "fairbanks_intl"
+[[airbase]]
+site = "nome_ap"
+[[airbase]]
+site = "bethel_ap"
+[[airbase]]
+site = "provideniya"
+side = "red"
+
+[[squadron]]
+id = "galena_det"
+name = "43rd TFS det. Galena"
+base = "galena"
+type = "F-15A"
+callsign = "TWIN"
+ready = { "5" = 2, "30" = 2 }
+pilots = 6
+
+[[squadron]]
+id = "ks_det"
+name = "43rd TFS det. King Salmon"
+base = "king_salmon"
+type = "F-15A"
+callsign = "FANG"
+ready = { "5" = 2, "30" = 2 }
+pilots = 6
+
+[[squadron]]
+id = "43tfs"
+name = "43rd TFS"
+base = "elmendorf"
+type = "F-15A"
+callsign = "COBRA"
+ready = { "15" = 2, "60" = 6 }
+pilots = 12
+
+[[traffic]]
+count = 10
+routes = [["Anchorage", "Fairbanks"], ["Anchorage", "Nome"], ["Anchorage", "Bethel"], ["Anchorage", "King Salmon"],
+          ["Fairbanks", "Kotzebue"], ["Nome", "Kotzebue"]]
+types = ["B707", "DC-10", "Viscount"]
+alt_ft = [12000.0, 33000.0]
+t_window = [0.0, 6000.0]
+off_plan = 0.12
+callsigns = ["ALASKA", "WIEN", "MARKAIR", "REEVE"]
+
+[[flight]]
+id = "awacs"
+type = "E-3A"
+callsign = "DARKSTAR"
+side = "blue"
+spawn_t = 0.0
+truth_label = "E-3A Sentry"
+markings = "USAF"
+start = { lat = 62.6, lon = -162.5, alt_m = 9000.0, kmh = 650.0 }
+route = [
+  { lat = 62.6, lon = -161.0, alt_m = 9000.0, kmh = 650.0 },
+  { lat = 61.6, lon = -161.0, alt_m = 9000.0, kmh = 650.0 },
+  { lat = 61.6, lon = -163.5, alt_m = 9000.0, kmh = 650.0 },
+  { lat = 62.6, lon = -163.5, alt_m = 9000.0, kmh = 650.0 },
+  { lat = 62.6, lon = -161.0, alt_m = 9000.0, kmh = 650.0 },
+  { lat = 61.6, lon = -161.0, alt_m = 9000.0, kmh = 650.0 },
+  { lat = 61.6, lon = -163.5, alt_m = 9000.0, kmh = 650.0 },
+  { lat = 62.6, lon = -163.5, alt_m = 9000.0, kmh = 650.0 },
+  { lat = 62.6, lon = -161.0, alt_m = 9000.0, kmh = 650.0 },
+  { lat = 61.6, lon = -161.0, alt_m = 9000.0, kmh = 650.0 },
+  { lat = 61.6, lon = -163.5, alt_m = 9000.0, kmh = 650.0 },
+  { lat = 62.6, lon = -163.5, alt_m = 9000.0, kmh = 650.0 },
+  { lat = 62.6, lon = -161.0, alt_m = 9000.0, kmh = 650.0 },
+  { lat = 61.6, lon = -161.0, alt_m = 9000.0, kmh = 650.0 },
+  { lat = 61.6, lon = -163.5, alt_m = 9000.0, kmh = 650.0 },
+  { lat = 62.6, lon = -163.5, alt_m = 9000.0, kmh = 650.0 },
+  { lat = 64.6, lon = -150.0, alt_m = 9000.0, kmh = 650.0 },
+  { lat = 61.25, lon = -149.8, alt_m = 1000.0, kmh = 400.0, action = "land" },
+]
+transponder = { system = "sif", codes = { "1" = "24", "3" = "4401" } }
+flight_plan = { kind = "MIL", mode3 = "4401", note = "AWACS orbit" }
+
+[[flight]]
+id = "bear1"
+type = "Tu-95MS"
+callsign = "BEAR 1"
+side = "red"
+spawn_t = 900.0
+truth_label = "Tu-95MS BEAR H"
+markings = "red star, Soviet Long-Range Aviation, cruise-missile pylons empty"
+nationality = "USSR"
+jammer = "ECM-SPS"
+on_intercept = "turn_away:250"
+start = { lat = 63.6, lon = -173.8, alt_m = 10500.0, kmh = 760.0 }
+route = [
+  { lat = 62.4, lon = -170.0, alt_m = 10500.0, kmh = 760.0 },
+  { lat = 61.2, lon = -168.0, alt_m = 600.0, kmh = 650.0 },
+  { lat = 60.2, lon = -165.4, alt_m = 300.0, kmh = 650.0 },
+  { lat = 59.0, lon = -163.2, alt_m = 300.0, kmh = 650.0, action = "var:bear1_coast" },
+  { lat = 58.3, lon = -167.0, alt_m = 9000.0, kmh = 720.0, action = "remove" },
+]
+transponder = { system = "kremniy", codes = { "period" = "MAR" } }
+
+[[flight]]
+id = "bear2"
+type = "Tu-95MS"
+callsign = "BEAR 2"
+side = "red"
+spawn_t = 2200.0
+truth_label = "Tu-95MS BEAR H"
+markings = "red star, Soviet Long-Range Aviation"
+nationality = "USSR"
+on_intercept = "turn_away:290"
+start = { lat = 66.3, lon = -172.2, alt_m = 11000.0, kmh = 760.0 }
+route = [
+  { lat = 66.6, lon = -168.6, alt_m = 11000.0, kmh = 760.0 },
+  { lat = 67.4, lon = -166.0, alt_m = 11000.0, kmh = 760.0 },
+  { lat = 68.3, lon = -164.5, alt_m = 11000.0, kmh = 760.0, action = "var:bear2_coast" },
+  { lat = 68.8, lon = -170.0, alt_m = 11000.0, kmh = 760.0, action = "remove" },
+]
+transponder = { system = "kremniy", codes = { "period" = "MAR" } }
+
+[[flight]]
+id = "beard"
+type = "Tu-95M"
+callsign = "BEAR 3"
+side = "red"
+spawn_t = 3800.0
+truth_label = "Tu-95RTs BEAR D (maritime reconnaissance)"
+markings = "red star, Soviet Naval Aviation, big belly radome"
+nationality = "USSR"
+on_intercept = "turn_away:230"
+start = { lat = 61.0, lon = -172.5, alt_m = 8000.0, kmh = 720.0 }
+route = [
+  { lat = 60.0, lon = -168.0, alt_m = 8000.0, kmh = 720.0 },
+  { lat = 58.6, lon = -163.0, alt_m = 8000.0, kmh = 720.0 },
+  { lat = 58.2, lon = -160.0, alt_m = 8000.0, kmh = 720.0, action = "var:bear3_coast" },
+  { lat = 58.2, lon = -168.0, alt_m = 9000.0, kmh = 720.0, action = "remove" },
+]
+transponder = { system = "kremniy", codes = { "period" = "MAR" } }
+
+[[flight]]
+id = "kal"
+type = "B747"
+callsign = "KOREAN 015"
+side = "civil"
+spawn_t = 1500.0
+truth_label = "Boeing 747, Korean Air Lines (Anchorage–Seoul, route R-20)"
+markings = "Korean Air Lines"
+start = { lat = 61.5, lon = -151.5, alt_m = 10000.0, kmh = 900.0 }
+route = [
+  { lat = 60.2, lon = -160.0, alt_m = 10600.0, kmh = 900.0 },
+  { lat = 59.2, lon = -168.0, alt_m = 10600.0, kmh = 900.0 },
+  { lat = 58.4, lon = -174.0, alt_m = 10600.0, kmh = 900.0, action = "remove" },
+]
+transponder = { system = "atc", codes = { "3" = "2015" } }
+flight_plan = { kind = "IFR", mode3 = "2015", note = "R-20 westbound" }
+
+[[flight]]
+id = "bush"
+type = "C172"
+callsign = "N2241B"
+side = "civil"
+spawn_t = 3000.0
+truth_label = "Cessna 172, bush pilot (no flight plan)"
+markings = "civil, ski landing gear"
+start = { lat = 64.9, lon = -163.8, alt_m = 600.0, kmh = 190.0 }
+route = [
+  { lat = 64.6, lon = -162.0, alt_m = 450.0, kmh = 190.0 },
+  { lat = 63.88, lon = -160.79, alt_m = 300.0, kmh = 170.0, action = "land" },
+]
+transponder = { system = "none" }
+
+[[trigger]]
+id = "open"
+cond = { type = "time", t = 5.0 }
+actions = [{ do = "message", channel = "tty", sender = "ALASKAN NORAD REGION", ack = true, kind = "order", text = "SOVIET LRA ACTIVITY EXPECTED FROM ANADYR AND UGOLNY. INTERCEPT, IDENTIFY AND ESCORT ALL BEARS. WEAPONS HOLD. DARKSTAR ON STATION OVER THE YUKON DELTA." }]
+
+[[trigger]]
+id = "bear_warn"
+cond = { type = "time", t = 1000.0 }
+actions = [{ do = "message", channel = "voice", sender = "ALASKAN NORAD REGION", ack = true, kind = "order", text = "Tin City reports a large aircraft leaving the Chukotka coast southeast bound, high. Probable BEAR. Scramble Galena." }]
+
+[[trigger]]
+id = "low_warn"
+cond = { type = "time", t = 1600.0 }
+actions = [{ do = "message", channel = "voice", sender = "DARKSTAR", text = "DARKSTAR: target descending through five thousand over the Bering Sea, still tracking." }]
+
+[[trigger]]
+id = "romanzof"
+cond = { type = "time", t = 4200.0 }
+actions = [{ do = "radar_status", site = "cape_romanzof", status = "down", minutes = 40.0, text = "CAPE ROMANZOF: POWER PLANT FAILURE — RADAR OFF THE AIR (minimally attended site, crew en route)" }]
+
+[[objective]]
+id = "vid1"
+text = "Intercept and visually identify BEAR 1"
+kind = "vid"
+params = { ac = "bear1" }
+points = 15
+
+[[objective]]
+id = "vid2"
+text = "Intercept and visually identify BEAR 2"
+kind = "vid"
+params = { ac = "bear2" }
+points = 15
+
+[[objective]]
+id = "vid3"
+text = "Intercept and visually identify BEAR 3"
+kind = "vid"
+params = { ac = "beard" }
+points = 10
+
+[[objective]]
+id = "coast"
+text = "Keep the low BEAR outside 12 miles of the coast until identified"
+kind = "keep_out"
+params = { ac = "bear1", zone = "alaska_coast", unless_vid = true }
+points = 15
+
+[[objective]]
+id = "kal"
+text = "Identify the Korean airliner as FRIEND"
+kind = "identify"
+params = { ac = "kal", correct = ["friend"], wrong = ["suspect", "hostile"], from = "track" }
+points = 10
+
+[[objective]]
+id = "bush"
+text = "Visually identify the low, slow unknown near Unalakleet"
+kind = "vid"
+params = { ac = "bush" }
+points = 10
+
+[[objective]]
+id = "nofire"
+text = "Weapons HOLD: no BEAR is engaged"
+kind = "not_destroyed"
+params = { ac = "bear1" }
+points = 10
+penalty = 50
+
+[[objective]]
+id = "civil"
+text = "No civil aircraft losses"
+kind = "no_civil_losses"
+points = 10
+penalty = 40
+
+[[objective]]
+id = "alert"
+text = "Hand over at least four Eagles on alert"
+kind = "keep_ready"
+params = { min = 4 }
+points = 5

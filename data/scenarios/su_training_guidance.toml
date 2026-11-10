@@ -1,0 +1,199 @@
+id = "su_training_guidance"
+title = "Training: Guidance Point Drill"
+subtitle = "Koltsovo guidance point — instructor-led"
+summary = "Learn the PVO way: a delayed plotting board for decisions, a real-time guidance-point scope for control."
+faction = "USSR"
+kind = "training"
+photo = ["Su-9", "MiG-19PM"]
+photo_caption = "Перехватчик Су-9 · Su-9 interceptor of the PVO"
+era = "1960s"
+difficulty = 1
+order = 1
+theater = "middle_urals"
+start = "1960-04-12T10:00:00"
+tz = "MSK"
+duration_min = 45
+seed = 412
+reliability = 50.0
+
+briefing = """
+COMMAND POST, 4th SEPARATE AIR DEFENSE ARMY — TRAINING EXERCISE
+
+An Il-14 of the Army's liaison squadron will play the intruder, approaching Sverdlovsk from the west at about 4,000 m with its IFF switched off.
+
+What you will learn:
+  1. The PLOTTING BOARD shows radar-company reports. Each mark is minutes old: the time label tells you how old. The dashed line is our extrapolation.
+  2. The guidance point at Koltsovo has its own P-30 radar. Its scope (RADAR SCOPE, key M) shows the target in real time.
+  3. Scramble a MiG-17PF pair from Koltsovo, keep them under Koltsovo guidance, and identify the target visually.
+
+The instructor's card is pinned to the plotting board: it tells you what to do next and circles the controls to use.
+"""
+
+[automation]
+surveil = true
+ident = false
+height = false
+tech = true
+
+[weather]
+k_factor = 1.333
+wind_from = 270.0
+wind_kmh = 50.0
+ceiling_m = 5000.0
+visibility_km = 30.0
+night = false
+
+[hq]
+name = "4th ARMY CP"
+readiness = "CONSTANT"
+weapons_status = "HOLD"
+[hq.policy]
+response_s = [40.0, 90.0]
+declare_hostile = "deny"
+engage = "deny"
+iff_period = "APR"
+track_start = 3101
+
+[[link]]
+id = "T_gp"
+name = "Guidance points"
+[[link]]
+id = "T_tagil"
+name = "Nizhny Tagil telephone"
+[[link]]
+id = "A_koltsovo"
+name = "Koltsovo line"
+delay_s = 15.0
+
+[[radar]]
+site = "koltsovo_gp"
+type = "P-30"
+gci = true
+link = "T_gp"
+[[radar]]
+site = "rlr_tagil"
+type = "P-10"
+link = "T_tagil"
+[[radar]]
+site = "rlr_zlatoust"
+type = "P-20"
+link = "T_gp"
+
+[[airbase]]
+site = "koltsovo"
+link = "A_koltsovo"
+
+[[squadron]]
+id = "kol_iap"
+name = "Koltsovo IAP"
+base = "koltsovo"
+type = "MiG-17PF"
+callsign = "5"
+ready = { "3" = 2, "7" = 2 }
+pilots = 4
+iff_codes = { period = "APR" }
+
+[[flight]]
+id = "target"
+type = "Il-14"
+callsign = "EXERCISE TARGET"
+side = "blue"
+spawn_t = 30.0
+truth_label = "Il-14 (exercise target)"
+markings = "red star, liaison squadron"
+start = { lat = 57.1, lon = 56.6, alt_m = 4000.0, kmh = 330.0 }
+route = [
+  { lat = 56.9, lon = 59.2, alt_m = 4000.0, kmh = 330.0 },
+  { lat = 56.8, lon = 61.8, alt_m = 4000.0, kmh = 330.0 },
+  { lat = 56.7, lon = 64.5, alt_m = 4000.0, kmh = 330.0, action = "remove" },
+]
+transponder = { system = "kremniy", on = false, codes = { period = "APR" } }
+
+# ---------------------------------------------------------------- instructor
+[[lesson]]
+title = "The plotting board"
+text = "This is the command post's plotting board. Radar companies telephone their targets in every minute, so each mark arrives minutes late, labelled with the time it was seen. The dashed line is our extrapolation. The exercise target, an Il-14 of the Army's liaison squadron with its IFF off, will come from the west."
+action = "Wait for the radar companies to report it: a target number will be allotted"
+mode = "map"
+console = "TRACKS"
+mark = "target"
+mark_label = "EXERCISE TARGET"
+mark_label_ru = "УЧЕБНАЯ ЦЕЛЬ"
+done = { type = "tracked", ac = "target" }
+
+[[lesson]]
+title = "Identify"
+text = "The target gives no reply to the Kremniy interrogator and nothing on the flight-plan table explains it. Until someone sees it, it is UNIDENTIFIED."
+action = "TRACKS F1: select the target, press UNIDENTIFIED"
+console = "TRACKS"
+highlight = ["UNIDENTIFIED", "TABLE tracks"]
+done = { type = "identity", ac = "target", is = ["unknown"] }
+
+[[lesson]]
+title = "The guidance point"
+text = "The board is for decisions; control needs real time. The guidance point at Koltsovo has its own P-30 radar. Its scope shows the target where it is now, not where it was. Compare the two: the difference is how far it has flown since it was reported."
+action = "Press M for the RADAR SCOPE and step to Koltsovo with < and >"
+mode = "scope"
+highlight = ["RADAR SCOPE", "<", ">"]
+done = { type = "ui", event = "scope_koltsovo_gp" }
+
+[[lesson]]
+title = "Scramble"
+text = "Koltsovo keeps MiG-17PF interceptors at readiness. Send a pair for an identification pass. The guidance officer at Koltsovo steers them on his own scope once both aircraft are in his picture."
+action = "WEAPONS F2: ×2, ID PASS, then SCRAMBLE ON the target"
+console = "WEAPONS"
+highlight = ["×2", "ID PASS", "SCRAMBLE*"]
+mark = "koltsovo"
+mark_label = "KOLTSOVO IAP"
+mark_label_ru = "КОЛЬЦОВО · ИАП"
+done = { type = "scrambled", n = 1 }
+
+[[lesson]]
+title = "Guidance"
+text = "Every vector goes by radio from the guidance point. Readiness 3 means three minutes to take-off; the climb takes longer. Speed up time and watch the pair close on the scope or the board; the clock slows itself for alerts."
+action = "Press 8× (or +) and watch the pair close"
+highlight = ["8×", "TABLE fl"]
+mark = "target"
+done = { type = "vid", ac = "target" }
+
+[[lesson]]
+title = "Re-identify"
+text = "The leader reports a red-star Il-14 of our own liaison squadron. Correct the board: the target is OWN."
+action = "TRACKS F1: press OWN"
+console = "TRACKS"
+highlight = ["OWN"]
+done = { type = "identity", ac = "target", is = ["friend"] }
+
+[[lesson]]
+title = "Return to base"
+text = "Bring the pair home. A MiG-17PF has little fuel to spare, and a fighter that runs dry is lost however well the intercept went."
+action = "WEAPONS F2: select the flight, press RTB"
+console = "WEAPONS"
+highlight = ["RTB", "TABLE fl"]
+done = { type = "any", of = [{ type = "flight", state = "rtb" }, { type = "flights_home" }] }
+
+[lesson_end]
+title = "Exercise complete"
+text = "On the board you decide; on the guidance-point scope you control. Next: the Jamming Drill."
+reason = "Exercise complete"
+
+[[objective]]
+id = "ident"
+text = "Set the exercise target UNIDENTIFIED until it is identified"
+kind = "identify"
+params = { ac = "target", correct = ["unknown", "friend"], wrong = ["hostile", "suspect"] }
+points = 30
+
+[[objective]]
+id = "vid"
+text = "Identify the target visually"
+kind = "vid"
+params = { ac = "target" }
+points = 50
+
+[[objective]]
+id = "frat"
+text = "No fratricide"
+kind = "no_fratricide"
+points = 20
+penalty = 50

@@ -1,0 +1,337 @@
+id = "su_genetrix"
+title = "Balloon Night"
+subtitle = "4th Separate Air Defense Army, 4 February 1956"
+summary = "They come out of the west on the jet stream: hundreds of American balloons with camera gondolas, too high for any fighter by day. But at night the gas cools and they sink. You have until sunrise."
+faction = "USSR"
+kind = "scenario"
+photo = ["GENETRIX", "MiG-17PF"]
+photo_caption = "Разведывательный аэростат над Уралом · reconnaissance balloon over the Urals"
+era = "1950s"
+difficulty = 2
+order = 5
+theater = "middle_urals"
+start = "1956-02-04T04:00:00"
+tz = "MSK"
+sun_offset_h = 2.0
+duration_min = 220
+seed = 1956
+reliability = 1.6
+
+briefing = """
+COMMAND POST, 4th SEPARATE AIR DEFENSE ARMY — NIGHT OF 3-4 FEBRUARY 1956
+
+SITUATION. Since 10 January the Americans have been launching automatic reconnaissance balloons from Western Europe and Turkey. They drift east on the high-altitude winds at 150-200 km/h, carrying camera gondolas and radar reflectors. By day they float at 20-25 km, out of reach of every fighter we have. After sunset the gas cools and they sink to 10-12 km before dropping ballast. Moscow has declared every balloon a violator of the state border.
+
+YOUR TASK. Destroy as many balloons as possible before dawn. Local sunrise is about 08:30 (06:30 Moscow time); after that they climb out of reach within the hour.
+
+FORCES. MiG-17PF night fighters at Koltsovo, MiG-15bis at Bolshoye Savino, Yak-25M all-weather interceptors at Shagol. Guidance points at Koltsovo, Savino and Shagol; radar companies around the region report by telephone.
+
+METHOD. The balloons have no engines and cannot manoeuvre: guide the fighter to the balloon's altitude, behind it, and let the pilot use his cannon. Do not waste fuel chasing balloons that are already climbing.
+"""
+
+[[intel]]
+title = "Balloon behaviour"
+text = "Float altitude follows the gas temperature: high in daylight, lowest a few hours before dawn. Radar paints the gondola and its reflector at 100-150 km. Speed over the ground equals the wind: expect 150-180 km/h toward the east."
+
+[[intel]]
+title = "Civil traffic"
+text = "Aeroflot Il-14 night mail flights Sverdlovsk–Chelyabinsk–Kurgan and Sverdlovsk–Perm. They do not carry IFF."
+
+[faction_override]
+report_delay_s = [180.0, 300.0]
+report_interval_s = 75.0
+company_capacity = 5
+
+[automation]
+surveil = true
+ident = true
+height = true
+tech = false
+
+[weather]
+k_factor = 1.333
+wind_from = 265.0
+wind_kmh = 105.0
+ceiling_m = 2000.0
+visibility_km = 10.0
+night = true
+sea_state = 0.0
+
+[hq]
+name = "ЦКП ПВО (MOSCOW)"
+readiness = "FULL"
+alert = ""
+weapons_status = "TIGHT"
+[hq.policy]
+response_s = [60.0, 150.0]
+declare_hostile = "grant"
+engage = "grant"
+ram = "deny"
+special_release = "deny"
+iff_period = "FEB"
+track_start = 5601
+
+[[link]]
+id = "T_gp"
+name = "Guidance point lines"
+[[link]]
+id = "T_troitsk"
+name = "Troitsk telephone"
+[[link]]
+id = "T_kurgan"
+name = "Kurgan telephone"
+[[link]]
+id = "T_kyshtym"
+name = "Kyshtym telephone"
+[[link]]
+id = "T_tagil"
+name = "Nizhny Tagil telephone"
+[[link]]
+id = "T_kamensk"
+name = "Kamensk telephone"
+[[link]]
+id = "T_zlatoust"
+name = "Zlatoust telephone"
+[[link]]
+id = "T_airfields"
+name = "Airfield alert lines"
+
+[[radar]]
+site = "koltsovo_gp"
+type = "P-20"
+gci = true
+link = "T_gp"
+[[radar]]
+site = "savino_gp"
+type = "P-20"
+gci = true
+link = "T_gp"
+[[radar]]
+site = "shagol_gp"
+type = "P-20"
+gci = true
+link = "T_gp"
+[[radar]]
+site = "rlr_troitsk"
+type = "P-8"
+link = "T_troitsk"
+[[radar]]
+site = "rlr_kurgan"
+type = "P-8"
+link = "T_kurgan"
+[[radar]]
+site = "rlr_kyshtym"
+type = "P-10"
+link = "T_kyshtym"
+[[radar]]
+site = "rlr_tagil"
+type = "P-10"
+link = "T_tagil"
+[[radar]]
+site = "rlr_kamensk"
+type = "P-8"
+link = "T_kamensk"
+[[radar]]
+site = "rlr_zlatoust"
+type = "P-10"
+link = "T_zlatoust"
+
+[[airbase]]
+site = "koltsovo"
+link = "T_airfields"
+[[airbase]]
+site = "savino"
+link = "T_airfields"
+[[airbase]]
+site = "shagol"
+link = "T_airfields"
+
+[[squadron]]
+id = "koltsovo_iap"
+name = "Koltsovo IAP (night)"
+base = "koltsovo"
+type = "MiG-17PF"
+callsign = "21"
+ready = { "3" = 2, "7" = 2, "20" = 4 }
+pilots = 8
+iff_codes = { period = "FEB" }
+
+[[squadron]]
+id = "savino_iap"
+name = "Savino IAP"
+base = "savino"
+type = "MiG-15bis"
+callsign = "34"
+ready = { "3" = 2, "7" = 2, "20" = 2 }
+pilots = 6
+iff_codes = { period = "FEB" }
+
+[[squadron]]
+id = "shagol_iap"
+name = "Shagol IAP (all-weather)"
+base = "shagol"
+type = "Yak-25M"
+callsign = "57"
+ready = { "3" = 2, "7" = 2 }
+pilots = 4
+iff_codes = { period = "FEB" }
+
+[[traffic]]
+count = 5
+routes = [["Sverdlovsk", "Chelyabinsk"], ["Sverdlovsk", "Perm"], ["Chelyabinsk", "Kurgan"], ["Sverdlovsk", "Tyumen"]]
+types = ["Il-14"]
+alt_m = [2400.0, 3600.0]
+t_window = [0.0, 9000.0]
+transponder = "none"
+plans = false
+callsigns = ["AEROFLOT"]
+
+[[flight]]
+id = "gx1"
+type = "GENETRIX"
+callsign = "BALLOON"
+side = "red"
+mission = "balloon"
+count = 3
+spacing_km = 22.0
+spawn_t = 0.0
+alt_day_m = 21000.0
+alt_night_m = 11500.0
+truth_label = "WS-119L reconnaissance balloon with camera gondola"
+markings = "polyethylene envelope, metal gondola"
+nationality = "US"
+start = { lat = 57.6, lon = 54.6, alt_m = 11800.0, kmh = 0.0 }
+transponder = { system = "none" }
+
+[[flight]]
+id = "gx2"
+type = "GENETRIX"
+callsign = "BALLOON"
+side = "red"
+mission = "balloon"
+count = 3
+spacing_km = 25.0
+spawn_t = 1500.0
+alt_day_m = 22000.0
+alt_night_m = 12000.0
+truth_label = "WS-119L reconnaissance balloon with camera gondola"
+markings = "polyethylene envelope, metal gondola"
+nationality = "US"
+start = { lat = 56.2, lon = 54.2, alt_m = 12200.0, kmh = 0.0 }
+transponder = { system = "none" }
+
+[[flight]]
+id = "gx3"
+type = "GENETRIX"
+callsign = "BALLOON"
+side = "red"
+mission = "balloon"
+count = 3
+spacing_km = 20.0
+spawn_t = 3600.0
+alt_day_m = 20000.0
+alt_night_m = 11000.0
+truth_label = "WS-119L reconnaissance balloon with camera gondola"
+markings = "polyethylene envelope, metal gondola"
+nationality = "US"
+start = { lat = 58.4, lon = 54.4, alt_m = 11300.0, kmh = 0.0 }
+transponder = { system = "none" }
+
+[[flight]]
+id = "gx4"
+type = "GENETRIX"
+callsign = "BALLOON"
+side = "red"
+mission = "balloon"
+count = 3
+spacing_km = 24.0
+spawn_t = 5400.0
+alt_day_m = 23000.0
+alt_night_m = 12500.0
+truth_label = "WS-119L reconnaissance balloon with camera gondola"
+markings = "polyethylene envelope, metal gondola"
+nationality = "US"
+start = { lat = 55.2, lon = 54.0, alt_m = 12700.0, kmh = 0.0 }
+transponder = { system = "none" }
+
+[[trigger]]
+id = "open"
+cond = { type = "time", t = 5.0 }
+actions = [
+  { do = "message", channel = "tty", sender = "ЦКП ПВО", ack = true, kind = "order", text = "BALLOONS CROSSING THE VOLGA EASTBOUND AT 11-12 KM. ALL BALLOONS ARE VIOLATORS. DESTROY BEFORE DAWN. REPORT EVERY BALLOON TRACKED." },
+]
+
+[[trigger]]
+id = "designate1"
+cond = { type = "time", t = 400.0 }
+actions = [{ do = "authorize", ac = "gx1", basis = "balloon: violator by order of the Commander-in-Chief" }]
+
+[[trigger]]
+id = "designate2"
+cond = { type = "time", t = 2100.0 }
+actions = [{ do = "authorize", ac = "gx2", basis = "balloon: violator by order of the Commander-in-Chief" }]
+
+[[trigger]]
+id = "designate3"
+cond = { type = "time", t = 4200.0 }
+actions = [{ do = "authorize", ac = "gx3", basis = "balloon: violator by order of the Commander-in-Chief" }]
+
+[[trigger]]
+id = "designate4"
+cond = { type = "time", t = 6000.0 }
+actions = [{ do = "authorize", ac = "gx4", basis = "balloon: violator by order of the Commander-in-Chief" }]
+
+[[trigger]]
+id = "dawn"
+cond = { type = "time", t = 9000.0 }
+actions = [{ do = "message", channel = "voice", sender = "WEATHER", text = "Dawn in the Urals. Balloons will begin to climb within the hour." }]
+
+[[trigger]]
+id = "line"
+cond = { type = "time", t = 5000.0 }
+actions = [{ do = "link", id = "T_kurgan", up = false, minutes = 30.0, text = "KURGAN TELEPHONE LINE DOWN — ICE ON THE WIRES" }]
+
+[[objective]]
+id = "kills"
+text = "Destroy at least five balloons"
+kind = "destroy_count"
+params = { ac = ["gx1", "gx2", "gx3", "gx4"], min = 5 }
+points = 50
+
+[[objective]]
+id = "report"
+text = "Report the first balloon to Moscow within 10 minutes of tracking it"
+kind = "report"
+params = { ac = "gx1-1", within_s = 600.0 }
+points = 15
+
+[[objective]]
+id = "civil"
+text = "No civil losses"
+kind = "no_civil_losses"
+points = 15
+penalty = 30
+
+[[objective]]
+id = "fratricide"
+text = "Do not shoot down our own aircraft"
+kind = "no_fratricide"
+points = 10
+penalty = 30
+
+[[objective]]
+id = "ready"
+text = "Keep at least two fighters on alert for the morning"
+kind = "keep_ready"
+params = { min = 2 }
+points = 10
+
+[[headline]]
+cond = { type = "var", name = "civil_losses", op = ">=", value = 1.0 }
+text = "ГИБЕЛЬ САМОЛЁТА АЭРОФЛОТА"
+sub = "An Aeroflot mail plane was lost in the night. The investigation is classified."
+
+[[headline]]
+cond = { type = "time", t = 0.0 }
+text = "АМЕРИКАНСКИЕ ШАРЫ-ШПИОНЫ НАД УРАЛОМ"
+sub = "American spy balloons over the Urals: gondolas recovered and displayed to the press in Moscow."

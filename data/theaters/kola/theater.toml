@@ -1,0 +1,382 @@
+id = "kola"
+name = "Kola Peninsula — Northern Air Defense"
+provenance = "approximate"
+
+[projection]
+lat0 = 67.8
+lon0 = 33.0
+extent_km = [-500.0, 480.0, -420.0, 360.0]
+
+[build]
+simplify_km = 0.6
+terrain_spacing_km = 4.0
+state_lines_countries = ["Russia", "Finland", "Norway"]
+lake_max_rank = 8.0
+river_max_rank = 6.0
+
+# PVO northern sector: site positions approximate, unit allocations fictionalized.
+
+[[radar_site]]
+id = "rlr_teriberka"
+name = "Radar company Teriberka"
+name_ru = "РЛР Териберка"
+lat = 69.16
+lon = 35.14
+elev_m = 150.0
+mast_m = 15.0
+
+[[radar_site]]
+id = "rlr_rybachy"
+name = "Radar company Rybachy"
+name_ru = "РЛР Рыбачий"
+lat = 69.75
+lon = 32.0
+elev_m = 200.0
+mast_m = 15.0
+
+[[radar_site]]
+id = "rlr_lovozero"
+name = "Radar company Lovozero"
+name_ru = "РЛР Ловозеро"
+lat = 68.0
+lon = 35.0
+elev_m = 200.0
+mast_m = 15.0
+
+[[radar_site]]
+id = "rlr_umba"
+name = "Radar company Umba"
+name_ru = "РЛР Умба"
+lat = 66.68
+lon = 34.35
+elev_m = 50.0
+mast_m = 15.0
+
+[[radar_site]]
+id = "rlr_kovdor"
+name = "Radar company Kovdor"
+name_ru = "РЛР Ковдор"
+lat = 67.56
+lon = 30.47
+elev_m = 300.0
+mast_m = 15.0
+
+[[radar_site]]
+id = "rlr_kem"
+name = "Radar company Kem"
+name_ru = "РЛР Кемь"
+lat = 64.95
+lon = 34.58
+elev_m = 20.0
+mast_m = 15.0
+
+[[radar_site]]
+id = "rlr_ponoi"
+name = "Radar company Ponoi"
+name_ru = "РЛР Поной"
+lat = 67.08
+lon = 41.12
+elev_m = 80.0
+mast_m = 15.0
+
+[[radar_site]]
+id = "gp_kilpyavr"
+name = "Kilp-Yavr guidance point"
+name_ru = "ПН Килп-Явр"
+lat = 69.0
+lon = 33.2
+elev_m = 200.0
+mast_m = 12.0
+
+[[radar_site]]
+id = "gp_monchegorsk"
+name = "Monchegorsk guidance point"
+name_ru = "ПН Мончегорск"
+lat = 67.97
+lon = 32.98
+elev_m = 200.0
+mast_m = 12.0
+
+[[radar_site]]
+id = "gp_afrikanda"
+name = "Afrikanda guidance point"
+name_ru = "ПН Африканда"
+lat = 67.45
+lon = 32.78
+elev_m = 200.0
+mast_m = 12.0
+
+[[airbase]]
+id = "kilpyavr"
+name = "Kilp-Yavr"
+name_ru = "Килп-Явр"
+lat = 69.0
+lon = 33.2
+elev_m = 120.0
+kind = "military"
+
+[[airbase]]
+id = "monchegorsk"
+name = "Monchegorsk"
+name_ru = "Мончегорск"
+lat = 67.98
+lon = 33.02
+elev_m = 140.0
+kind = "military"
+
+[[airbase]]
+id = "afrikanda"
+name = "Afrikanda"
+name_ru = "Африканда"
+lat = 67.45
+lon = 32.8
+elev_m = 160.0
+kind = "military"
+
+[[airbase]]
+id = "murmashi"
+name = "Murmansk (Murmashi)"
+name_ru = "Мурманск"
+lat = 68.78
+lon = 32.75
+elev_m = 81.0
+kind = "civil"
+
+[[airbase]]
+id = "korpijarvi"
+name = "Lake Korpijärvi (frozen)"
+name_ru = "оз. Корпиярви"
+lat = 65.75
+lon = 31.9
+elev_m = 150.0
+kind = "civil"
+
+[[airbase]]
+id = "kirkenes"
+name = "Kirkenes (Norway)"
+lat = 69.72
+lon = 29.89
+elev_m = 86.0
+kind = "foreign"
+
+[[airbase]]
+id = "ivalo"
+name = "Ivalo (Finland)"
+lat = 68.61
+lon = 27.41
+elev_m = 146.0
+kind = "foreign"
+
+[[airbase]]
+id = "rovaniemi"
+name = "Rovaniemi (Finland)"
+lat = 66.56
+lon = 25.83
+elev_m = 196.0
+kind = "foreign"
+
+[[sam_site]]
+id = "zrdn_severomorsk"
+name = "SAM battalion Severomorsk"
+name_ru = "ЗРДН Североморск"
+lat = 69.07
+lon = 33.45
+elev_m = 80.0
+unit = ""
+
+[[sam_site]]
+id = "zrdn_murmansk"
+name = "SAM battalion Murmansk West"
+name_ru = "ЗРДН Мурманск-Западный"
+lat = 68.95
+lon = 32.85
+elev_m = 120.0
+unit = ""
+
+[[sam_site]]
+id = "zrdn_olenya"
+name = "SAM battalion Olenya"
+name_ru = "ЗРДН Оленья"
+lat = 68.15
+lon = 33.46
+elev_m = 150.0
+unit = ""
+
+[[sam_site]]
+id = "zrdn_polyarny"
+name = "SAM battalion Polyarny"
+name_ru = "ЗРДН Полярный"
+lat = 69.2
+lon = 33.4
+elev_m = 60.0
+unit = ""
+
+[[sam_site]]
+id = "zrdn_kandalaksha"
+name = "SAM battalion Kandalaksha"
+name_ru = "ЗРДН Кандалакша"
+lat = 67.15
+lon = 32.4
+elev_m = 60.0
+unit = ""
+
+[[city]]
+name = "Murmansk"
+name_ru = "Мурманск"
+lat = 68.97
+lon = 33.08
+size = 3
+
+[[city]]
+name = "Severomorsk"
+name_ru = "Североморск"
+lat = 69.07
+lon = 33.42
+size = 2
+
+[[city]]
+name = "Monchegorsk"
+name_ru = "Мончегорск"
+lat = 67.94
+lon = 32.86
+size = 2
+
+[[city]]
+name = "Apatity"
+name_ru = "Апатиты"
+lat = 67.57
+lon = 33.39
+size = 2
+
+[[city]]
+name = "Kirovsk"
+name_ru = "Кировск"
+lat = 67.62
+lon = 33.67
+size = 1
+
+[[city]]
+name = "Kandalaksha"
+name_ru = "Кандалакша"
+lat = 67.16
+lon = 32.41
+size = 2
+
+[[city]]
+name = "Polyarnye Zori"
+name_ru = "Полярные Зори"
+lat = 67.37
+lon = 32.5
+size = 1
+
+[[city]]
+name = "Kovdor"
+name_ru = "Ковдор"
+lat = 67.57
+lon = 30.47
+size = 1
+
+[[city]]
+name = "Zapolyarny"
+name_ru = "Заполярный"
+lat = 69.42
+lon = 30.81
+size = 1
+
+[[city]]
+name = "Nikel"
+name_ru = "Никель"
+lat = 69.41
+lon = 30.22
+size = 1
+
+[[city]]
+name = "Kem"
+name_ru = "Кемь"
+lat = 64.96
+lon = 34.58
+size = 1
+
+[[city]]
+name = "Loukhi"
+name_ru = "Лоухи"
+lat = 66.08
+lon = 33.04
+size = 1
+
+[[city]]
+name = "Belomorsk"
+name_ru = "Беломорск"
+lat = 64.52
+lon = 34.77
+size = 1
+
+[[city]]
+name = "Umba"
+name_ru = "Умба"
+lat = 66.68
+lon = 34.35
+size = 1
+
+[[city]]
+name = "Lovozero"
+name_ru = "Ловозеро"
+lat = 68.0
+lon = 35.01
+size = 1
+
+[[city]]
+name = "Kirkenes"
+lat = 69.73
+lon = 30.05
+size = 1
+
+[[city]]
+name = "Vardø"
+lat = 70.37
+lon = 31.11
+size = 1
+
+[[city]]
+name = "Ivalo"
+lat = 68.66
+lon = 27.55
+size = 1
+
+[[city]]
+name = "Rovaniemi"
+lat = 66.5
+lon = 25.73
+size = 2
+
+[[city]]
+name = "Sodankylä"
+lat = 67.42
+lon = 26.59
+size = 1
+
+[[zone]]
+id = "foreign"
+name = "Norway and Finland"
+name_ru = "Норвегия и Финляндия"
+kind = "foreign"
+shape = "poly"
+points = [[71.0, 20.5], [71.0, 30.8], [69.8, 30.85], [69.45, 30.15], [69.05, 28.9], [68.85, 28.4], [68.55, 28.45], [68.15, 28.65], [67.65, 29.95], [66.85, 29.1], [66.1, 29.9], [65.3, 29.75], [64.6, 30.05], [64.0, 30.5], [64.0, 20.5]]
+
+[[zone]]
+id = "murmansk_da"
+name = "Murmansk and Northern Fleet defended area"
+name_ru = "Мурманский объект"
+kind = "defended"
+shape = "circle"
+lat = 69.0
+lon = 33.2
+r_km = 70.0
+
+[[zone]]
+id = "ussr_land"
+name = "Kola Peninsula and Karelia"
+name_ru = "Территория СССР"
+kind = "territory"
+shape = "poly"
+points = [[69.8, 30.85], [69.95, 32.0], [69.7, 33.5], [69.3, 35.8], [68.9, 38.0], [68.3, 40.0], [68.0, 41.5], [66.3, 41.2], [66.6, 38.0], [66.1, 35.5], [64.6, 35.6], [64.0, 35.0], [64.0, 30.5], [64.6, 30.05], [65.3, 29.75], [66.1, 29.9], [66.85, 29.1], [67.65, 29.95], [68.15, 28.65], [68.55, 28.45], [68.85, 28.4], [69.05, 28.9], [69.45, 30.15]]

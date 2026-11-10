@@ -389,7 +389,9 @@ class World:
         for s in self.sams.values():
             if s.lock == victim:
                 s.lock = deb.id
-        own_shooter = shooter in self.sams or shooter in self.flights or shooter.startswith("FL")
+        own_shooter = (shooter in self.sams and self.sams[shooter].side == self.own_side) or \
+            shooter in self.flights or shooter.startswith("FL") or \
+            (shooter in self.battle.groups and self.battle.groups[shooter].side == self.own_side)
         self.stats.kills.append([victim, shooter or cause, ac.side])
         if ac.side == "civil":
             self.vars["civil_losses"] = self.vars.get("civil_losses", 0.0) + 1

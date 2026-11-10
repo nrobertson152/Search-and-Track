@@ -42,6 +42,8 @@ class Scene:
 
 # ====================================================================== TITLE
 MENU_ITEMS = [
+    ("BATTLES", "The Cold War turned hot: whole air battles fought out by both sides. Command the defence — "
+                "or sit back and watch it unfold."),
     ("CAMPAIGN", "A career at the scopes: the historical watches of your service, 1956–1987, in order."),
     ("SCENARIOS", "Any historical watch, with its own briefing, forces and objectives."),
     ("ALERT DUTY", "A procedurally generated shift: your sector, any era, and whatever the night brings."),
@@ -159,7 +161,9 @@ class TitleScene(Scene):
         app = self.app
         from .campaign import AlertDutyScene, CampaignScene
         app.campaign = None
-        if key == "SCENARIOS":
+        if key == "BATTLES":
+            app.push(OperationsScene(app, self.faction, "battle"))
+        elif key == "SCENARIOS":
             app.push(OperationsScene(app, self.faction, "scenario"))
         elif key == "TRAINING":
             app.push(OperationsScene(app, self.faction, "training"))
@@ -188,7 +192,7 @@ class OperationsScene(Scene):
         self.kind = kind
         self.theme = theme_for(faction)
         self.items = [s for s in scenario.list_scenarios() if s["faction"] == faction and
-                      (s["kind"] == "training") == (kind == "training")]
+                      s["kind"] == (kind if kind in ("training", "battle") else "scenario")]
         self.items.sort(key=lambda s: (s["order"], s["start"]) if kind == "training" else (s["start"], s["order"]))
         self.sel_id = self.items[0]["id"] if self.items else ""
         self.desk = None
@@ -258,7 +262,7 @@ class OperationsScene(Scene):
         th = self.theme
         gui.set_theme(th)
         screen.blit(self._desk(), (0, 0))
-        en = "OPERATIONS FILE" + ("  —  TRAINING" if self.kind == "training" else "")
+        en = "OPERATIONS FILE" + {"training": "  —  TRAINING", "battle": "  —  BATTLES"}.get(self.kind, "")
         if self.faction == "USSR" and gui.lang_mode != "en":
             gui.label((60, 26), "УЧЕБНЫЕ ЗАДАЧИ" if self.kind == "training" else "ОПЕРАТИВНЫЕ ЗАДАЧИ", 30,
                       (226, 220, 200), "title")
@@ -268,6 +272,9 @@ class OperationsScene(Scene):
             gui.label((60, 30), en, 30, (226, 220, 200), "title")
         y = 96
         last_era = None
+        if not self.items:
+            gui.label((62, y), "No battles for this service yet." if self.kind == "battle" else "Nothing here yet.", 16,
+                      (180, 170, 150), "eng")
         for it in self.items:
             era = it["era"] if self.kind != "training" else "TRAINING"
             if era != last_era:
@@ -454,10 +461,19 @@ class BriefingScene(Scene):
         if w.sams:
             stt = {}
             for s in w.sams.values():
-                stt[s.type_id] = stt.get(s.type_id, 0) + 1
+                if s.side == w.own_side:
+                    stt[s.type_id] = stt.get(s.type_id, 0) + 1
             gui.label((fr.x, fr.y + 36), "MISSILES: " + ", ".join(f"{v}× {k}" for k, v in stt.items()), 12,
                       (200, 192, 170), "eng_r")
-        if gui.button(R(1260, 806, 300, 54), "TAKE THE WATCH >>", color=th.lamp_green, size=15):
+        if self.world.battle.active:
+            if gui.button(R(1260, 806, 300, 54), "TAKE COMMAND >>", color=th.lamp_green, size=15,
+                          tip="Command the defence: the staff runs the routine, you make the calls."):
+                self.app.start_command(self.world)
+            if gui.button(R(1090, 812, 160, 44), "SPECTATE", size=13,
+                          tip="Watch the battle unfold with both sides on their own; take command at any time."):
+                self.world.battle.spectator = True
+                self.app.start_command(self.world)
+        elif gui.button(R(1260, 806, 300, 54), "TAKE THE WATCH >>", color=th.lamp_green, size=15):
             self.app.start_command(self.world)
         if gui.button(R(920, 812, 150, 44), "BACK", size=13) or any(e.key == pygame.K_ESCAPE for e in gui.keys):
             self.app.pop()
@@ -486,6 +502,13 @@ class CommandScene(Scene):
         self.ci = 0
         self.sel = {"track": None, "flight": None, "site": next(iter(world.radars), None), "sam": None}
         self.speed_i = 1
+        self.tab_names = list(CONSOLE_TABS)
+        self.battle_fx = None
+        if world.battle.active:
+            from .battlefx import BattleConsole, BattleFX
+            self.consoles[5] = BattleConsole()
+            self.tab_names[5] = "BATTLE F7"
+            self.speed_i = 3                      # battles open at 4x: the clock slows itself for the action
         self.advancing = False            # running fast until something needs the player
         self.render_t = world.t
         self._wake = ()
@@ -498,6 +521,10 @@ class CommandScene(Scene):
         self.app = app
         self.fps = 0.0
         self.lesson = LessonCard(self)
+        if world.battle.active:
+            self.battle_fx = BattleFX(self)
+            self.map.fx = self.battle_fx
+            self.ci = 5
         self._ui_seen = (self.mode, self.ci, self.scope.site_id, False)
         self._lesson_key = (world.lesson.get("step"), world.lesson.get("final"))
 
@@ -514,6 +541,10 @@ class CommandScene(Scene):
 
     # ------------------------------------------------------------ helpers used by consoles
     def select(self, kind: str, oid: str) -> None:
+        if kind in ("ship", "group", "flight"):        # one unit card at a time
+            self.sel.pop("ship", None)
+            self.sel.pop("group", None)
+            self.sel["flight"] = None
         self.sel[kind] = oid
         if kind == "site" and oid in self.world.radars:
             self.scope.set_site(oid)
@@ -544,6 +575,11 @@ class CommandScene(Scene):
         return ADVANCE_SPEED if self.advancing else SPEEDS[self.speed_i]
 
     def _wake_marks(self) -> tuple:
+        if self.world.battle.active:
+            return (len(self.world.battle.events),)
+        return self._wake_marks_watch()
+
+    def _wake_marks_watch(self) -> tuple:
         w = self.world
         return (w.stats.tracks_initiated, len(w.missiles), w.lesson.get("step"), w.lesson.get("final"),
                 sum(1 for f in w.flights.values() if f.bingo), len(w.stats.vid), len(w.stats.kills),
@@ -552,6 +588,14 @@ class CommandScene(Scene):
     def needs_player(self) -> str:
         """While advancing: the reason to stop, if something now needs the player."""
         w = self.world
+        if w.battle.active:
+            n = self._wake[0] if self._wake and isinstance(self._wake[0], int) else len(w.battle.events)
+            for ev in w.battle.events[n:]:
+                if ev[7] >= 2:
+                    self._wake = (len(w.battle.events),)
+                    return ev[2][:60]
+            self._wake = (len(w.battle.events),)
+            return ""
         if w.new_messages:
             recent = {m.mid: m for m in w.messages[-40:]}
             for mid in w.new_messages:
@@ -733,6 +777,8 @@ class CommandScene(Scene):
             if self.render_t > w.t + 2.0:
                 self.render_t = w.t
             self._react()
+        if self.battle_fx is not None:
+            self.battle_fx.update(dt)
             key = (w.lesson.get("step"), w.lesson.get("final"))
             if key != self._lesson_key:
                 self._lesson_key = key
@@ -756,7 +802,7 @@ class CommandScene(Scene):
                 continue
             if m.channel == "system" and m.priority >= 1:
                 self.audio.play("alert")
-                if self.auto_slow and self.speed_i > 2:
+                if self.auto_slow and self.speed_i > 2 and self.battle_fx is None:
                     self.speed_i = 1
                     self.toast("Time compression reduced: alert", True)
             elif m.channel == "radio":
@@ -814,6 +860,8 @@ class CommandScene(Scene):
         else:
             self.net.draw(gui, self.sel, self.app.dt)
             self._finish_display(gui, mr, scan=not L.pvo, bloom=90 if not L.pvo else 0)
+        if self.battle_fx is not None:
+            self.battle_fx.draw_overlay(gui, self, mr)
         if L.pvo:
             pvo.board_frame(gui, self)
             pvo.strip(gui, self)
@@ -874,6 +922,10 @@ class CommandScene(Scene):
             if not can and trk.identity in ("unknown", "suspect", "hostile"):
                 items.append(("REQUEST ENGAGE", lambda: self.cmd("request", kind="engage", track=oid), True, None,
                               why))
+            if w.battle.active:
+                pr = oid in w.battle.priority
+                items.insert(0, ("CLEAR PRIORITY" if pr else "PRIORITY", lambda: self.cmd("priority", track=oid, on=not pr),
+                                 True, (255, 236, 120), "The staff commits on priority targets first, at any range."))
             items.append(("CENTER", lambda: self.map.center_on(*tracking.predicted(trk, w.t)), True, None,
                           "Center the board on it."))
         else:
@@ -934,9 +986,9 @@ class CommandScene(Scene):
         th = self.theme
         w = self.world
         r = self.L.tabs
-        bw = r.w // len(CONSOLE_TABS)
+        bw = r.w // len(self.tab_names)
         unacked = sum(1 for m in w.messages if m.ack and not m.acked and m.delivered)
-        for i, n in enumerate(CONSOLE_TABS):
+        for i, n in enumerate(self.tab_names):
             lit = i == self.ci
             lab = n if not (i == 4 and unacked) else f"COMMS !{unacked}"
             if gui.button(R(r.x + i * bw, r.y, bw - 4, r.h), lab, lit=lit, size=11,
@@ -1040,8 +1092,11 @@ class CommandScene(Scene):
             pygame.draw.rect(s, (0, 0, 0), plate.move(1, 2), border_radius=3)
             pygame.draw.rect(s, th.plate, plate, border_radius=3)
             pygame.draw.line(s, (74, 70, 64), (plate.x + 3, plate.y + 1), (plate.right - 4, plate.y + 1))
-            gui.label((plate.x + 12, plate.y + 2), th.title, 15, th.plate_text, "eng")
-            gui.label((plate.x + 12, plate.y + 21), f"{w.title.upper()} — {th.subtitle}", 11, (170, 166, 156), "eng_r")
+            title, sub = th.title, f"{w.title.upper()} — {th.subtitle}"
+            if w.battle.active and w.battle.post:
+                title, sub = w.battle.post, f"{w.title.upper()} — {w.battle.post_sub}"
+            gui.label((plate.x + 12, plate.y + 2), title, 15, th.plate_text, "eng")
+            gui.label((plate.x + 12, plate.y + 21), sub, 11, (170, 166, 156), "eng_r")
             for sx in (plate.x + 5, plate.right - 6):
                 pygame.draw.circle(s, (120, 116, 108), (sx, plate.centery), 2)
         else:
@@ -1257,6 +1312,30 @@ def headlines(world, rep) -> list[tuple[str, str]]:
         except (KeyError, TypeError):
             continue
     c = rep["consequences"]
+    bt = rep.get("battle")
+    if not out and bt:
+        us = world.faction == "US"
+        foe = "red" if world.own_side == "blue" else "blue"
+        cnt = bt["counters"]
+        sunk = sum(1 for s in world.ships.values() if s.side == world.own_side and s.state == "sunk")
+        foe_hit = sum(1 for s in world.ships.values() if s.side == foe and s.state in ("sunk", "crippled", "damaged"))
+        raiders = int(cnt.get(f"lost_{foe}_strike", 0) + cnt.get(f"lost_{foe}_bomber", 0))
+        hits = int(cnt.get(f"asm_hits_{foe}", 0))
+        ships = lambda n: f"{n} ship{'s' if n != 1 else ''}"
+        oc = bt["outcome"]
+        if oc == "VICTORY":
+            out.append(("RAID SMASHED — FLEET HOLDS" if us else "ENEMY ATTACK REPULSED",
+                        f"{raiders} missile carriers downed; {ships(foe_hit)} of the enemy hit in reply."))
+        elif oc == "DEFEAT":
+            tail = "Congress demands answers." if us else "A commission has been appointed."
+            out.append(("DISASTER AT SEA" if us else "HEAVY LOSSES IN THE NORTH",
+                        f"{ships(sunk)} lost, {hits} missile hits on the force. {tail}"))
+        else:
+            out.append(("BLOODY DRAW AT SEA" if us else "BATTLE WITHOUT A VICTOR",
+                        f"{ships(sunk)} of ours lost, {raiders} raiders down. Both sides claim the day."))
+        if hits and oc != "DEFEAT":
+            out.append(("MISSILES STRIKE THE TASK FORCE" if us else "ENEMY MISSILES GET THROUGH",
+                        f"{hits} hits; damage control teams fought fires into the night."))
     if not out:
         if c["civil_losses"]:
             out.append(("AIRLINER DOWN — AIR DEFENSE UNDER FIRE" if world.faction == "US" else
@@ -1278,6 +1357,10 @@ class DebriefScene(Scene):
         app.gui.set_theme(self.theme)
         self.rep = aar.build(world)
         self.map = MapView(world, self.theme, R(874, 84, 690, 500))
+        if world.battle.active and world.battle.view:
+            v = world.battle.view
+            self.map.center_on(v[0], v[1])
+            self.map.scale = self.map.rect.w / max(v[2] * 1.1, 50.0)
         self.snap_i = 0
         self.playing = True
         self.play_t = 0.0
@@ -1318,6 +1401,10 @@ class DebriefScene(Scene):
             main, sub = GRADE_SU.get(g, (g, ""))
         else:
             main, sub = g, "EVALUATION"
+        if rep.get("battle"):
+            main = rep["battle"]["outcome"] or main
+            sub = "BATTLE"
+            col = {"VICTORY": (30, 60, 150), "DRAW": (120, 90, 30)}.get(main, (170, 30, 26))
         st = stamp(main, col, 30, -6, sub, seed=5)
         pg.blit(st, (790 - st.get_width(), 52))
         pygame.draw.line(pg, (120, 100, 80), (36, 120), (764, 120), 1)
@@ -1355,7 +1442,14 @@ class DebriefScene(Scene):
                       (f"Civil losses {c['civil_losses']} · fratricide {c['fratricide']} · overdue acknowledgements "
                        f"{cm['unacked_overdue']} · reports to HQ {cm['reports_to_hq']} · HQ confidence {cm['hq_credibility']}",
                        ink)]
-            for k in c["kills"]:
+            bt = rep.get("battle")
+            if bt:
+                lines += [("", ink), (f"THE BATTLE — {bt['outcome']}", (120, 40, 30))]
+                for txt in bt["summary"]:
+                    lines.append((txt, ink))
+                for d in bt["decisions"]:
+                    lines.append((f"  {d}", (90, 80, 64)))
+            for k in c["kills"][: (12 if bt else 999)]:
                 lines.append((f"  destroyed: {k['victim']} — by {k['by']}", (150, 30, 24)))
             for rq in cm["requests"]:
                 lines.append((f"  request {rq['kind']} {rq['ref']} at {rq['t']}: {'granted' if rq['granted'] else 'denied'} — "
@@ -1386,8 +1480,8 @@ class DebriefScene(Scene):
             self.snap_i = max(0, min(self.snap_i, len(snaps) - 1))
             paths: dict[str, list] = {}
             sides = {}
-            for t, acs, trs in snaps[: self.snap_i + 1]:
-                for aid, x, y, alt, side, kind in acs:
+            for snap in snaps[: self.snap_i + 1]:
+                for aid, x, y, alt, side, kind in snap[1]:
                     paths.setdefault(aid, []).append(self.map.w2s(x, y))
                     sides[aid] = (side, kind)
             cols = {"blue": (120, 180, 255), "red": (255, 90, 80), "civil": (230, 230, 210), "neutral": (170, 170, 170)}
@@ -1396,7 +1490,14 @@ class DebriefScene(Scene):
                 col = cols.get(side, (200, 200, 200)) if kind != "ghost" else (200, 120, 255)
                 if len(pts) > 1:
                     pygame.draw.lines(screen, col, False, pts, 1)
-            t, acs, trs = snaps[self.snap_i]
+            t, acs, trs = snaps[self.snap_i][:3]
+            if len(snaps[self.snap_i]) > 3:
+                from .battlefx import ship_glyph, surface_frame
+                for sid, x, y, hdg, side, state in snaps[self.snap_i][3]:
+                    sx, sy = self.map.w2s(x, y)
+                    col = cols.get(side, (200, 200, 200)) if state != "sunk" else (100, 100, 100)
+                    surface_frame(screen, sx, sy, "friend" if side == w.own_side else "hostile", col, 6, 1)
+                    ship_glyph(screen, sx, sy, hdg, col, 4)
             for aid, x, y, alt, side, kind in acs:
                 sx, sy = self.map.w2s(x, y)
                 pygame.draw.circle(screen, cols.get(side, (200, 200, 200)), (sx, sy), 3)
@@ -1427,6 +1528,10 @@ class DebriefScene(Scene):
                 self.playing = not self.playing
                 if self.snap_i >= len(snaps) - 1:
                     self.snap_i = 0
+            if gui.button(R(mr.right - 150, mr.y - 36, 150, 30), "WATCH REPLAY", size=11, color=th.lamp_amber,
+                          tip="The whole engagement again on the tactical display"):
+                from .replay import ReplayScene
+                self.app.push(ReplayScene(self.app, w))
         # ---- newspaper clipping
         if self.news:
             from .cinema import paper

@@ -632,3 +632,4 @@ class BattleState:
     defended: list[str] = field(default_factory=list)                  # own assets the enemy is after
     end_t: float = -1.0
     outcome: str = ""
+    view: list[float] = field(default_factory=list)                     # [x, y, km across] at the start

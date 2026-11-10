@@ -67,6 +67,11 @@ def defended_points(w: "World") -> list[tuple[float, float]]:
 
 def step(w: "World") -> None:
     b = w.battle
+    if w.tick % 15 == 0:                          # the watch officer acknowledges the routine traffic
+        from ..doctrine import acknowledge
+        for m in w.messages[-300:]:
+            if m.ack and not m.acked and m.delivered and w.t - m.t_deliver > 25.0:
+                acknowledge(w, m.mid)
     _emcon(w)
     _identify(w)
     _cap(w)

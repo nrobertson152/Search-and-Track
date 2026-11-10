@@ -174,6 +174,7 @@ vital = ["cvn70"]
 hostile_west_of_lon = -164.0
 hostile_line_lat = 60.0
 brief_target = { x = -360.0, y = -500.0 }
+view = { x = -480.0, y = -420.0, km = 620.0 }
 standing = { posture = "balanced", fighters = "auto", sam = "FREE", emcon = false, reserve = 2 }
 
 [[battle.red_sensor]]

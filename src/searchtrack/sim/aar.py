@@ -57,11 +57,12 @@ def build(world: "World") -> dict[str, Any]:
     rep["expenditure"] = {"sorties": st.sorties, "aam_shots": st.aam_shots, "sam_missiles": st.missiles,
                           "fuel_emergencies": st.fuel_emergencies, "tracks_initiated": st.tracks_initiated,
                           "false_tracks": st.false_tracks}
+    from .battle.combat import unit_name
     kills = []
     for victim, shooter, side in st.kills:
         ac = world.aircraft.get(victim)
         label = f"{ac.callsign} ({ac.truth_label})" if ac else victim
-        kills.append({"victim": label, "by": shooter, "side": side})
+        kills.append({"victim": label, "by": unit_name(world, shooter) if shooter else "—", "side": side})
     rep["consequences"] = {"kills": kills, "civil_losses": int(world.vars.get("civil_losses", 0)),
                            "fratricide": int(world.vars.get("fratricide", 0))}
     rep["command"] = {"unacked_overdue": st.unacked_overdue, "reports_to_hq": st.reports_to_hq,
@@ -70,7 +71,47 @@ def build(world: "World") -> dict[str, Any]:
                                     "t": _fmt(world, r.t)} for r in world.hq.requests]}
     rep["timeline"] = [{"t": _fmt(world, e.t), "cat": e.cat, "text": e.text} for e in world.log
                        if e.cat in ("cmd", "id", "weapon", "result", "scenario") and not e.text.startswith("[truth]")]
+    if world.battle.active:
+        rep["battle"] = battle_summary(world)
+        rep["timeline"] = [{"t": _fmt(world, e[0]), "cat": e[1], "text": e[2].replace("[enemy] ", "ENEMY: ")}
+                           for e in world.battle.events if e[7] >= 1 or e[1] in ("launch", "asm_launch", "located")]
     return rep
+
+
+def battle_summary(world: "World") -> dict[str, Any]:
+    """What the battle cost each side, what was fired and what got through."""
+    b = world.battle
+    c = b.counters
+    own = world.own_side
+    foe = "red" if own == "blue" else "blue"
+    lost_types: dict[str, Counter] = {own: Counter(), foe: Counter()}
+    for victim, shooter, side in world.stats.kills:
+        ac = world.aircraft.get(victim)
+        if ac is None or ac.aim or side not in lost_types:
+            continue
+        at = world.catalog.aircraft.get(ac.type_id)
+        lost_types[side][at.name.split(" (")[0] if at else ac.type_id] += 1
+
+    def fmt(cnt: Counter) -> str:
+        return ", ".join(f"{n}× {k}" for k, n in cnt.most_common()) or "none"
+    ships = {own: [], foe: []}
+    for s in world.ships.values():
+        if s.side in ships and s.state != "afloat":
+            ships[s.side].append(f"{s.name} ({s.state})")
+    summary = [
+        f"Our losses: {fmt(lost_types[own])}",
+        f"Enemy losses: {fmt(lost_types[foe])}",
+        f"Our ships: {', '.join(ships[own]) or 'all undamaged'}",
+        f"Enemy ships: {', '.join(ships[foe]) or 'all undamaged'}",
+        f"Anti-ship missiles at us: {int(c.get(f'asm_{foe}', 0))} fired, {int(c.get(f'asm_killed_{foe}', 0))} shot "
+        f"down, {int(c.get(f'ciws_kills_{own}', 0))} stopped by close-in guns, {int(c.get(f'asm_hits_{foe}', 0))} hits",
+        f"Our anti-ship missiles: {int(c.get(f'asm_{own}', 0))} fired, {int(c.get(f'asm_hits_{own}', 0))} hits",
+        f"Air-to-air missiles: ours {int(c.get(f'aam_shots_{own}', 0))}, theirs {int(c.get(f'aam_shots_{foe}', 0))}",
+    ]
+    decisions = [f"{_fmt(world, d.t)} {d.title}: {d.chosen}{' (staff)' if d.by != 'player' else ''}"
+                 for d in b.decisions if d.chosen]
+    return {"outcome": b.outcome, "summary": summary, "decisions": decisions,
+            "counters": {k: v for k, v in c.items()}}
 
 
 def doctrine_reason(limit: str) -> str:

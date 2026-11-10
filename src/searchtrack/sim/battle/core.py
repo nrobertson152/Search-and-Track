@@ -76,6 +76,9 @@ def setup(w: "World", sc: dict) -> None:
     if "brief_target" in bd:
         b.red_plan["brief"] = list(spec_xy(w, bd["brief_target"]))
     b.red_plan["vital"] = list(bd.get("vital", []))
+    if "view" in bd:
+        vx, vy = spec_xy(w, bd["view"])
+        b.view = [vx, vy, float(bd["view"].get("km", 900.0))]
     for s in bd.get("red_sensor", []):
         x, y = spec_xy(w, s)
         b.red_sensors.append({"name": s.get("name", "radar"), "x": x, "y": y, "h": float(s.get("mast_m", 30.0)),

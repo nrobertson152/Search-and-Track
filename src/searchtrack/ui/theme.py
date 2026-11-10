@@ -128,10 +128,12 @@ class Text:
     def __init__(self):
         self._fonts: dict[tuple[str, int], pygame.font.Font] = {}
         self._cache: dict[tuple, pygame.Surface] = {}
+        self._wraps: dict[tuple, tuple] = {}
 
     def reset(self) -> None:
         self._fonts.clear()
         self._cache.clear()
+        self._wraps.clear()
 
     def font(self, kind: str, size: int) -> pygame.font.Font:
         key = (kind, size)
@@ -190,6 +192,17 @@ class Text:
         return f.size(text)[0]
 
     def wrap(self, text: str, width: int, size: int = 13, kind: str = "ui") -> list[str]:
+        key = (text, width, size, kind)
+        hit = self._wraps.get(key)
+        if hit is not None:
+            return list(hit)
+        out = self._wrap(text, width, size, kind)
+        if len(self._wraps) > 3000:
+            self._wraps.clear()
+        self._wraps[key] = tuple(out)
+        return out
+
+    def _wrap(self, text: str, width: int, size: int = 13, kind: str = "ui") -> list[str]:
         out: list[str] = []
         for para in text.split("\n"):
             if not para.strip():

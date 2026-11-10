@@ -219,6 +219,9 @@ def screenshot(path: str, sid: str | None, seconds: float, console: int, mode: s
         world = scenario.build_world(sid)
         from ..sim.student import Student
         pupil = Student(world) if any(tr.id.startswith("lesson_") for tr in world.triggers) else None
+        if world.battle.active:
+            world.battle.spectator = True       # the staff fights it; the picture shows our side
+            autoplay_on = False
         while world.t < seconds and not world.ended:
             if autoplay_on and pupil is not None:
                 pupil.act()

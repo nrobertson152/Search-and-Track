@@ -64,6 +64,16 @@ def synth_all() -> dict[str, np.ndarray]:
     s["key"] = np.concatenate([key * 0.6, np.zeros(200), _tone(90, 0.06) * 0.3])
     w = _lowpass(_noise(1.4, rng), 12) * np.linspace(1, 0, int(1.4 * RATE)) ** 1.5
     s["launch"] = w * 0.5
+    # a distant explosion: a low thump and a long rumble
+    n = int(1.8 * RATE)
+    tt = np.arange(n) / RATE
+    rumble = _lowpass(_noise(1.8, rng), 40) * np.exp(-tt * 2.2) * 3.0
+    thud = np.sin(2 * np.pi * (55 - 20 * tt) * tt) * np.exp(-tt * 6.0)
+    s["boom"] = np.clip(rumble + thud * 0.8, -1, 1) * 0.55
+    n = int(0.35 * RATE)
+    tt = np.arange(n) / RATE
+    s["pop"] = (_lowpass(_noise(0.35, rng), 6) * np.exp(-tt * 14.0) + np.sin(2 * np.pi * 90 * tt) *
+                np.exp(-tt * 18.0) * 0.5) * 0.4
     return s
 
 

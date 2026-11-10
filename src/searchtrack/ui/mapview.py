@@ -60,6 +60,7 @@ class MapView:
         self._cov = None
         self._cov_key = None
         self.drag = None
+        self.fx = None                     # battle overlay (ui/battlefx.py) when a battle is on
         self.light_gun: Optional[tuple[float, float]] = None
         self.hover_world = (0.0, 0.0)
         self._base_labels: list[pygame.Rect] = []     # label rects baked into the base layer (screen coords)
@@ -119,6 +120,10 @@ class MapView:
 
     def pick(self, sx: int, sy: int, radius: int = 14) -> Optional[tuple[str, str]]:
         w = self.world
+        if self.fx is not None:
+            hit = self.fx.pick(self, sx, sy)
+            if hit is not None:
+                return hit
         best, bd = None, radius
         for f in w.flights.values():
             if f.state in ("landed", "lost", "scrambling"):
@@ -287,6 +292,15 @@ class MapView:
         return surf
 
     # ------------------------------------------------------------ draw
+    def draw_base_only(self, screen: pygame.Surface) -> None:
+        """Just the map (coasts, grid, names): the replay draws its own picture on it."""
+        key = (round(self.cx, 2), round(self.cy, 2), round(self.scale, 4), self.layers["zones"], self.layers["labels"],
+               self.rect.size, getattr(self, "lang_mode", ""))
+        if key != self._base_key:
+            self._base = self._build_base()
+            self._base_key = key
+        screen.blit(self._base, self.rect.topleft)
+
     def draw(self, screen: pygame.Surface, sel: dict, tr: float) -> None:
         th = self.theme
         w = self.world
@@ -319,7 +333,8 @@ class MapView:
         # static sites
         if self.layers["sites"]:
             for s in w.radars.values():
-                self._site(screen, s, sel)
+                if not s.carrier:
+                    self._site(screen, s, sel)
             for b in w.airbases.values():
                 if b.side != "blue":
                     continue
@@ -332,7 +347,8 @@ class MapView:
                     if r is not None:
                         screen.blit(img, r)
             for sm in w.sams.values():
-                self._sam(screen, sm, sel)
+                if not sm.carrier and sm.side == w.own_side:
+                    self._sam(screen, sm, sel)
         # range rings for selected radar
         if self.layers["rings"] and sel.get("site") in w.radars:
             s = w.radars[sel["site"]]
@@ -352,12 +368,21 @@ class MapView:
                 sx, sy = self.w2s(p.x, p.y)
                 c = _fade(th.phosphor, 1.0 - age / 45.0)
                 pygame.draw.circle(screen, c, (sx, sy), 2)
-        # jam strobes
-        for st in w.strobes:
+        # jam strobes (in a battle, only the latest strobe per radar and jammer bearing, faint)
+        strobes = w.strobes
+        if self.fx is not None:
+            last: dict = {}
+            for st in w.strobes:
+                if st.strobe_az is not None and w.t - st.t < 12.0:
+                    last[(st.radar, round(st.strobe_az / 4.0))] = st
+            strobes = list(last.values())
+        for st in strobes:
             site = w.radars.get(st.radar)
             if site is None or st.strobe_az is None:
                 continue
             age = w.t - st.t
+            if self.fx is not None:
+                age = age * 2.0 + 10.0
             sx, sy = self.w2s(site.x, site.y)
             rt = w.catalog.radars[site.type_id]
             a = math.radians(st.strobe_az)
@@ -369,19 +394,23 @@ class MapView:
                 sx, sy = self.w2s(a.x, a.y)
                 pygame.draw.circle(screen, (255, 0, 255), (sx, sy), 3, 1)
                 screen.blit(TEXT.render(a.callsign[:12], 9, (255, 0, 255), "ui"), (sx + 4, sy + 2))
-        # tracks
-        for tk in sorted(w.tracks.values(), key=lambda t: t.id == sel.get("track")):
-            self._track(screen, tk, tk.id == sel.get("track"))
-        # interceptors and missiles
-        for f in w.flights.values():
-            self._flight(screen, f, f.id == sel.get("flight"))
-        for m in w.missiles.values():
-            if m.state != "flying" or w.t < m.t_launch:
-                continue
-            sx, sy = self.w2s(m.x, m.y)
-            ex, ey = self.w2s(m.x - m.vx / 1000.0 * 6, m.y - m.vy / 1000.0 * 6)
-            pygame.draw.line(screen, th.alert, (sx, sy), (ex, ey), 1)
-            pygame.draw.circle(screen, th.lamp_white, (sx, sy), 2)
+        if self.fx is not None:
+            # battle: tactical symbols, ships, weapons in flight and effects
+            self.fx.draw_map(screen, self, sel)
+        else:
+            # tracks
+            for tk in sorted(w.tracks.values(), key=lambda t: t.id == sel.get("track")):
+                self._track(screen, tk, tk.id == sel.get("track"))
+            # interceptors and missiles
+            for f in w.flights.values():
+                self._flight(screen, f, f.id == sel.get("flight"))
+            for m in w.missiles.values():
+                if m.state != "flying" or w.t < m.t_launch:
+                    continue
+                sx, sy = self.w2s(m.x, m.y)
+                ex, ey = self.w2s(m.x - m.vx / 1000.0 * 6, m.y - m.vy / 1000.0 * 6)
+                pygame.draw.line(screen, th.alert, (sx, sy), (ex, ey), 1)
+                pygame.draw.circle(screen, th.lamp_white, (sx, sy), 2)
         # light gun
         if self.light_gun and not board:
             sx, sy = self.w2s(*self.light_gun)

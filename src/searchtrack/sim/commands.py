@@ -34,13 +34,13 @@ def execute(world: World, cmd: Command) -> Result:
     fn = _HANDLERS.get(cmd.kind)
     if fn is None:
         return False, f"unknown command {cmd.kind}"
-    if world.ended and cmd.kind not in ("ack", "ack_all"):
+    if world.ended and cmd.kind not in ("ack", "ack_all", "ui_event"):
         return False, "Scenario has ended"
     try:
         ok, msg = fn(world, **cmd.args)
     except KeyError as e:
         ok, msg = False, f"not found: {e}"
-    if cmd.kind not in ("ack", "ack_all"):
+    if cmd.kind not in ("ack", "ack_all", "ui_event"):
         world.log_event("cmd", f"{'' if ok else 'REJECTED '}{cmd.kind}: {msg}", str(cmd.args.get("track", "")))
     return ok, msg
 
@@ -483,6 +483,14 @@ def _automation(w: World, position: str, on: bool) -> Result:
 @handler("ack")
 def _ack(w: World, mid: int) -> Result:
     return (True, "acknowledged") if doctrine.acknowledge(w, mid) else (False, "nothing to acknowledge")
+
+
+@handler("ui_event")
+def _ui_event(w: World, name: str) -> Result:
+    """A console action the instructor watches for (switching displays and consoles)."""
+    key = "ui_" + "".join(ch if ch.isalnum() else "_" for ch in name.lower())
+    w.vars[key] = w.vars.get(key, 0.0) + 1.0
+    return True, ""
 
 
 @handler("ack_all")

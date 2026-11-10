@@ -10,7 +10,7 @@ era = "1950s"
 difficulty = 1
 order = 1
 theater = "gulf_of_maine"
-start = "1962-10-20T15:00:00"
+start = "1959-11-12T15:00:00"
 tz = "Z"
 duration_min = 45
 seed = 1101
@@ -21,12 +21,12 @@ DIRECTION CENTER DC-05, TOPSHAM AFS — TRAINING SHIFT
 
 You are the Senior Director. An exercise target (a KC-135 flying with its IFF switched off) will approach the sector from the east over the Gulf of Maine. Treat it as a genuine UNKNOWN.
 
-Your instructor will talk you through each step on the teletype:
+Your instructor's card is pinned to the situation display. It tells you what to do next and circles the controls to use:
   1. INITIATE the track with the light gun (click the return, then INITIATE).
   2. Request a HEIGHT from a height finder.
   3. Set the identity to UNKNOWN.
   4. SCRAMBLE a pair from Dow AFB and commit them for an identification pass.
-  5. Get a visual identification, then send the fighters home.
+  5. Get a visual identification, re-identify the track, then send the fighters home.
 
 Surveillance and identification automation are switched OFF for this lesson so you do the work yourself.
 """
@@ -137,38 +137,77 @@ transponder = { system = "atc", codes = { "3" = "2101" } }
 flight_plan = { kind = "IFR", callsign = "NORTHEAST 405", mode3 = "2101" }
 
 # ---------------------------------------------------------------- instructor
-[[trigger]]
-id = "t0"
-cond = { type = "time", t = 5.0 }
-actions = [{ do = "message", channel = "tty", sender = "INSTRUCTOR", ack = true, text = "Welcome to the weapons room. Watch the situation display east of Bucks Harbor. Returns that the computer has not associated with a track show as small dots. When the unknown appears, click it with the light gun, then press INITIATE TRACK (or press I)." }]
+# Each [[lesson]] step is pinned to the display on the instructor's card. The
+# controls named in `highlight` are circled; `console` and `mode` point at the
+# console tab and display to open; `mark` rings an aircraft or site on the
+# display. The next step appears when `done` holds.
 
-[[trigger]]
-id = "t1"
-cond = { type = "tracked", ac = "target" }
-actions = [{ do = "message", channel = "tty", sender = "INSTRUCTOR", ack = true, text = "Good — the computer now holds a track. Search radars give range and bearing only. With the track selected, press HEIGHT to queue it on a height finder. Then set its identity: it has no IFF reply and no flight plan, so it is UNKNOWN." }]
+[[lesson]]
+title = "The situation display"
+text = "This is the SAGE situation display. Radar returns that the computer has not yet tied to a track show as small dots. The exercise target, a KC-135 with its IFF switched off, will come in from the east over the Gulf of Maine. The amber circle shows where."
+action = "When its return appears, click it with the light gun, then press INITIATE TRACK (I)"
+mode = "map"
+console = "TRACKS"
+highlight = ["INITIATE TRACK (I)", "INITIATE (I)"]
+mark = "target"
+mark_label = "EXERCISE TARGET"
+done = { type = "tracked", ac = "target" }
 
-[[trigger]]
-id = "t2"
-cond = { type = "identity", ac = "target", is = ["unknown", "faker"] }
-actions = [{ do = "message", channel = "tty", sender = "INSTRUCTOR", ack = true, text = "Identity set. An unknown inbound must be visually identified. Open WEAPONS (F3), select 75th FIS at Dow and SCRAMBLE 2 with task ID PASS on the selected track. The computer computes a stern approach so the fighters can close safely from behind." }]
+[[lesson]]
+title = "Get a height"
+text = "The computer now holds a track. Search radars measure range and bearing, not altitude. Height requests queue on the nearest free AN/FPS-6, which nods its beam up and down through the target."
+action = "TRACKS F1: select the track, press HEIGHT (H)"
+console = "TRACKS"
+highlight = ["HEIGHT (H)", "TABLE tracks"]
+mark = "target"
+done = { type = "height", ac = "target", src = ["HF"] }
 
-[[trigger]]
-id = "t3"
-cond = { type = "scrambled", n = 1 }
-actions = [{ do = "message", channel = "tty", sender = "INSTRUCTOR", ack = true, text = "Scramble ordered. Five-minute alert aircraft take a few minutes to get airborne. Watch the predicted intercept point (the X) and the fuel readout. The F-101B is voice controlled: each vector reaches the pilot several seconds after you give it. Use time compression (+/-) while they climb." }]
+[[lesson]]
+title = "Identify"
+text = "No IFF reply, and no flight plan correlates with it. Air Defense Command calls that an UNKNOWN, and an unknown inside the ADIZ must be identified by eye."
+action = "TRACKS F1: press UNKNOWN"
+console = "TRACKS"
+highlight = ["UNKNOWN"]
+done = { type = "identity", ac = "target", is = ["unknown", "faker"] }
 
-[[trigger]]
-id = "t4"
-cond = { type = "vid", ac = "target" }
-actions = [{ do = "message", channel = "tty", sender = "INSTRUCTOR", ack = true, text = "Visual identification complete — read the pilot's report in COMMS. A friendly exercise target should be re-identified FRIEND (or FAKER). Then send the flight home: select it in WEAPONS and press RTB." }]
+[[lesson]]
+title = "Scramble"
+text = "Dow AFB keeps F-101B Voodoos of the 75th FIS on five-minute alert. Commit a pair for an identification pass: the computer brings them up behind the target, where the pilots can read its markings."
+action = "WEAPONS F2: ×2, ID PASS, STERN, then SCRAMBLE ON the track"
+console = "WEAPONS"
+highlight = ["×2", "ID PASS", "STERN", "SCRAMBLE ON*"]
+mark = "dow"
+mark_label = "DOW AFB · 75th FIS"
+done = { type = "scrambled", n = 1 }
 
-[[trigger]]
-id = "t5"
-cond = { type = "all", of = [{ type = "vid", ac = "target" }, { type = "flights_home" }] }
-actions = [
-  { do = "message", channel = "tty", sender = "INSTRUCTOR", text = "Flight recovered. That is the core loop: detect, track, height, identify, commit, identify visually, recover. Lesson complete." },
-  { do = "end", reason = "Lesson complete", result = "complete" },
-]
+[[lesson]]
+title = "Fly the intercept"
+text = "Alert aircraft need three or four minutes to get airborne. The X on the display is the predicted intercept point. The Voodoo is voice controlled, so every vector reaches the pilot seconds after you give it. Speed up time while they climb; the clock slows itself for alerts."
+action = "Press 8× (or +) and watch the flight close on the X"
+highlight = ["8×", "TABLE fl"]
+mark = "target"
+done = { type = "vid", ac = "target" }
+
+[[lesson]]
+title = "Re-identify"
+text = "The pilots read the tail: a USAF KC-135, the exercise target. Their report is in COMMS. Re-identify the track. An exercise aircraft simulating an enemy is a FAKER; a FRIEND is also correct."
+action = "TRACKS F1: press FRIEND or FAKER"
+console = "TRACKS"
+highlight = ["FRIEND", "FAKER"]
+done = { type = "identity", ac = "target", is = ["friend", "faker"] }
+
+[[lesson]]
+title = "Recover the flight"
+text = "Bring the Voodoos home before their fuel runs low. An interceptor that runs dry is lost, however well the intercept went."
+action = "WEAPONS F2: select the flight, press RTB"
+console = "WEAPONS"
+highlight = ["RTB", "TABLE fl"]
+done = { type = "any", of = [{ type = "flight", state = "rtb" }, { type = "flights_home" }] }
+
+[lesson_end]
+title = "Lesson complete"
+text = "That is the core loop of the weapons room: detect, track, get a height, identify, commit, identify by eye, recover. Next: Jamming and the Radar Scope."
+reason = "Lesson complete"
 
 [[objective]]
 id = "track"

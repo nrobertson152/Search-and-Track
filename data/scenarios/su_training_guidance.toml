@@ -23,10 +23,10 @@ An Il-14 of the Army's liaison squadron will play the intruder, approaching Sver
 
 What you will learn:
   1. The PLOTTING BOARD shows radar-company reports. Each mark is minutes old: the time label tells you how old. The dashed line is our extrapolation.
-  2. The guidance point at Koltsovo has its own P-30 radar. Its scope (RADAR, F2) shows the target in real time.
+  2. The guidance point at Koltsovo has its own P-30 radar. Its scope (RADAR SCOPE, key M) shows the target in real time.
   3. Scramble a MiG-17PF pair from Koltsovo, keep them under Koltsovo guidance, and identify the target visually.
 
-The instructor will prompt you on the teletype.
+The instructor's card is pinned to the plotting board: it tells you what to do next and circles the controls to use.
 """
 
 [automation]
@@ -109,33 +109,73 @@ route = [
 ]
 transponder = { system = "kremniy", on = false, codes = { period = "APR" } }
 
-[[trigger]]
-id = "t0"
-cond = { type = "time", t = 5.0 }
-actions = [{ do = "message", channel = "tty", sender = "INSTRUCTOR", ack = true, text = "Watch the plotting board to the west. Radar companies telephone their targets in every minute; each mark arrives minutes late and is labelled with its observation time." }]
+# ---------------------------------------------------------------- instructor
+[[lesson]]
+title = "The plotting board"
+text = "This is the command post's plotting board. Radar companies telephone their targets in every minute, so each mark arrives minutes late, labelled with the time it was seen. The dashed line is our extrapolation. The exercise target, an Il-14 of the Army's liaison squadron with its IFF off, will come from the west."
+action = "Wait for the radar companies to report it: a target number will be allotted"
+mode = "map"
+console = "TRACKS"
+mark = "target"
+mark_label = "EXERCISE TARGET"
+mark_label_ru = "УЧЕБНАЯ ЦЕЛЬ"
+done = { type = "tracked", ac = "target" }
 
-[[trigger]]
-id = "t1"
-cond = { type = "tracked", ac = "target" }
-actions = [{ do = "message", channel = "tty", sender = "INSTRUCTOR", ack = true, text = "A target number has been allotted. It has no IFF reply: set it UNIDENTIFIED. Now press F2 for the RADAR scope and select Koltsovo guidance point — compare its live picture with the board. The difference is how far the target has flown since it was reported." }]
+[[lesson]]
+title = "Identify"
+text = "The target gives no reply to the Kremniy interrogator and nothing on the flight-plan table explains it. Until someone sees it, it is UNIDENTIFIED."
+action = "TRACKS F1: select the target, press UNIDENTIFIED"
+console = "TRACKS"
+highlight = ["UNIDENTIFIED", "TABLE tracks"]
+done = { type = "identity", ac = "target", is = ["unknown"] }
 
-[[trigger]]
-id = "t2"
-cond = { type = "identity", ac = "target", is = ["unknown"] }
-actions = [{ do = "message", channel = "tty", sender = "INSTRUCTOR", ack = true, text = "Scramble a pair from Koltsovo (F3 WEAPONS, task ID PASS). The guidance officer at Koltsovo will steer them with his own radar once both aircraft are on his scope." }]
+[[lesson]]
+title = "The guidance point"
+text = "The board is for decisions; control needs real time. The guidance point at Koltsovo has its own P-30 radar. Its scope shows the target where it is now, not where it was. Compare the two: the difference is how far it has flown since it was reported."
+action = "Press M for the RADAR SCOPE and step to Koltsovo with < and >"
+mode = "scope"
+highlight = ["RADAR SCOPE", "<", ">"]
+done = { type = "ui", event = "scope_koltsovo_gp" }
 
-[[trigger]]
-id = "t3"
-cond = { type = "vid", ac = "target" }
-actions = [{ do = "message", channel = "tty", sender = "INSTRUCTOR", ack = true, text = "Visual identification received. Set the target OWN (it is our exercise aircraft) and return the pair to base." }]
+[[lesson]]
+title = "Scramble"
+text = "Koltsovo keeps MiG-17PF interceptors at readiness. Send a pair for an identification pass. The guidance officer at Koltsovo steers them on his own scope once both aircraft are in his picture."
+action = "WEAPONS F2: ×2, ID PASS, then SCRAMBLE ON the target"
+console = "WEAPONS"
+highlight = ["×2", "ID PASS", "SCRAMBLE ON*"]
+mark = "koltsovo"
+mark_label = "KOLTSOVO IAP"
+mark_label_ru = "КОЛЬЦОВО · ИАП"
+done = { type = "scrambled", n = 1 }
 
-[[trigger]]
-id = "t4"
-cond = { type = "all", of = [{ type = "vid", ac = "target" }, { type = "flights_home" }] }
-actions = [
-  { do = "message", channel = "tty", sender = "INSTRUCTOR", text = "Exercise complete. In the field the board is for decisions; the guidance point scope is for control." },
-  { do = "end", reason = "Exercise complete", result = "complete" },
-]
+[[lesson]]
+title = "Guidance"
+text = "Every vector goes by radio from the guidance point. Readiness 3 means three minutes to take-off; the climb takes longer. Speed up time and watch the pair close on the scope or the board; the clock slows itself for alerts."
+action = "Press 8× (or +) and watch the pair close"
+highlight = ["8×", "TABLE fl"]
+mark = "target"
+done = { type = "vid", ac = "target" }
+
+[[lesson]]
+title = "Re-identify"
+text = "The leader reports a red-star Il-14 of our own liaison squadron. Correct the board: the target is OWN."
+action = "TRACKS F1: press OWN"
+console = "TRACKS"
+highlight = ["OWN"]
+done = { type = "identity", ac = "target", is = ["friend"] }
+
+[[lesson]]
+title = "Return to base"
+text = "Bring the pair home. A MiG-17PF has little fuel to spare, and a fighter that runs dry is lost however well the intercept went."
+action = "WEAPONS F2: select the flight, press RTB"
+console = "WEAPONS"
+highlight = ["RTB", "TABLE fl"]
+done = { type = "any", of = [{ type = "flight", state = "rtb" }, { type = "flights_home" }] }
+
+[lesson_end]
+title = "Exercise complete"
+text = "On the board you decide; on the guidance-point scope you control. Next: the Jamming Drill."
+reason = "Exercise complete"
 
 [[objective]]
 id = "ident"

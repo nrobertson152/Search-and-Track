@@ -121,6 +121,7 @@ class World:
     sun_offset_h: float = 0.0             # local solar time minus scenario clock
     intel: list[list[str]] = field(default_factory=list)
     headlines: list[dict[str, Any]] = field(default_factory=list)
+    lesson: dict[str, Any] = field(default_factory=dict)   # current instructor step (training)
     ids: dict[str, int] = field(default_factory=dict)
     track_seq: int = 0
     reliability: float = 1.0

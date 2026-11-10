@@ -358,15 +358,16 @@ def triangulate(world: "World") -> None:
     for s in world.strobes:
         latest.setdefault(s.radar, []).append(s)
     radars = list(latest)
-    pts: list[tuple[float, float]] = []
+    pts: list[tuple[float, float, str]] = []
     for i in range(len(radars)):
         for j in range(i + 1, len(radars)):
             for a in latest[radars[i]][-3:]:
                 for b in latest[radars[j]][-3:]:
                     p = _intersect(a.x, a.y, a.strobe_az, b.x, b.y, b.strobe_az)
                     if p is not None:
-                        pts.append(p)
-    clusters: list[list[tuple[float, float]]] = []
+                        # hidden bookkeeping: which jammer produced both strobes (evaluation only)
+                        pts.append((p[0], p[1], a.truth if a.truth == b.truth else ""))
+    clusters: list[list[tuple[float, float, str]]] = []
     for p in pts:
         for c in clusters:
             if math.hypot(c[0][0] - p[0], c[0][1] - p[1]) < 50.0:
@@ -391,7 +392,13 @@ def triangulate(world: "World") -> None:
             world.stats.tracks_initiated += 1
             world.log_event("track", f"Jam strobe triangulation: jammer track {tid}", tid)
             world.alert(f"JAMMING — strobes triangulated, jammer track {tid}", ref=tid, priority=1)
-        else:
+            for p in c:
+                if p[2]:
+                    world.stats.first_track.setdefault(p[2], world.t)
+        for p in c:
+            if p[2]:
+                trk.truth_votes[p[2]] = trk.truth_votes.get(p[2], 0) + 1
+        if trk.t_init != world.t:            # an existing jammer track: smooth the new fix in
             dt = max(world.t - trk.t_update, 1.0)
             trk.vx = 0.7 * trk.vx + 0.3 * (x - trk.x) / dt
             trk.vy = 0.7 * trk.vy + 0.3 * (y - trk.y) / dt

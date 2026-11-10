@@ -5,7 +5,7 @@ import math
 from pathlib import Path
 from typing import Any, Optional
 
-from . import doctrine, ident
+from . import doctrine, ident, tracking
 from .catalog import load_toml
 from .geo import FT, KT, NM, bearing_deg, heading_vec
 from .state import (Aircraft, Airbase, FlightPlan, HeightFinder, HQState, Link, Mission, Objective, RadarSite,
@@ -164,6 +164,7 @@ def build_world_from(sc: dict[str, Any], seed: Optional[int] = None) -> World:
             w.pending_flights[f["id"]] = f
     for tr in sc.get("trigger", []):
         w.triggers.append(Trigger(tr["id"], tr.get("cond", {}), list(tr.get("actions", [])), tr.get("once", True)))
+    w.triggers.extend(lesson_triggers(sc))
     for o in sc.get("objective", []):
         w.objectives.append(Objective(o["id"], o["text"], o["kind"], dict(o.get("params", {})), o.get("points", 10),
                                       hidden=o.get("hidden", False), penalty=o.get("penalty", 0)))
@@ -344,10 +345,50 @@ def _spawn_due(w: World) -> None:
 
 # ---------------------------------------------------------------- triggers
 
+def lesson_triggers(sc: dict) -> list[Trigger]:
+    """Compile a scenario's ``[[lesson]]`` steps into a chain of triggers.
+
+    Step k is shown when step k-1 is on the card and its ``done`` condition
+    holds; the first step appears at its ``start`` condition (default T+3 s).
+    ``[lesson_end]`` describes the closing card; the scenario ends a few
+    seconds after it unless ``end = false``.
+    """
+    steps = sc.get("lesson", [])
+    if not steps:
+        return []
+    n = len(steps)
+    out = []
+
+    def on_step(k: int) -> dict:
+        return {"type": "var", "name": "lesson_step", "op": "==", "value": float(k)}
+
+    for i, st in enumerate(steps):
+        k = i + 1
+        info = {key: v for key, v in st.items() if key != "start"}
+        cond = st.get("start", {"type": "time", "t": 3.0}) if i == 0 else \
+            {"type": "all", "of": [on_step(k - 1), steps[i - 1]["done"]]}
+        out.append(Trigger(f"lesson_{k}", cond, [{"do": "lesson", "step": k, "of": n, **info}]))
+    fin = sc.get("lesson_end", {})
+    acts = [{"do": "lesson", "step": n, "of": n, "final": True, "title": fin.get("title", "Lesson complete"),
+             "text": fin.get("text", "")}]
+    out.append(Trigger("lesson_end", {"type": "all", "of": [on_step(n), steps[-1]["done"]]}, acts))
+    if fin.get("end", True):
+        out.append(Trigger("lesson_close", {"type": "since", "var": "lesson_done_t", "s": fin.get("linger_s", 20.0)},
+                           [{"do": "end", "reason": fin.get("reason", "Lesson complete"), "result": "complete"}]))
+    return out
+
+
 def _truth_ids(w: World, ac: str) -> list[str]:
     if ac in w.aircraft:
         return [ac]
     return [k for k in w.aircraft if k.startswith(ac + "-")]
+
+
+def _skin_tracks(w: World, ac: str) -> list:
+    """Live tracks on an aircraft built from its echo (not from jamming strobes)."""
+    ids = set(_truth_ids(w, ac))
+    return [trk for trk in w.tracks.values()
+            if not trk.lost and not trk.jammer and tracking.truth_of(trk) in ids]
 
 
 def cond(w: World, c: dict) -> bool:
@@ -382,8 +423,12 @@ def cond(w: World, c: dict) -> bool:
     if t == "vid":
         return any(a in w.stats.vid for a in _truth_ids(w, c["ac"]))
     if t == "tracked":
+        if c.get("skin"):
+            return bool(_skin_tracks(w, c["ac"]))
         return any(w.track_for_truth(a) is not None for a in _truth_ids(w, c["ac"]))
     if t == "identity":
+        if c.get("skin"):
+            return any(trk.identity in c["is"] for trk in _skin_tracks(w, c["ac"]))
         for a in _truth_ids(w, c["ac"]):
             trk = w.track_for_truth(a)
             if trk is not None and trk.identity in c["is"]:
@@ -397,11 +442,65 @@ def cond(w: World, c: dict) -> bool:
         return w.stats.sorties >= c.get("n", 1)
     if t == "flights_home":
         return bool(w.flights) and all(f.state in ("landed", "lost") for f in w.flights.values())
+    if t == "height":
+        src = c.get("src")
+        for a in _truth_ids(w, c["ac"]):
+            trk = w.track_for_truth(a)
+            if trk is not None and trk.alt is not None and (not src or trk.alt_src in src):
+                return True
+        return False
+    if t == "flight":
+        keys = {k: v for k, v in c.items() if k not in ("type", "target_ac")}
+        for f in w.flights.values():
+            if f.state in ("landed", "lost"):
+                continue
+            if "target_ac" in c:
+                trk = w.tracks.get(f.target or "")
+                if trk is None or trk.truth not in _truth_ids(w, c["target_ac"]):
+                    continue
+            if all((getattr(f, k, None) in v) if isinstance(v, list) else getattr(f, k, None) == v
+                   for k, v in keys.items()):
+                return True
+        return False
+    if t == "site":
+        obj = w.radars.get(c["site"]) or w.sams.get(c["site"]) or w.airbases.get(c["site"])
+        if obj is None:
+            return False
+        v = getattr(obj, c["attr"])
+        ref = c.get("value", True)
+        return {"==": v == ref, "!=": v != ref, ">": v > ref, ">=": v >= ref, "<": v < ref,
+                "<=": v <= ref}[c.get("op", "==")]
+    if t == "request":
+        return any(r.kind == c["kind"] and (not c.get("answered") or r.answered)
+                   and ("granted" not in c or (r.answered and r.granted == c["granted"]))
+                   for r in w.hq.requests)
+    if t == "weapons_status":
+        return w.hq.weapons_status in c["is"]
+    if t == "sim_killed":
+        return any(w.sim_killed(a) for a in _truth_ids(w, c["ac"]))
+    if t == "ui":
+        return w.vars.get("ui_" + c["event"], 0.0) >= 1.0
+    if t == "since":
+        return c["var"] in w.vars and w.t - w.vars[c["var"]] >= c["s"]
     raise ValueError(f"unknown condition type {t}")
 
 
 def act(w: World, a: dict) -> None:
     k = a["do"]
+    if k == "lesson":
+        w.lesson = {key: v for key, v in a.items() if key != "do"}
+        w.lesson["t"] = w.t
+        w.vars["lesson_step"] = float(a.get("step", 0)) + (1.0 if a.get("final") else 0.0)
+        if a.get("final"):
+            w.vars["lesson_done_t"] = w.t
+        if a.get("tty", True):
+            body = a.get("text", "")
+            if a.get("action"):
+                body += "  >> " + a["action"]
+            doctrine.send(w, "tty", a.get("sender", "INSTRUCTOR"),
+                          (f"STEP {a['step']}/{a['of']}: " if "step" in a and "of" in a else "")
+                          + f"{a.get('title', '')}. {body}".strip(". "), 0, False, "", "info", 0.0)
+        return
     if k == "message":
         doctrine.send(w, a.get("channel", "tty"), a.get("sender", w.hq.name), a["text"], a.get("priority", 0),
                       a.get("ack", False), a.get("ref", ""), a.get("kind", "info"), a.get("delay", 0.0))

@@ -7,6 +7,7 @@ import pygame
 
 from ..sim import aar, commands, doctrine, scenario, tracking
 from ..sim.world import DT
+from .lesson import CONSOLE_TABS, LessonCard
 from .consoles import (CommsConsole, IntelConsole, MissilesConsole, RadarNetConsole, StatusConsole, TECH_NOTES,
                        TracksConsole, WeaponsConsole)
 from . import fx
@@ -523,6 +524,9 @@ class CommandScene(Scene):
         self.audio = app.audio
         self.app = app
         self.fps = 0.0
+        self.lesson = LessonCard(self)
+        self._ui_seen = (self.mode, self.ci, self.scope.site_id, False)
+        self._lesson_key = (world.lesson.get("step"), world.lesson.get("final"))
 
     # ------------------------------------------------------------ helpers used by consoles
     def select(self, kind: str, oid: str) -> None:
@@ -609,6 +613,7 @@ class CommandScene(Scene):
                 self.scope.cycle_range(1)
         if self.menu:
             return
+        self.lesson.handle(gui)
         if self.mode == "net":
             if gui.released and not gui.consumed and self.net.rect.collidepoint(gui.mouse):
                 hit = self.net.pick(gui.mouse)
@@ -681,6 +686,11 @@ class CommandScene(Scene):
             if self.render_t > w.t + 2.0:
                 self.render_t = w.t
             self._react()
+            key = (w.lesson.get("step"), w.lesson.get("final"))
+            if key != self._lesson_key:
+                self._lesson_key = key
+                if self.speed_i > 1:          # a new instruction: back to real time to read it
+                    self.speed_i = 1
         if w.ended:
             if self.ended_t is None:
                 self.ended_t = self.app.clock_t
@@ -709,10 +719,27 @@ class CommandScene(Scene):
                 self.audio.play("buzz" if w.faction == "US" else "bell")
         # messages created directly (delivered immediately) are flagged here
     # ------------------------------------------------------------ draw
+    def _ui_events(self) -> None:
+        """Tell the instructor which displays and consoles the student has opened."""
+        w = self.world
+        now = (self.mode, self.ci, self.scope.site_id, bool(self.map.layers.get("coverage")))
+        if w.lesson and now != self._ui_seen:
+            if now[0] != self._ui_seen[0]:
+                commands.run(w, "ui_event", name="mode_" + now[0])
+            if now[1] != self._ui_seen[1]:
+                commands.run(w, "ui_event", name="console_" + CONSOLE_TABS[now[1]].split()[0])
+            if now[2] != self._ui_seen[2] or (now[0] == "scope" and now[0] != self._ui_seen[0]):
+                commands.run(w, "ui_event", name="scope_" + now[2])
+            if now[3] and not self._ui_seen[3]:
+                commands.run(w, "ui_event", name="coverage")
+        self._ui_seen = now
+
     def draw(self, screen):
         gui = self.app.gui
         w = self.world
         th = self.theme
+        self._ui_events()
+        gui.highlight = self.lesson.highlights(self)
         screen.fill(th.bg)
         self._topbar(gui)
         self._housing(gui)
@@ -722,17 +749,19 @@ class CommandScene(Scene):
             self.map.draw(screen, self.sel, self.render_t)
             self._finish_display(gui, mr)
             self.map.annotate(screen, self.sel)
+            self.lesson.draw_mark(gui, self)
         elif self.mode == "scope":
             pygame.draw.rect(screen, (0, 0, 0), mr)
             self.scope.lang_mode = gui.lang_mode
             self.scope.draw(screen, min(self.render_t, w.t), self.app.dt, self.speed)
             self._finish_display(gui, mr, scan=False)
+            self.lesson.draw_mark(gui, self)
         else:
             self.net.draw(gui, self.sel, self.app.dt)
             self._finish_display(gui, mr, scan=True, bloom=90)
         self._display_strip(gui)
         # console selector: a row of lamp keys
-        names = ["TRACKS F1", "WEAPONS F2", "MISSILES F3", "RADAR F4", "COMMS F6", "INTEL F7", "STATUS F8"]
+        names = CONSOLE_TABS
         bw = 596 // len(names)
         unacked = sum(1 for m in w.messages if m.ack and not m.acked and m.delivered)
         for i, n in enumerate(names):
@@ -743,6 +772,7 @@ class CommandScene(Scene):
                 self.ci = i
         self.consoles[self.ci].draw(gui, CONSOLE_R, self)
         self._ticker(gui)
+        self.lesson.draw(gui, self, MAP_R)
         screen.blit(self.room, (0, 0))
         if self.menu:
             self._menu(gui)

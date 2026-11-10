@@ -89,6 +89,7 @@ class Gui:
         self.tooltip = None
         self.consumed = False
         self.drawn = {}
+        self.highlight = set()
         for e in events:
             if e.type == pygame.MOUSEBUTTONDOWN and e.button == 1:
                 self.down = True
@@ -559,6 +560,7 @@ class Gui:
     def toggle(self, r: Rect, text: str, value: bool, tip: str | None = None) -> bool:
         th = self.theme
         s = self.screen
+        self.drawn[text] = r
         c = (r.x + 11, r.centery)
         # hex nut and bushing
         pts = [(c[0] + 9 * math.cos(math.pi / 6 + k * math.pi / 3), c[1] + 9 * math.sin(math.pi / 6 + k * math.pi / 3))
@@ -589,6 +591,7 @@ class Gui:
         """Chicken-head selector: click the left half to step down, right half to step up (or use the wheel)."""
         th = self.theme
         s = self.screen
+        self.drawn[label] = r
         rad = r.h // 2 - 2
         c = (r.x + r.h // 2, r.centery + 1)
         if pos is None:
@@ -667,6 +670,7 @@ class Gui:
               colors: list | None = None, size: int = 12, row_h: int = 18) -> int | None:
         """Scrollable selectable table drawn on CRT glass. Returns clicked row index."""
         th = self.theme
+        self.drawn["TABLE " + sid] = r
         self.glass(r)
         x = r.x + 6
         kind = th.data_font
@@ -765,14 +769,29 @@ class Gui:
                                      (cx - px * width * 0.5 + ux * 2, cy - py * width * 0.5 + uy * 2), 1)
 
     # ------------------------------------------------------------ overlays
+    def highlighted(self) -> list[Rect]:
+        """Rects of the controls the instructor is pointing at (``LABEL*`` matches a prefix)."""
+        out = []
+        for lab in self.highlight:
+            if lab.endswith("*"):
+                out.extend(r for k, r in self.drawn.items() if k.startswith(lab[:-1]))
+            elif lab in self.drawn:
+                out.append(self.drawn[lab])
+        return out
+
     def _draw_highlights(self) -> None:
         pulse = 0.5 + 0.5 * math.sin(self.time * 5.0)
-        for lab in self.highlight:
-            r = self.drawn.get(lab)
-            if r is None:
-                continue
-            col = _mix((255, 230, 120), (255, 120, 40), pulse)
-            pygame.draw.rect(self.screen, col, r.inflate(10 + pulse * 6, 10 + pulse * 6), 2, border_radius=6)
+        col = _mix((255, 230, 120), (255, 120, 40), pulse)
+        for r in self.highlighted():
+            g = int(6 + pulse * 4)
+            box = r.inflate(g, g)
+            pygame.draw.rect(self.screen, (0, 0, 0), box.move(1, 2), 3, border_radius=6)
+            pygame.draw.rect(self.screen, col, box, 3, border_radius=6)
+            # corner ticks, like a grease-pencil circle on the console glass
+            for cx, cy, dx, dy in ((box.x, box.y, 1, 1), (box.right, box.y, -1, 1),
+                                   (box.x, box.bottom, 1, -1), (box.right, box.bottom, -1, -1)):
+                pygame.draw.line(self.screen, col, (cx - dx * 6, cy), (cx - dx * 12, cy), 2)
+                pygame.draw.line(self.screen, col, (cx, cy - dy * 6), (cx, cy - dy * 12), 2)
 
     def _draw_tooltip(self, text: str, pos) -> None:
         lines = TEXT.wrap(text, 360, 12, "ui")

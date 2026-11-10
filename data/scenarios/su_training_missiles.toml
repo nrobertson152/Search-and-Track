@@ -1,0 +1,300 @@
+id = "su_training_missiles"
+title = "Training: Missile Battalion Drill"
+subtitle = "4th Separate Air Defense Army — exercise, instructor-led"
+summary = "Hand a training target to an S-75 battalion, ask the command post for a violator declaration, and identify a stranger before anyone fires."
+faction = "USSR"
+kind = "training"
+photo = ["Tu-16", "MiG-17PF"]
+photo_caption = "Ту-16 — учебная цель · Tu-16 playing the target for the exercise"
+era = "1960s"
+difficulty = 1
+order = 2
+theater = "middle_urals"
+start = "1961-08-15T11:00:00"
+tz = "MSK"
+duration_min = 75
+seed = 815
+reliability = 50.0
+exercise = true
+
+briefing = """
+COMMAND POST, 4th SEPARATE AIR DEFENSE ARMY — TACTICAL EXERCISE
+
+A Tu-16 of Long-Range Aviation will fly a simulated attack on Sverdlovsk from the west. It is a TRAINING target: under exercise rules our battalions and fighters may engage it. Launches are simulated and the umpires score them.
+
+What you will learn:
+  1. Exercise rules: what may be engaged, and what may not.
+  2. The S-75 battalions: designating a target from the command post.
+  3. The command post's authority: what it takes to declare a target a VIOLATOR.
+  4. Identification before engagement, always.
+
+The instructor's card is pinned to the plotting board. Radar-company reporting is automatic; identification is yours.
+"""
+
+[automation]
+surveil = true
+ident = false
+height = false
+tech = true
+
+[weather]
+k_factor = 1.333
+wind_from = 270.0
+wind_kmh = 40.0
+ceiling_m = 5000.0
+visibility_km = 30.0
+night = false
+
+[hq]
+name = "4th ARMY CP"
+readiness = "INCREASED"
+weapons_status = "HOLD"
+[hq.policy]
+response_s = [40.0, 80.0]
+declare_hostile = "evidence"
+engage = "evidence"
+iff_period = "AUG"
+track_start = 5101
+
+[[link]]
+id = "T_gp"
+name = "Guidance points"
+[[link]]
+id = "T_tagil"
+name = "Nizhny Tagil telephone"
+[[link]]
+id = "T_kamensk"
+name = "Kamensk telephone"
+[[link]]
+id = "T_zlatoust"
+name = "Zlatoust telephone"
+[[link]]
+id = "T_kyshtym"
+name = "Kyshtym telephone"
+[[link]]
+id = "A_koltsovo"
+name = "Koltsovo line"
+delay_s = 15.0
+
+[[radar]]
+site = "koltsovo_gp"
+type = "P-30"
+gci = true
+link = "T_gp"
+[[radar]]
+site = "shagol_gp"
+type = "P-20"
+gci = true
+link = "T_gp"
+[[radar]]
+site = "rlr_tagil"
+type = "P-10"
+link = "T_tagil"
+[[radar]]
+site = "rlr_zlatoust"
+type = "P-20"
+link = "T_zlatoust"
+[[radar]]
+site = "rlr_kamensk"
+type = "P-12"
+link = "T_kamensk"
+[[radar]]
+site = "rlr_kyshtym"
+type = "P-30"
+link = "T_kyshtym"
+
+[[airbase]]
+site = "koltsovo"
+link = "A_koltsovo"
+[[airbase]]
+site = "shagol"
+
+[[squadron]]
+id = "kol_iap"
+name = "Koltsovo IAP"
+base = "koltsovo"
+type = "MiG-17PF"
+callsign = "5"
+ready = { "3" = 2, "7" = 2 }
+pilots = 4
+iff_codes = { period = "AUG" }
+
+[[sam]]
+site = "zrdn_west"
+type = "S-75"
+missiles = 6
+reloads = 6
+[[sam]]
+site = "zrdn_north"
+type = "S-75"
+missiles = 6
+reloads = 6
+
+[[flight]]
+id = "drone"
+type = "Tu-16"
+callsign = "TRAINING TARGET"
+side = "blue"
+spawn_t = 15.0
+truth_label = "Tu-16 (exercise target)"
+markings = "red star, Long-Range Aviation"
+start = { lat = 56.9, lon = 57.9, alt_m = 9000.0, kmh = 780.0 }
+route = [
+  { lat = 56.74, lon = 60.1, alt_m = 9000.0, kmh = 780.0 },
+  { lat = 56.84, lon = 60.7, alt_m = 9000.0, kmh = 780.0 },
+  { lat = 57.3, lon = 63.0, alt_m = 9500.0, kmh = 800.0 },
+  { lat = 57.6, lon = 65.6, alt_m = 9500.0, kmh = 800.0, action = "remove" },
+]
+transponder = { system = "kremniy", on = false, codes = { period = "AUG" } }
+
+[[flight]]
+id = "stray"
+type = "Il-14"
+callsign = "AEROFLOT 4127"
+side = "civil"
+spawn = "trigger"
+truth_label = "Il-14, Aeroflot, far off its airway"
+markings = "Aeroflot, СССР-41827"
+nationality = "USSR"
+start = { lat = 54.75, lon = 59.3, alt_m = 2400.0, kmh = 320.0 }
+route = [
+  { lat = 55.05, lon = 60.4, alt_m = 2400.0, kmh = 320.0 },
+  { lat = 55.26, lon = 61.3, alt_m = 300.0, kmh = 230.0, action = "land" },
+]
+transponder = { system = "kremniy", failed = true, codes = { period = "AUG" } }
+fuel_frac = 3.0
+
+[[trigger]]
+id = "spawn_stray"
+cond = { type = "var", name = "lesson_step", op = ">=", value = 4.0 }
+actions = [{ do = "spawn", flight = "stray" }]
+
+# ---------------------------------------------------------------- instructor
+[[lesson]]
+title = "The training target"
+text = "A Tu-16 of Long-Range Aviation is playing the enemy today, coming in from the west. On the board it is a TRAINING target: under exercise rules our battalions and fighters may engage it, and the umpires score the launches. Everything else is real."
+action = "TRACKS F1: select its target number, press TRAINING"
+mode = "map"
+console = "TRACKS"
+highlight = ["TRAINING", "TABLE tracks"]
+mark = "drone"
+mark_label = "TRAINING TARGET"
+mark_label_ru = "УЧЕБНАЯ ЦЕЛЬ"
+done = { type = "identity", ac = "drone", is = ["faker"] }
+
+[[lesson]]
+title = "The missile battalions"
+text = "S-75 battalions ring Sverdlovsk. The command post designates the target; the battalion's P-12 finds it and its guidance radar locks on. A battalion accepts targets within about 190 km and fires inside 34 km. The West battalion at Degtyarsk is in the target's path."
+action = "MISSILES F3: select the West battalion, then DESIGNATE the target"
+console = "MISSILES"
+highlight = ["TABLE sams", "DESIGNATE*"]
+mark = "zrdn_west"
+mark_label = "SAM BATTALION WEST"
+mark_label_ru = "ЗРДН «ЗАПАД»"
+done = { type = "any", of = [{ type = "site", site = "zrdn_west", attr = "assigned", op = "!=", value = "" }, { type = "site", site = "zrdn_north", attr = "assigned", op = "!=", value = "" }] }
+
+[[lesson]]
+title = "Simulated launch"
+text = "The guidance radar locks on and the battalion launches when the target is inside its zone. In an exercise the launch is simulated: the umpires assess the result and the Tu-16 flies on, scored destroyed. After a miss the battalion waits for orders unless re-engagement is automatic."
+action = "MISSILES F3: switch AUTO RE-ENG on, then press 8× (or +) and watch"
+console = "MISSILES"
+highlight = ["AUTO RE-ENG", "8×"]
+mark = "drone"
+mark_label = "TRAINING TARGET"
+mark_label_ru = "УЧЕБНАЯ ЦЕЛЬ"
+done = { type = "sim_killed", ac = "drone" }
+
+[[lesson]]
+title = "A stranger"
+text = "A slow target with no IFF reply is coming up from the south-west toward Chelyabinsk. Nobody has seen it, so it is not the training target: it is UNIDENTIFIED, and exercise rules do not cover it."
+action = "TRACKS F1: select the new target, press UNIDENTIFIED"
+console = "TRACKS"
+highlight = ["UNIDENTIFIED", "TABLE tracks"]
+mark = "stray"
+mark_label = "UNIDENTIFIED"
+mark_label_ru = "НЕОПОЗНАННАЯ"
+done = { type = "identity", ac = "stray", is = ["unknown"] }
+
+[[lesson]]
+title = "The command post"
+text = "Only the command post can declare a target a VIOLATOR. Ask them, and see what they want before they will."
+action = "COMMS F6: with the target selected, press HOSTILE"
+console = "COMMS"
+highlight = ["HOSTILE*"]
+done = { type = "request", kind = "declare_hostile", answered = true }
+
+[[lesson]]
+title = "Go and look"
+text = "The command post wants evidence: a visual identification, an active jammer, or a hostile act. Scramble a pair from Koltsovo for an identification pass. Fire is forbidden."
+action = "WEAPONS F2: ×2, ID PASS, then SCRAMBLE ON the target"
+console = "WEAPONS"
+highlight = ["×2", "ID PASS", "SCRAMBLE ON*"]
+mark = "koltsovo"
+mark_label = "KOLTSOVO IAP"
+mark_label_ru = "КОЛЬЦОВО · ИАП"
+done = { type = "scrambled", n = 1 }
+
+[[lesson]]
+title = "Guidance"
+text = "A slow, low target is hard to find: the pair must slow down and come in from behind. Speed up time while they fly."
+action = "Press 8× (or +) and watch the pair close"
+highlight = ["8×", "TABLE fl"]
+mark = "stray"
+done = { type = "vid", ac = "stray" }
+
+[[lesson]]
+title = "Aeroflot"
+text = "The leader reports an Aeroflot Il-14, far off its airway, with its transponder dead. Set it OWN; the airport controllers at Shagol will bring it in."
+action = "TRACKS F1: press OWN"
+console = "TRACKS"
+highlight = ["OWN"]
+done = { type = "identity", ac = "stray", is = ["friend"] }
+
+[[lesson]]
+title = "Return to base"
+text = "Bring the pair home."
+action = "WEAPONS F2: select the flight, press RTB"
+console = "WEAPONS"
+highlight = ["RTB", "TABLE fl"]
+done = { type = "any", of = [{ type = "flight", state = "rtb" }, { type = "flights_home" }] }
+
+[lesson_end]
+title = "Exercise complete"
+text = "Exercise rules covered the training target. Everything else needed a positive identification first, and the command post wanted evidence before it would call anything a violator. Next: the Jamming Drill."
+reason = "Exercise complete"
+
+# ---------------------------------------------------------------- scoring
+[[objective]]
+id = "kill"
+text = "Score a simulated launch on the training target"
+kind = "sim_kills"
+params = { ac = "drone" }
+points = 30
+
+[[objective]]
+id = "stray"
+text = "Identify the stranger as UNIDENTIFIED, then OWN"
+kind = "identify"
+params = { ac = "stray", correct = ["friend"], wrong = ["hostile", "faker", "suspect"] }
+points = 30
+
+[[objective]]
+id = "vid"
+text = "Identify the stranger visually"
+kind = "vid"
+params = { ac = "stray" }
+points = 20
+
+[[objective]]
+id = "nociv"
+text = "No civil aircraft engaged (real or simulated)"
+kind = "no_civil_losses"
+points = 10
+penalty = 100
+
+[[objective]]
+id = "frat"
+text = "No fratricide"
+kind = "no_fratricide"
+points = 10
+penalty = 50

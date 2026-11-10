@@ -42,7 +42,8 @@ def save_career(app, data: dict) -> None:
 def campaign_missions(faction: str) -> list[dict]:
     items = [s for s in scenario.list_scenarios() if s["faction"] == faction and s["kind"] in ("scenario", "training")
              and s.get("campaign", True)]
-    items.sort(key=lambda s: (s["kind"] != "training", s["start"], s["order"]))
+    items.sort(key=lambda s: (s["kind"] != "training", s["order"] if s["kind"] == "training" else 0, s["start"],
+                              s["order"]))
     return items
 
 

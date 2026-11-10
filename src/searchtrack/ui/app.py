@@ -201,8 +201,12 @@ def screenshot(path: str, sid: str | None, seconds: float, console: int, mode: s
             app.frame([])
     else:
         world = scenario.build_world(sid)
+        from ..sim.student import Student
+        pupil = Student(world) if any(tr.id.startswith("lesson_") for tr in world.triggers) else None
         while world.t < seconds and not world.ended:
-            if autoplay_on and world.tick % 10 == 0:
+            if autoplay_on and pupil is not None:
+                pupil.act()
+            elif autoplay_on and world.tick % 10 == 0:
                 autoplay.think(world)
             world.step()
         if scene == "debrief":

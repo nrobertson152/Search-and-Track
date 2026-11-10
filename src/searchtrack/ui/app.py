@@ -28,10 +28,16 @@ def data_home() -> Path:
 class App:
     def __init__(self, headless: bool = False, sound: bool = True, fullscreen: bool = False):
         pygame.init()
-        from .theme import TEXT
+        from .theme import FONT_DIR, TEXT
         TEXT._fonts.clear()       # fonts die with pygame.quit(); start clean
         TEXT._cache.clear()
         pygame.display.set_caption("Search and Track — Cold War Air Defense")
+        icon = FONT_DIR.parent / "icons" / "searchtrack-64.png"
+        if icon.exists() and not headless:
+            try:
+                pygame.display.set_icon(pygame.image.load(str(icon)))
+            except pygame.error:
+                pass
         flags = 0 if headless else (pygame.SCALED | pygame.RESIZABLE | (pygame.FULLSCREEN if fullscreen else 0))
         try:
             self.screen = pygame.display.set_mode((W, H), flags, vsync=0 if headless else 1)

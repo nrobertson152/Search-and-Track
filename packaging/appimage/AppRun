@@ -1,0 +1,9 @@
+#!/bin/sh
+# Start Search and Track with the Python interpreter bundled in this AppImage.
+# -I: ignore the host's PYTHON* variables and user site-packages (the game finds its
+#     code through a .pth file in the bundled site-packages); -B: the image is read-only.
+HERE="${APPDIR:-$(dirname "$(readlink -f "$0")")}"
+export SDL_VIDEO_X11_WMCLASS="${SDL_VIDEO_X11_WMCLASS:-searchtrack}"
+export SDL_VIDEO_WAYLAND_WMCLASS="${SDL_VIDEO_WAYLAND_WMCLASS:-searchtrack}"
+export PYGAME_HIDE_SUPPORT_PROMPT=1
+exec "$HERE/usr/python/bin/python3" -I -B -m searchtrack "$@"

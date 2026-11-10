@@ -1,0 +1,6 @@
+# Pinned runtime dependencies bundled into the AppImage.
+# Both ship manylinux2014 (glibc 2.17) wheels, the same baseline as the bundled Python,
+# so the AppImage runs on practically any x86_64 Linux desktop.
+pygame-ce==2.5.8
+numpy==2.2.6
+tomli==2.5.0; python_version < "3.11"   # only for builds on an older bundled Python

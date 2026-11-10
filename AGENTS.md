@@ -14,7 +14,7 @@ How work gets done on Search and Track. One page; keep it that way.
 2. Every change lands through a pull request with a summary, how it was tested, and screenshots for anything visible.
 3. CI (`.github/workflows/ci.yml`) must be green: tests on Python 3.10 and 3.12, the manual mirror check, a headless screenshot run.
 4. The reviewer comments; the builder answers or fixes; the owner merges.
-5. Releases are tagged from `main` (`vX.Y.Z`) with a `CHANGELOG.md` entry, only on the owner's approval.
+5. Releases are tagged from `main` (`vX.Y.Z`) with a `CHANGELOG.md` entry, only on the owner's approval. The tag makes the AppImage workflow build the AppImage and attach it to a **draft** release; the owner publishes it.
 
 ## Rules of the codebase
 
@@ -34,6 +34,7 @@ python -m pytest -q                                   # full suite, headless
 python -m searchtrack --screenshot out.png --scenario <id> --seconds <t> [--mode scope|net] [--console N]
 python -m searchtrack --screenshot out.png --scene title|briefing|debrief|campaign|alert|operations|manual
 python tools/sync_manual.py                           # after editing data/manual
+tools/build_appimage.sh                               # Linux AppImage in dist/ (needs desktop-file-utils)
 python tools/build_theater.py data/theaters/<id> --ne <natural-earth> --dem <etopo.nc>
 ```
 

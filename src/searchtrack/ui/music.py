@@ -72,7 +72,7 @@ def _strings(freq: float, dur: float, rng) -> np.ndarray:
         for k in range(1, 9):
             if f * k > RATE * 0.45:
                 break
-            out += np.sin(2 * np.pi * f * k * t + ph * k) * (1.0 / k) * math.exp(-k / 3.5)
+            out += np.sin(2 * np.pi * f * k * t + ph * k) * (1.0 / k) * math.exp(-k / 6.0)
     return out * _adsr(n, 0.9, 0.6, 0.8, 1.2) * 0.18
 
 
@@ -82,7 +82,7 @@ def _choir(freq: float, dur: float, rng) -> np.ndarray:
     t = _t(n)
     vib = 1.0 + 0.004 * np.sin(2 * np.pi * rng.uniform(4.5, 5.5) * t + rng.uniform(0, 6))
     out = np.zeros(n, np.float32)
-    weights = (1.0, 0.7, 0.55, 0.35, 0.2, 0.12)
+    weights = (1.0, 0.75, 0.65, 0.5, 0.35, 0.25, 0.15, 0.1)
     for k, wgt in enumerate(weights, 1):
         out += np.sin(2 * np.pi * freq * k * np.cumsum(vib) / RATE) * wgt
     return out * _adsr(n, 1.2, 0.8, 0.85, 1.4) * 0.16
@@ -100,8 +100,9 @@ def _bass(freq: float, dur: float) -> np.ndarray:
 def _epiano(freq: float, dur: float) -> np.ndarray:
     n = int(dur * RATE)
     t = _t(n)
-    x = np.sin(2 * np.pi * freq * t) + 0.35 * np.sin(2 * np.pi * 2 * freq * t) * np.exp(-t * 4.0) + \
-        0.12 * np.sin(2 * np.pi * 3.01 * freq * t) * np.exp(-t * 7.0)
+    x = np.sin(2 * np.pi * freq * t) + 0.5 * np.sin(2 * np.pi * 2 * freq * t) * np.exp(-t * 3.0) + \
+        0.25 * np.sin(2 * np.pi * 3.01 * freq * t) * np.exp(-t * 5.0) + \
+        0.12 * np.sin(2 * np.pi * 4.02 * freq * t) * np.exp(-t * 8.0)
     return x * np.exp(-t * 1.6) * _adsr(n, 0.004, 0.1, 1.0, 0.25) * 0.4
 
 
@@ -141,7 +142,7 @@ def _hat(rng, open_: bool = False) -> np.ndarray:
     n = int((0.18 if open_ else 0.05) * RATE)
     t = _t(n)
     noise = np.diff(rng.uniform(-1, 1, n + 1)).astype(np.float32)
-    return noise * np.exp(-t * (14.0 if open_ else 70.0)) * 0.22
+    return noise * np.exp(-t * (14.0 if open_ else 70.0)) * 0.6
 
 
 def _timpani(freq: float, rng) -> np.ndarray:
@@ -218,7 +219,7 @@ def render(faction: str, seed: int = 11) -> dict[str, np.ndarray]:
         _place(L["theme"], b * BEAT, lead(_f(m), length * BEAT + (0.6 if lead is _epiano else 2.5)))
     for k in L:                                               # each layer to a common loudness
         peak = float(np.max(np.abs(L[k]))) or 1.0
-        L[k] = L[k] / peak * {"pad": 0.55, "pulse": 0.5, "drive": 0.6, "theme": 0.5}[k]
+        L[k] = L[k] / peak * {"pad": 0.45, "pulse": 0.5, "drive": 0.6, "theme": 0.6}[k]
     return L
 
 

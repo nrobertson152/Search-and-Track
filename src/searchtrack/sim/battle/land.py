@@ -116,7 +116,13 @@ def hit_installation(w: "World", iid: str, weapon: str, heavy: float = 1.0, side
         if was_open:
             counter(w, f"runway_cuts_{side}")
         return
+    if is_destroyed(w, iid):                           # a wreck stays a wreck: no repair crew brings it back
+        event(w, "ground_hit", f"{name} hit again by {weapon} — already destroyed", iid, x, y, side, 0)
+        return
     destroyed = rng.random() < 0.5 * heavy
+    loud = t - w.vars.get(f"hitmsg_{iid}", -1e9) > 90.0 or destroyed
+    w.vars[f"hitmsg_{iid}"] = t
+    level = (3 if own else 1) if loud else 0
     if kind == "sam":
         s = w.sams[iid]
         s.status = "down"
@@ -130,9 +136,10 @@ def hit_installation(w: "World", iid: str, weapon: str, heavy: float = 1.0, side
             counter(w, f"sams_destroyed_{side}")
         else:
             back = rng.uniform(10.0, 20.0)
-            w.vars[f"sam_repair_{iid}"] = t + back * 60.0
+            w.vars[f"sam_repair_{iid}"] = max(t + back * 60.0, w.vars.get(f"sam_repair_{iid}", 0.0))
+            back = (w.vars[f"sam_repair_{iid}"] - t) / 60.0
             event(w, "ground_hit", f"{name.upper()} HIT by {weapon} — off the air, repairs about {back:.0f} min",
-                  iid, x, y, side, 3 if own else 1)
+                  iid, x, y, side, level)
         return
     r = w.radars[iid]
     for hf in w.hfs.values():
@@ -148,9 +155,10 @@ def hit_installation(w: "World", iid: str, weapon: str, heavy: float = 1.0, side
         counter(w, f"radars_destroyed_{side}")
     else:
         back = rng.uniform(12.0, 25.0)
-        r.repair_t = t + back * 60.0
+        r.repair_t = max(t + back * 60.0, r.repair_t)
+        back = (r.repair_t - t) / 60.0
         event(w, "ground_hit", f"{name.upper()} HIT by {weapon} — antenna damaged, off the air about {back:.0f} min",
-              iid, x, y, side, 3 if own else 1)
+              iid, x, y, side, level)
     if own and w.faction == "USSR":
         w.alert(f"{r.name}: NO REPORTS — station hit", iid, 2)
 

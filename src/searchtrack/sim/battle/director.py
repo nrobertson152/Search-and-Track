@@ -67,7 +67,8 @@ def _later(w: "World") -> None:
 # ------------------------------------------------------------------ actions
 
 ACTIONS = {"launch", "group", "decision", "standing", "reinforcement", "reinforce", "aew_withdraw", "fleet", "ready",
-           "located", "end_battle", "surge", "cap_station", "salvo", "ship_salvo", "war", "ceasefire", "say", "spare"}
+           "located", "end_battle", "surge", "cap_station", "salvo", "ship_salvo", "war", "ceasefire", "say", "spare",
+           "engage"}
 
 
 def act(w: "World", a: dict) -> None:
@@ -178,6 +179,8 @@ def act(w: "World", a: dict) -> None:
         start_war(w, spare=list(spare or []), text=a.get("text", ""))
     elif k == "spare":
         spare_groups(w, list(a.get("groups", [])), a.get("text", ""))
+    elif k == "engage":
+        engage_groups(w, list(a.get("groups", [])), a.get("text", ""))
     elif k == "ceasefire":
         ceasefire(w, a.get("text", ""))
     elif k == "say":
@@ -212,6 +215,35 @@ def start_war(w: "World", spare: Optional[list] = None, text: str = "") -> None:
             w.vars[f"atk_{fl.id}"] = -1.0       # they were sitting on him: the first shot is theirs to take
 
 
+def cleared(w: "World", trk) -> bool:
+    """Higher command has ordered this aircraft shot down, whatever the rules of the moment say."""
+    from ..tracking import truth_of
+    a = w.aircraft.get(truth_of(trk) or "") if trk is not None else None
+    return a is not None and bool(a.group) and bool(w.vars.get(f"cleared_{a.group}"))
+
+
+def engage_groups(w: "World", gids: list, text: str = "") -> None:
+    """The order to fire on these: they go to the top of the list and the weapons are released on them."""
+    for gid in gids:
+        if gid in w.battle.groups:
+            w.vars[f"cleared_{gid}"] = w.t
+    authorize_cleared(w)
+    event(w, "engage", text or "Ordered: shoot it down.", "", level=2)
+
+
+def authorize_cleared(w: "World") -> None:
+    b = w.battle
+    for trk in w.tracks.values():
+        if trk.lost or not cleared(w, trk):
+            continue
+        if trk.id not in b.priority:
+            b.priority.append(trk.id)
+        if trk.id not in w.hq.engage_ok:
+            w.hq.engage_ok.append(trk.id)
+        if trk.identity != "hostile":
+            w.set_identity(trk.id, "hostile", "ordered by higher command", authority=True)
+
+
 def spared(w: "World", trk) -> bool:
     """The track is one of the aircraft the commander let go."""
     from ..tracking import truth_of
@@ -229,7 +261,8 @@ def spare_groups(w: "World", gids: list, text: str = "") -> None:
             continue
         w.vars[f"spared_{gid}"] = w.t
         if g.state not in ("pending", "done"):
-            g.state, g.t_state = "egress", w.t
+            if g.role != "stray":                # a straggler goes where it was going anyway
+                g.state, g.t_state = "egress", w.t
             names.append(g.callsign or g.name)
     if not names:
         return
@@ -262,8 +295,12 @@ def ceasefire(w: "World", text: str = "") -> None:
         if fl.state not in ("landed", "lost") and fl.target:
             commands.run(w, "rtb", flight=fl.id)
     for g in b.groups.values():
-        if g.state not in ("pending", "done", "egress", "rtb") and not g.id.startswith("stray"):
+        if g.state not in ("pending", "done", "egress", "rtb") and g.role != "stray":
             g.state, g.t_state = "egress", w.t
+        if g.state not in ("pending", "done"):
+            for mid in g.members:                    # the jammers fall silent with the guns
+                if mid in w.aircraft:
+                    w.aircraft[mid].jamming = False
     event(w, "ceasefire", text or "FLASH — CEASEFIRE IN EFFECT. All units cease fire; defend only against "
           "weapons already in the air.", "", level=3)
 

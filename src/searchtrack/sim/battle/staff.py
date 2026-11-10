@@ -89,10 +89,14 @@ def step(w: "World") -> None:
             _recall(w)                            # in peacetime nobody shoots: escorts go wherever the stranger goes
         elif rules == "peace":
             _escorts(w)
+        elif rules == "ceasefire" and any(k.startswith("cleared_") for k in w.vars):
+            from .director import authorize_cleared
+            authorize_cleared(w)                  # new tracks on an aircraft we were ordered to shoot down
+            _commit(w, only_cleared=True)
     if rules == "war":
         _self_defense(w)
     if b.standing.get("sam", "FREE") != "HOLD" or rules == "ceasefire":
-        _sams(w, missiles_only=rules != "war")
+        _sams(w, missiles_only=rules != "war")       # (and whatever higher command has ordered shot down)
     _aew(w)
     if w.tick % 3 == 0:
         _intercepts(w)
@@ -374,7 +378,7 @@ def _hvaa_threats(w: "World") -> dict[str, float]:
     return out
 
 
-def _commit(w: "World") -> None:
+def _commit(w: "World", only_cleared: bool = False) -> None:
     b = w.battle
     pts = defended_points(w, aew=False)          # reach is measured from what we defend, not from the radar aircraft
     reach = REACH_KM.get(b.standing.get("posture", "balanced"), 600.0)
@@ -388,6 +392,10 @@ def _commit(w: "World") -> None:
             cls = "cruise"                   # subsonic and low: an interceptor with look-down radar can catch it
         if cls in ("missile", "debris") or spared(w, trk):
             continue
+        if only_cleared:
+            from .director import cleared
+            if not cleared(w, trk):
+                continue
         px, py = predicted(trk, w.t)
         d = min(math.hypot(px - x, py - y) for x, y in pts)
         if cls == "cruise" and d > 260.0 and trk.id not in b.priority:
@@ -589,7 +597,9 @@ def _sams(w: "World", missiles_only: bool = False) -> None:
         if tight and cls != "missile" and near_ship > 60.0:
             continue
         if missiles_only and cls != "missile":
-            continue                                 # ceasefire: only what is already coming at us
+            from .director import cleared
+            if not cleared(w, trk):
+                continue                             # ceasefire: only what is already coming at us
         live.append((trk, cls, px, py, near_ship))
     for site in w.sams.values():
         if site.side != w.own_side or site.status != "ok" or site.hold or w.t < site.t_ready:

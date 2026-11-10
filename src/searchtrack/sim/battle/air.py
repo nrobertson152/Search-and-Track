@@ -205,6 +205,9 @@ def group_step(w: "World", g: AirGroup, dt: float) -> None:
         free = _fighter(w, g, ms, lead)
     elif r == "recon":
         _recon(w, g, ms, lead, at)
+    elif r == "stray":
+        _stray(w, g, ms, lead, at)
+        return
     else:
         _orbit(w, g, ms, lead)
     _low_level(w, g, lead)
@@ -634,6 +637,38 @@ def _recon(w: "World", g: AirGroup, ms: list[Aircraft], lead: Aircraft, at) -> N
         _fly(lead, x, y, g.alt)
     else:
         g.state = "egress"
+
+
+def _stray(w: "World", g: AirGroup, ms: list[Aircraft], lead: Aircraft, at) -> None:
+    """A damaged straggler after the shooting has stopped: it limps along its route, low and slow, and at
+    the end of it either puts down in the sea (note "ditch") or crosses out of our airspace."""
+    slow = max(at.min_kmh / 3.6 * 1.4, 150.0)
+    if g.wp < len(g.route):
+        x, y, alt = g.route[g.wp]
+        if math.hypot(x - lead.x, y - lead.y) < 6.0:
+            g.wp += 1
+        _fly(lead, x, y, alt, "cruise", spd=slow)
+        return
+    if g.note == "ditch":
+        for a in ms:
+            a.state = "gone"
+        g.state, g.t_state = "done", w.t
+        w.vars[f"ditched_{g.id}"] = w.t
+        crew = {"Tu-22M3": 4, "Tu-16K": 6, "Tu-95RT": 10, "B-52G": 6, "F-111F": 2}.get(g.type_id, 2)
+        rescue = " The helicopters are on their way." if w.vars.get(f"spared_{g.id}") else ""
+        event(w, "ditched", f"{g.callsign} has ditched in the sea — {crew} men in the water.{rescue}", g.id, lead.x,
+              lead.y, g.side, 2)
+        return
+    if g.exit:
+        _fly(lead, g.exit[0], g.exit[1], g.alt, "cruise", spd=slow)
+        if math.hypot(g.exit[0] - lead.x, g.exit[1] - lead.y) < 8.0:
+            for a in ms:
+                a.state = "gone"
+            g.state, g.t_state = "done", w.t
+            w.vars[f"left_{g.id}"] = w.t
+            event(w, "left", f"{g.callsign} has left our airspace", g.id, lead.x, lead.y, g.side, 2)
+        return
+    g.state = "egress"
 
 
 def _orbit(w: "World", g: AirGroup, ms: list[Aircraft], lead: Aircraft) -> None:

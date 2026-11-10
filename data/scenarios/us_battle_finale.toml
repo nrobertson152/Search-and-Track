@@ -1,0 +1,100 @@
+base = "us_battle_bering_2"
+id = "us_battle_finale"
+title = "The Last Night"
+subtitle = "Bering Sea, 23 October 1987 — the ceasefire — hypothetical"
+summary = "Moscow and Washington have agreed: the guns fall silent at 0400Z. The Pacific Fleet's naval aviation has one hour left to sink the Carl Vinson and it is throwing everything it has. Survive the hour. Then keep your finger off the trigger."
+order = 9
+start = "1987-10-23T03:00:00"
+seed = 2310
+duration_min = 100
+photo = ["F-14A", "Tu-22M3"]
+photo_caption = "F-14A on the catapult of USS Carl Vinson (file photograph)"
+
+briefing = """
+TASK FORCE 77.4 — CARL VINSON BATTLE GROUP, BERING SEA. 23 OCTOBER 1987, 0300Z. THIS SCENARIO IS HYPOTHETICAL.
+
+SITUATION. Four days of war. At 0100Z the National Command Authority announced that the United States and the Soviet Union have agreed to a ceasefire on all fronts, effective 0400Z. Fleet intelligence expects the Pacific Fleet to use the last hour: the BACKFIREs it has left, the BADGERs, and the FRUNZE group, which is still at sea to the northwest with her Granits.
+
+YOUR ORDERS. Defend the battle group until 0400Z with everything you have. At 0400Z all units cease fire. After that, defend only against weapons already in the air. No aircraft is to be engaged after 0400Z without a direct order — and the order will come from you.
+
+YOUR FORCES. What is left of the air wing and the screen after three nights. The alpha strike is still on deck if you want it.
+
+THE LAST HOUR. Every pilot in the air wing knows the hour. So does every Soviet pilot. Some of them will want to finish what they started.
+"""
+
+assumed_oob = { groups = { backfire_a = { lost = 3 }, backfire_b = { lost = 3 }, backfire_c = { lost = 1 }, badger_g = { lost = 2 } }, squadrons = { vf51 = { lost = 3 }, vf111 = { lost = 2 } }, ships = { ffg46 = { state = "sunk", hp_frac = 0.0 }, cg52 = { state = "damaged", hp_frac = 0.6 } } }
+
+group_add = [
+  { id = "stray", name = "BACKFIRE straggler (568th MRAP)", callsign = "STRAGGLER", side = "red", role = "stray", type = "Tu-22M3", n = 1, weapons = {}, note = "ditch", entry = { x = -500.0, y = -455.0, alt_m = 3500.0 }, exit = { x = -740.0, y = -400.0 }, route = [{ x = -430.0, y = -480.0, alt_m = 3000.0 }, { x = -395.0, y = -495.0, alt_m = 1200.0 }, { x = -375.0, y = -502.0, alt_m = 200.0 }], trigger = "phase" },
+]
+
+objective_drop = ["carrier", "group", "archers", "granit", "hawkeye", "frunze", "deny"]
+objective_add = [
+  { id = "carrier", text = "Carl Vinson sees the ceasefire", kind = "ship_survives", params = { ship = "cvn70" }, points = 25 },
+  { id = "group", text = "Lose no more than one ship on the last night", kind = "ships_survive", params = { max = 1 }, points = 10 },
+  { id = "archers", text = "Destroy half the BACKFIREs before the ceasefire", kind = "kill_fraction", params = { groups = ["backfire_a", "backfire_b", "backfire_c"], frac = 0.5 }, points = 20 },
+  { id = "granit", text = "No Granit salvo", kind = "prevent_salvo", params = { ship = "frunze" }, points = 10 },
+  { id = "frunze", text = "Put a ship of the Frunze group out of action", kind = "sink", params = { ships = ["frunze", "chapayev", "boyevoy", "razitelny"], n = 1 }, points = 10 },
+  { id = "holdfire", text = "After 0400Z, not one shot at an aircraft", kind = "hold_fire", params = { after = "ceasefire" }, points = 20 },
+  { id = "hawkeye", text = "Keep the Hawkeye flying", kind = "protect_group", params = { group = "e2c" }, points = 5 },
+]
+
+[weather]
+k_factor = 1.333
+wind_from = 330.0
+wind_kmh = 65.0
+ceiling_m = 600.0
+visibility_km = 5.0
+night = true
+sea_state = 6.0
+
+[battle]
+reinforcement = []
+
+[[battle.phase]]
+id = "last"
+name = "PHASE I — THE LAST NIGHT"
+earliest_min = 0.0
+text = "Sixty minutes to the ceasefire. BEAR Ds again, one from the west, one down the Strait. The FRUNZE group is 350-450 km northwest. Alpha strike on deck."
+actions = [
+  { do = "launch", groups = ["bear1"], delay_s = 120.0 },
+  { do = "launch", groups = ["bear2"], delay_s = 240.0 },
+  { do = "say", kind = "story", after_s = 90.0, text = "CAG on the 1MC: Sixty minutes, gentlemen. Then we all go home. Let's make sure everybody does.", level = 2 },
+]
+
+[[battle.phase]]
+id = "granit"
+name = "PHASE II — GRANIT"
+earliest_min = 14.0
+latest_min = 22.0
+when = { type = "located" }
+text = "The FRUNZE group has turned toward us. Fleet intelligence: she has been ordered to fire before the hour if she can get a fix."
+actions = [{ do = "launch", groups = ["ew_south", "ew_north"], delay_s = 60.0 }]
+
+[[battle.phase]]
+id = "raid"
+name = "PHASE III — THE LAST RAID"
+earliest_min = 18.0
+latest_min = 25.0
+when = { type = "quiet", s = 120.0 }
+text = "Raid warning, two axes. Everything the 568th has left from the west, the Mongokhto squadron down the Strait, BADGERs behind. Their last chance before the ceasefire — and ours."
+actions = [
+  { do = "launch", groups = ["backfire_a", "escort_a"], delay_s = 180.0 },
+  { do = "launch", groups = ["backfire_c", "escort_c"], delay_s = 120.0 },
+  { do = "launch", groups = ["backfire_b"], delay_s = 300.0 },
+  { do = "launch", groups = ["badger_g"], delay_s = 420.0 },
+  { do = "decision", kind = "deck", title = "LAUNCH THE ALERT DECK?", text = "The last raid of the war. Bring every Tomcat on deck to five-minute alert and let the staff throw them at both axes?", options = ["LAUNCH THE DECK", "HOLD THE RESERVE"], default = "LAUNCH THE DECK", timeout_s = 50.0, effects = { "LAUNCH THE DECK" = [{ do = "ready", squadron = "vf51", move = { "15" = "5", "45" = "5" } }, { do = "ready", squadron = "vf111", move = { "15" = "5", "45" = "5" } }, { do = "standing", reserve = 0 }, { do = "surge", squadrons = ["vf51"], x = -620.0, y = -470.0, alt_m = 9000.0, max_flights = 2 }, { do = "surge", squadrons = ["vf111"], x = -450.0, y = -230.0, alt_m = 9000.0, max_flights = 2 }], "HOLD THE RESERVE" = [{ do = "ready", squadron = "vf51", move = { "15" = "5" } }, { do = "surge", squadrons = ["vf51"], x = -520.0, y = -420.0, alt_m = 9000.0, max_flights = 1 }] } },
+]
+
+[[battle.phase]]
+id = "ceasefire"
+name = "PHASE IV — 0400Z"
+earliest_min = 60.0
+text = "FLASH. FROM CINCPAC: CEASEFIRE IN EFFECT 0400Z. ALL UNITS CEASE FIRE. DEFEND ONLY AGAINST WEAPONS ALREADY IN FLIGHT. ACKNOWLEDGE."
+actions = [
+  { do = "ceasefire", text = "0400Z — CEASEFIRE. All units cease fire. Soviet aircraft are turning for home; missiles already in the air are still coming." },
+  { do = "weather", sea_state = 3.0, visibility_km = 15.0, ceiling_m = 1500.0 },
+  { do = "launch", groups = ["stray"], delay_s = 150.0 },
+  { do = "say", kind = "story", after_s = 200.0, text = "Hawkeye: single contact, low and slow, from the west, 100 miles. Burning on the infrared. Guard frequency, once, in English: 'Mayday... no fuel... four men.'", level = 3 },
+  { do = "decision", after_s = 230.0, kind = "mercy", title = "A BACKFIRE — AFTER THE CEASEFIRE", text = "Eleven minutes after the ceasefire a single BACKFIRE is coming straight at the battle group, low, slow, burning. The Hawkeye sees no missiles under its wings — at night, at this range, it cannot be sure. Last night a BACKFIRE that looked like this one fired at the Truxtun. The ceasefire says hold fire. The Tomcats on the barrier can have it in two minutes.", options = ["LET IT DITCH", "SHOOT IT DOWN"], default = "LET IT DITCH", timeout_s = 50.0, effects = { "LET IT DITCH" = [{ do = "spare", groups = ["stray"], text = "Hold fire. The BACKFIRE is allowed to come down. Helicopters from the Carl Vinson are standing by." }], "SHOOT IT DOWN" = [{ do = "standing", emcon = false }, { do = "engage", groups = ["stray"], text = "Weapons free on the BACKFIRE — ceasefire or not." }] } },
+]

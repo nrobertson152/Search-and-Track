@@ -51,8 +51,9 @@ def _flight_ok(world: "World", fl, track_id: str) -> bool:
     return lead.fuel > gci.rtb_fuel(world, lead) * 1.6
 
 
-def interceptor(world: "World", track_id: str) -> tuple[Optional[Pick], str]:
-    """The quickest way to put an interceptor on the track."""
+def interceptor(world: "World", track_id: str, keep_cap_km: float = 0.0) -> tuple[Optional[Pick], str]:
+    """The quickest way to put an interceptor on the track. With keep_cap_km, a fighter on a
+    combat air patrol is only pulled off its station for a target within that distance of it."""
     trk = world.tracks.get(track_id)
     if trk is None or trk.lost:
         return None, "no such track"
@@ -60,8 +61,12 @@ def interceptor(world: "World", track_id: str) -> tuple[Optional[Pick], str]:
         if fl.target == track_id and fl.state not in ("rtb", "landed", "lost"):
             return Pick("flight", fl.id, 0.0, f"{fl.callsign} is already on {track_id}"), "already assigned"
     best: Optional[Pick] = None
+    px, py = predicted(trk, world.t)
     for fl in world.flights.values():
         if not _flight_ok(world, fl, track_id):
+            continue
+        if keep_cap_km > 0 and fl.task == "cap" and fl.cap_x is not None and \
+                math.hypot(px - fl.cap_x, py - fl.cap_y) > keep_cap_km:
             continue
         lead = gci.lead_of(world, fl)
         t = _eta(world, lead.x, lead.y, lead.alt, fl.type_id, trk)

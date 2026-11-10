@@ -134,6 +134,9 @@ def deliver(world: "World") -> None:
         ingest(world, r)
 
 
+MAX_KMS = 1.6          # fastest target the tracker will follow (km/s): Mach 4+ missiles at altitude
+
+
 def predicted(trk: Track, t: float) -> tuple[float, float]:
     dt = t - trk.t_update
     return trk.x + trk.vx * dt, trk.y + trk.vy * dt
@@ -230,8 +233,8 @@ def update_track(world: "World", trk: Track, r: Report, manual: bool) -> None:
         trk.vx += dvx
         trk.vy += dvy
     spd = math.hypot(trk.vx, trk.vy)
-    if spd > 1.2:
-        trk.vx, trk.vy = trk.vx / spd * 1.2, trk.vy / spd * 1.2
+    if spd > MAX_KMS:
+        trk.vx, trk.vy = trk.vx / spd * MAX_KMS, trk.vy / spd * MAX_KMS
     if trk.lost:
         trk.lost = False
         world.log_event("track", f"Track {trk.id} reacquired", trk.id)
@@ -310,7 +313,7 @@ def auto_initiate(world: "World", plots: list[Report], tracks: dict, local: str 
                 continue
             last = chain[-1]
             dtq = last.t - q.t
-            if 3.0 < dtq < 45.0 and math.hypot(last.x - q.x, last.y - q.y) <= 1.25 * dtq + 3.5:
+            if 3.0 < dtq < 45.0 and math.hypot(last.x - q.x, last.y - q.y) <= MAX_KMS * dtq + 3.5:
                 chain.append(q)
                 if len(chain) >= min_hits:
                     break

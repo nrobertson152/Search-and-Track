@@ -362,6 +362,54 @@ def _quick(w: World, track: str, order: str, n: int = 2) -> Result:
     return False, f"unknown order {order}"
 
 
+# ------------------------------------------------------------------ battle command
+
+@handler("decide")
+def _decide(w: World, decision: int, option: str) -> Result:
+    from .battle import staff
+    return staff.decide(w, int(decision), option, "player")
+
+
+@handler("standing")
+def _standing(w: World, key: str, value) -> Result:
+    if not w.battle.active:
+        return False, "no battle in progress"
+    allowed = {"posture": ("aggressive", "balanced", "defensive"), "fighters": ("auto", "manual"),
+               "sam": ("FREE", "TIGHT", "HOLD"), "emcon": (True, False), "reserve": tuple(range(0, 13))}
+    if key not in allowed or value not in allowed[key]:
+        return False, f"standing order {key}: not {value}"
+    w.battle.standing[key] = value
+    from .battle.core import event
+    event(w, "standing", f"Standing order: {key.upper()} {str(value).upper()}", "", level=1)
+    return True, f"Standing order {key.upper()}: {str(value).upper()}"
+
+
+@handler("priority")
+def _priority(w: World, track: str, on: bool = True) -> Result:
+    if track not in w.tracks:
+        return False, "no such track"
+    pr = w.battle.priority
+    if on and track not in pr:
+        pr.append(track)
+    elif not on and track in pr:
+        pr.remove(track)
+    return True, f"{track}: {'PRIORITY TARGET — staff commits on it first' if on else 'priority cleared'}"
+
+
+@handler("reinforce")
+def _reinforce(w: World, id: str) -> Result:
+    from .battle.director import call_reinforcement
+    return call_reinforcement(w, id)
+
+
+@handler("spectator")
+def _spectator(w: World, on: bool) -> Result:
+    if not w.battle.active:
+        return False, "no battle in progress"
+    w.battle.spectator = bool(on)
+    return True, "Spectating: the staff commands both sides" if on else "You have the command"
+
+
 # ------------------------------------------------------------------ missiles
 
 @handler("sam_assign")

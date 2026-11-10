@@ -20,6 +20,8 @@ if TYPE_CHECKING:
 
 
 def sam_step(world: "World", site: SamSite, dt: float) -> None:
+    if site.side != world.own_side:
+        return                       # the other side's fire channels are run by the battle AI
     st = world.catalog.sams[site.type_id]
     t = world.t
     if site.reloading:
@@ -42,7 +44,7 @@ def sam_step(world: "World", site: SamSite, dt: float) -> None:
         _designate(world, site, trk)
         if t - site.t_state < st.acq_time_s:
             return
-        tgt = _acquire(world, site, st)
+        tgt = _acquire(world, site, st, math.hypot(trk.vx, trk.vy))
         if tgt is None:
             if t - site.t_state > st.acq_time_s + 90.0:
                 world.unit_report(site, "TARGET NOT FOUND IN ACQUISITION GATE", priority=1)
@@ -61,8 +63,10 @@ def sam_step(world: "World", site: SamSite, dt: float) -> None:
             world.unit_report(site, "LOST LOCK", priority=0)
         return
     if site.state == "locked":
-        if st.iff and tgt.transponder.on and not tgt.transponder.failed and tgt.transponder.system == "kremniy":
-            if tgt.transponder.codes.get("period", "") == world.hq.policy.get("iff_period", ""):
+        tr = tgt.transponder
+        own_sif = tr.system == "sif" and tr.codes.get("1", "") in world.hq.policy.get("mode1_valid", [])
+        if st.iff and tr.on and not tr.failed and (tr.system == "kremniy" or own_sif):
+            if own_sif or tr.codes.get("period", "") == world.hq.policy.get("iff_period", ""):
                 if world.t - site.t_state < 2.0:
                     world.unit_report(site, "LOCKED TARGET ANSWERS IFF — OWN AIRCRAFT. HOLDING.", priority=1)
                 site.lock, site.state, site.t_state = "", "search", t
@@ -130,9 +134,10 @@ def _los(site: SamSite, tgt) -> bool:
     return math.hypot(tgt.x - site.x, tgt.y - site.y) <= radar_horizon_km(site.elev + 15.0, tgt.alt)
 
 
-def _acquire(world: "World", site: SamSite, st):
+def _acquire(world: "World", site: SamSite, st, spd_kms: float = 0.0):
     best, bscore = None, 0.0
-    gate = 9.0
+    gate = 9.0 + 12.0 * spd_kms              # fast targets: the track lags, the gate opens
+    fast = spd_kms > 0.6
     for tgt in world.radar_targets():
         if tgt.kind == "ghost":
             continue
@@ -142,7 +147,7 @@ def _acquire(world: "World", site: SamSite, st):
         d = math.hypot(tgt.x - site.des_x, tgt.y - site.des_y)
         if d > gate:
             continue
-        if site.des_alt >= 0 and abs(tgt.alt - site.des_alt) > 4000.0:
+        if site.des_alt >= 0 and abs(tgt.alt - site.des_alt) > 4000.0 and not fast:
             continue
         at = world.catalog.aircraft.get(tgt.type_id)
         rcs = (at.rcs(90.0) if at else 3.0) * tgt.rcs_scale
@@ -205,7 +210,7 @@ def missile_step(world: "World", m: Missile, dt: float) -> None:
     age = world.t - m.t_launch
     if m.kind == "aam":
         wt = world.catalog.weapons[m.type_id]
-        speed = 750.0 if wt.kind != "rocket" and wt.kind != "nuclear_rocket" else 650.0
+        speed = wt.speed_mps or (750.0 if wt.kind != "rocket" and wt.kind != "nuclear_rocket" else 650.0)
         max_t = wt.max_km / (speed / 1000.0) * 1.3 + 3.0
         lethal, pk, turn = wt.lethal_m, wt.pk, 22.0
     else:
@@ -253,8 +258,13 @@ def missile_step(world: "World", m: Missile, dt: float) -> None:
     p1 = (m.x, m.y, m.alt / 1000.0)
     q1 = (tgt.x + vx * dt, tgt.y + vy * dt, (tgt.alt + tgt.vs * dt) / 1000.0)
     dmin = _closest(p0, p1, q0, q1) * 1000.0
+    closing = math.sqrt((m.vx - vx * 1000.0) ** 2 + (m.vy - vy * 1000.0) ** 2 + (m.vz - tgt.vs) ** 2)
+    lethal *= max(1.0, closing / 600.0)      # the proximity fuze's window grows with the closing speed
     if dmin < lethal * 3.0:
         p = pk * max(0.0, 1.0 - (dmin / (lethal * 3.0)) ** 2) * (1.3 if m.kind == "sam" else 1.0)
+        if world.battle.active:
+            from .battle.combat import evade_factor
+            p *= evade_factor(world, tgt, m)
         if world.rng.random() < min(0.95, p):
             m.state = "done"
             if tgt.kind == "debris":
@@ -262,7 +272,11 @@ def missile_step(world: "World", m: Missile, dt: float) -> None:
                 world.log_event("weapon", f"Missile {m.id} detonated on debris", m.owner)
             else:
                 m.result = "hit"
-                world.destroy(tgt.id, f"{m.type_id} from {m.owner}", shooter=m.owner)
+                if world.battle.active:
+                    from .battle.combat import hit
+                    hit(world, tgt, f"{m.type_id} from {m.owner}", m.owner)
+                else:
+                    world.destroy(tgt.id, f"{m.type_id} from {m.owner}", shooter=m.owner)
             return
     if age > 3.0 and _opening(p1, q1, m, vx, vy, tgt):
         m.state, m.result = "done", f"miss ({dmin:.0f} m)"

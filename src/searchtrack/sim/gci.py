@@ -191,7 +191,7 @@ def apply_pending(world: "World", fl: Flight) -> None:
 def nearest_base(world: "World", ac: Aircraft, prefer: str = "") -> tuple[str, float]:
     best, bd = prefer, math.inf
     for b in world.airbases.values():
-        if b.side != world.own_side or not b.runway_ok or b.kind != "military":
+        if b.side != world.own_side or not b.runway_ok or b.kind not in ("military", "carrier"):
             continue
         d = math.hypot(b.x - ac.x, b.y - ac.y)
         if b.id == prefer:
@@ -509,23 +509,43 @@ def _attack(world: "World", fl: Flight, lead: Aircraft, at, c: Aircraft, d3: flo
     ok, why = world.can_engage_truth(c.id, fl)
     if not ok:
         return
+    if world.battle.active and c.side == world.own_side and c.transponder.on and not c.transponder.failed \
+            and c.transponder.system != "none":
+        if world.vars.get(f"iffhold_{fl.id}_{c.id}", 0.0) <= 0.0:
+            world.vars[f"iffhold_{fl.id}_{c.id}"] = 1.0
+            world.radio(fl, "target squawks friendly, holding fire" if world.faction_def.id == "US" else
+                        "Target answers our IFF. Holding fire.", priority=1)
+        fl.contact = ""
+        return
     key = f"atk_{fl.id}"
     if world.t < world.vars.get(key, -1.0):
         return
+    if world.battle.active:
+        # track-while-scan: two missiles on their way to this one, take the next target
+        inflight = sum(1 for m in world.missiles.values()
+                       if m.owner == fl.id and m.state == "flying" and m.target == c.id)
+        if inflight >= 2:
+            nxt = _next_target(world, fl, lead, at, c)
+            if nxt is None:
+                return
+            fl.contact, c = nxt.id, nxt
+            d3 = math.hypot(math.hypot(c.x - lead.x, c.y - lead.y), (c.alt - lead.alt) / 1000.0)
     aspect = abs(angle_diff(bearing_deg(lead.x - c.x, lead.y - c.y), c.hdg))  # 180 = shooter behind
     for wid, cnt in sorted(lead.weapons.items()):
         if cnt <= 0:
             continue
         wt = world.catalog.weapons[wid]
+        if wt.kind == "asm":
+            continue
         if wt.special and not (world.hq.special_release and fl.special_release):
             continue
-        if not (wt.min_km <= d3 <= wt.max_km):
+        if not (wt.min_km <= d3 <= wt.max_km * (0.8 if wt.max_km > 30.0 else 1.0)):
             continue
         if wt.aspect == "rear" and aspect < 110.0:
             continue
         if wt.aspect == "front" and aspect > 70.0:
             continue
-        if abs(c.alt - lead.alt) > 2500.0:
+        if abs(c.alt - lead.alt) > 2500.0 + (wt.max_km * 70.0 if wt.max_km > 30.0 else 0.0):
             continue
         if wt.kind == "gun":
             # a gun burst is resolved at once: hit probability falls off with range
@@ -557,7 +577,12 @@ def _attack(world: "World", fl: Flight, lead: Aircraft, at, c: Aircraft, d3: flo
         fl.shots += shots
         world.stats.aam_shots += shots
         fl.state = "attack"
-        world.vars[key] = world.t + 25.0
+        world.vars[key] = world.t + (8.0 if world.battle.active and wt.max_km > 30.0 else 25.0)
+        if world.battle.active:
+            from .battle.core import counter, event
+            counter(world, f"aam_shots_{world.own_side}", shots)
+            event(world, "aam", f"{fl.callsign}: {shots}× {wt.name.split(' (')[0]} away at {c.callsign or 'a bandit'}",
+                  fl.id, lead.x, lead.y, world.own_side, 1)
         world.radio(fl, f"fox, {shots} {wt.name}" if world.faction_def.id == "US" else f"Launch, {shots} missiles.",
                     priority=1)
         world.log_event("weapon", f"{fl.callsign} fired {shots}x {wt.name} at {c.callsign or c.id}", fl.id)
@@ -565,6 +590,24 @@ def _attack(world: "World", fl: Flight, lead: Aircraft, at, c: Aircraft, d3: flo
     if not any(v > 0 for v in lead.weapons.values()) and world.t > world.vars.get(f"win_{fl.id}", -1):
         world.vars[f"win_{fl.id}"] = world.t + 1e9
         world.radio(fl, "winchester" if world.faction_def.id == "US" else "Weapons expended.")
+
+
+def _next_target(world: "World", fl: Flight, lead: Aircraft, at, cur: Aircraft) -> Optional[Aircraft]:
+    """Another enemy aircraft in the radar's field of view that is not yet being shot at."""
+    best, bd = None, math.inf
+    for c in world.radar_targets():
+        if c.id == cur.id or c.kind != "aircraft" or c.side in (world.own_side, "civil", "neutral") or c.aim:
+            continue
+        d = math.hypot(c.x - lead.x, c.y - lead.y)
+        off = abs(angle_diff(bearing_deg(c.x - lead.x, c.y - lead.y), lead.hdg))
+        if off > at.ai_radar_cone or d > _ai_range(world, at, lead, c):
+            continue
+        if sum(1 for m in world.missiles.values() if m.owner == fl.id and m.state == "flying" and m.target == c.id) >= 2:
+            continue
+        dd = math.hypot(c.x - cur.x, c.y - cur.y)
+        if dd < bd:
+            best, bd = c, dd
+    return best
 
 
 def _ram(world: "World", fl: Flight, lead: Aircraft, c: Aircraft, d3: float) -> None:

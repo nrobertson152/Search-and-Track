@@ -27,7 +27,8 @@ def list_scenarios() -> list[dict[str, Any]]:
                     "photo": list(d.get("photo", [])), "photo_caption": d.get("photo_caption", ""),
                     "difficulty": d.get("difficulty", 2), "era": d.get("era", d.get("start", "1960")[:3] + "0s"),
                     "duration_min": d.get("duration_min", 120), "n_objectives": len(d.get("objective", [])),
-                    "campaign": d.get("campaign", True), "night": d.get("weather", {}).get("night", False)})
+                    "campaign": d.get("campaign", True), "night": d.get("weather", {}).get("night", False),
+                    "battle": "battle" in d})
     out.sort(key=lambda s: (s["faction"], s["order"]))
     return out
 
@@ -153,6 +154,9 @@ def build_world_from(sc: dict[str, Any], seed: Optional[int] = None) -> World:
                                     ready_missiles=m.get("missiles", st.launchers), reloads=m.get("reloads", 6),
                                     salvo_size=m.get("salvo", st.salvo), auto=m.get("auto", False),
                                     link=m.get("link", ""), name_ru=s.get("name_ru", ""))
+    if "battle" in sc:
+        from . import battle
+        battle.setup(w, sc)
     # scripted flights and flight plans (plus generated civil traffic)
     flights = list(sc.get("flight", [])) + generate_traffic(w, th, sc.get("traffic", []))
     for f in flights:
@@ -482,6 +486,11 @@ def cond(w: World, c: dict) -> bool:
         return w.vars.get("ui_" + c["event"], 0.0) >= 1.0
     if t == "since":
         return c["var"] in w.vars and w.t - w.vars[c["var"]] >= c["s"]
+    if w.battle.active:
+        from .battle import director
+        r = director.cond(w, c)
+        if r is not None:
+            return r
     raise ValueError(f"unknown condition type {t}")
 
 
@@ -584,6 +593,10 @@ def act(w: World, a: dict) -> None:
             if key in a:
                 setattr(w.weather, key, a[key])
     else:
+        from .battle import director
+        if k in director.ACTIONS:
+            director.act(w, a)
+            return
         raise ValueError(f"unknown action {k}")
 
 
@@ -721,6 +734,12 @@ def evaluate_objectives(w: World, final: bool = False) -> None:
             if final:
                 ready = sum(sum(q.ready.values()) for q in w.squadrons.values())
                 _set(w, o, "done" if ready >= p.get("min", 2) else "failed")
+            continue
+        elif w.battle.active:
+            from .battle import director
+            r = director.objective(w, o, final)
+            if r:
+                _set(w, o, r)
             continue
         if final and o.status == "open":
             _set(w, o, "done" if k in END_PASS else "failed")

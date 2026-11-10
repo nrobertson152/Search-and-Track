@@ -1478,3 +1478,304 @@ ff_mil = 130.0
 transponder = "sif"
 provenance = "approximate"
 notes = "[H] RAF Vulcans took part in the SKY SHIELD exercises, attacking at very high altitude behind heavy ECM."
+
+# ---- battle missions (1980s naval air warfare)
+# surface_radar_km: range at which the aircraft's radar finds a large warship;
+# esm_km: passive detection of a radiating ship radar; missiles: seeker_km, profile, warhead_kg.
+
+[[aircraft]]
+id = "F-14A"
+name = "F-14A Tomcat"
+nation = "US"
+role = "interceptor"
+rcs_nose = 6.0
+rcs_beam = 18.0
+rcs_tail = 9.0
+cruise_kmh = 950.0
+cruise_alt_m = 10000.0
+max_mach = 2.34
+max_kmh_sl = 1470.0
+min_kmh = 230.0
+ceiling_m = 15200.0
+zoom_ceiling_m = 16500.0
+climb_mps = 150.0
+accel_mps2 = 8.0
+turn_dps = 9.0
+fuel_kg = 7350.0
+ff_cruise = 42.0
+ff_mil = 80.0
+ff_ab = 380.0
+ai_radar_km = 190.0
+ai_radar_cone = 65.0
+lookdown = true
+weapons = { "AIM-54A" = 4, "AIM-7F" = 2, "AIM-9L" = 2, "M61" = 6 }
+datalink = "sage"
+transponder = "sif"
+provenance = "approximate"
+notes = "[H] AWG-9 track-while-scan radar and AIM-54 Phoenix: the fleet's outer air battle against missile carriers."
+
+[[aircraft]]
+id = "E-2C"
+name = "E-2C Hawkeye"
+nation = "US"
+role = "awacs"
+rcs_nose = 15.0
+rcs_beam = 40.0
+rcs_tail = 20.0
+cruise_kmh = 500.0
+cruise_alt_m = 9000.0
+max_mach = 0.55
+max_kmh_sl = 600.0
+min_kmh = 200.0
+ceiling_m = 11300.0
+climb_mps = 13.0
+accel_mps2 = 1.5
+turn_dps = 3.0
+fuel_kg = 5600.0
+ff_cruise = 14.0
+ff_mil = 20.0
+surface_radar_km = 260.0
+esm_km = 450.0
+transponder = "sif"
+provenance = "approximate"
+notes = "[H] APS-125 UHF radar in a rotodome; the carrier's airborne early warning and fighter control."
+
+[[aircraft]]
+id = "A-6E"
+name = "A-6E Intruder"
+nation = "US"
+role = "strike"
+rcs_nose = 8.0
+rcs_beam = 22.0
+rcs_tail = 10.0
+cruise_kmh = 760.0
+cruise_alt_m = 8000.0
+max_mach = 0.85
+max_kmh_sl = 1030.0
+min_kmh = 220.0
+ceiling_m = 12900.0
+climb_mps = 40.0
+accel_mps2 = 3.0
+turn_dps = 5.0
+fuel_kg = 7230.0
+ff_cruise = 40.0
+ff_mil = 55.0
+surface_radar_km = 130.0
+weapons = { "AGM-84A" = 3 }
+transponder = "sif"
+provenance = "approximate"
+notes = "[H] All-weather attack aircraft; carried Harpoon anti-ship missiles in the 1980s."
+
+[[aircraft]]
+id = "EA-6B"
+name = "EA-6B Prowler"
+nation = "US"
+role = "ew"
+rcs_nose = 9.0
+rcs_beam = 24.0
+rcs_tail = 11.0
+cruise_kmh = 760.0
+cruise_alt_m = 8000.0
+max_mach = 0.84
+max_kmh_sl = 1000.0
+min_kmh = 220.0
+ceiling_m = 12500.0
+climb_mps = 35.0
+accel_mps2 = 3.0
+turn_dps = 5.0
+fuel_kg = 7000.0
+ff_cruise = 42.0
+ff_mil = 58.0
+jammer = "ECM-ALQ-99"
+transponder = "sif"
+provenance = "approximate"
+notes = "[H] ALQ-99 tactical jamming pods: escorts strikes and blinds search radars."
+
+[[aircraft]]
+id = "Tu-22M3"
+name = "Tu-22M3 (BACKFIRE C)"
+name_ru = "Ту-22М3"
+nation = "USSR"
+role = "strike"
+rcs_nose = 9.0
+rcs_beam = 35.0
+rcs_tail = 14.0
+cruise_kmh = 900.0
+cruise_alt_m = 11000.0
+max_mach = 1.88
+max_kmh_sl = 1050.0
+min_kmh = 300.0
+ceiling_m = 13300.0
+climb_mps = 30.0
+accel_mps2 = 4.0
+turn_dps = 3.0
+fuel_kg = 50000.0
+ff_cruise = 140.0
+ff_mil = 200.0
+ff_ab = 850.0
+surface_radar_km = 220.0
+esm_km = 400.0
+weapons = { "Kh-22" = 2 }
+transponder = "kremniy"
+provenance = "approximate"
+notes = "[H] Naval missile regiments planned to saturate carrier groups with Kh-22 salvoes from 300 km."
+
+[[aircraft]]
+id = "Tu-16K"
+name = "Tu-16K-26 (BADGER G)"
+name_ru = "Ту-16К-26"
+nation = "USSR"
+role = "strike"
+rcs_nose = 25.0
+rcs_beam = 70.0
+rcs_tail = 35.0
+cruise_kmh = 850.0
+cruise_alt_m = 10000.0
+max_mach = 0.85
+max_kmh_sl = 900.0
+min_kmh = 300.0
+ceiling_m = 12800.0
+climb_mps = 15.0
+accel_mps2 = 1.2
+turn_dps = 2.0
+fuel_kg = 34000.0
+ff_cruise = 90.0
+ff_mil = 120.0
+surface_radar_km = 170.0
+weapons = { "KSR-5" = 2 }
+transponder = "kremniy"
+provenance = "approximate"
+
+[[aircraft]]
+id = "Tu-16P"
+name = "Tu-16P (BADGER J) jammer"
+name_ru = "Ту-16П"
+nation = "USSR"
+role = "ew"
+rcs_nose = 25.0
+rcs_beam = 70.0
+rcs_tail = 35.0
+cruise_kmh = 820.0
+cruise_alt_m = 9000.0
+max_mach = 0.85
+max_kmh_sl = 900.0
+min_kmh = 300.0
+ceiling_m = 12800.0
+climb_mps = 15.0
+accel_mps2 = 1.2
+turn_dps = 2.0
+fuel_kg = 34000.0
+ff_cruise = 90.0
+ff_mil = 120.0
+jammer = "ECM-SPS"
+transponder = "kremniy"
+provenance = "approximate"
+
+[[aircraft]]
+id = "Tu-95RT"
+name = "Tu-95RTs (BEAR D)"
+name_ru = "Ту-95РЦ"
+nation = "USSR"
+role = "recon"
+rcs_nose = 50.0
+rcs_beam = 150.0
+rcs_tail = 60.0
+cruise_kmh = 750.0
+cruise_alt_m = 10000.0
+max_mach = 0.78
+max_kmh_sl = 850.0
+min_kmh = 300.0
+ceiling_m = 12000.0
+climb_mps = 10.0
+accel_mps2 = 1.0
+turn_dps = 2.0
+fuel_kg = 80000.0
+ff_cruise = 120.0
+ff_mil = 150.0
+surface_radar_km = 230.0
+esm_km = 450.0
+transponder = "kremniy"
+provenance = "approximate"
+notes = "[H] Uspekh targeting radar: found carrier groups for the missile regiments and relayed their positions."
+
+[[aircraft]]
+id = "AS-4"
+name = "Kh-22 (AS-4 KITCHEN) anti-ship missile"
+name_ru = "Х-22"
+nation = "USSR"
+role = "missile"
+rcs_nose = 0.6
+rcs_beam = 2.0
+rcs_tail = 1.0
+cruise_kmh = 3600.0
+cruise_alt_m = 22000.0
+max_mach = 4.0
+max_kmh_sl = 1800.0
+min_kmh = 900.0
+ceiling_m = 27000.0
+climb_mps = 400.0
+accel_mps2 = 40.0
+turn_dps = 6.0
+fuel_kg = 6000.0
+ff_cruise = 500.0
+ff_mil = 600.0
+seeker_km = 70.0
+profile = "high_dive"
+warhead_kg = 1000.0
+transponder = "none"
+provenance = "approximate"
+notes = "[H] Mach 3+ at 22 km, steep dive onto the target; active radar seeker locks the largest return."
+
+[[aircraft]]
+id = "AS-6"
+name = "KSR-5 (AS-6 KINGFISH) anti-ship missile"
+name_ru = "КСР-5"
+nation = "USSR"
+role = "missile"
+rcs_nose = 0.5
+rcs_beam = 1.5
+rcs_tail = 0.8
+cruise_kmh = 3000.0
+cruise_alt_m = 18000.0
+max_mach = 3.2
+max_kmh_sl = 1500.0
+min_kmh = 800.0
+ceiling_m = 22000.0
+climb_mps = 350.0
+accel_mps2 = 35.0
+turn_dps = 6.0
+fuel_kg = 4000.0
+ff_cruise = 450.0
+ff_mil = 550.0
+seeker_km = 50.0
+profile = "high_dive"
+warhead_kg = 700.0
+transponder = "none"
+provenance = "approximate"
+
+[[aircraft]]
+id = "AGM-84A"
+name = "AGM-84A Harpoon anti-ship missile"
+nation = "US"
+role = "missile"
+rcs_nose = 0.1
+rcs_beam = 0.3
+rcs_tail = 0.15
+cruise_kmh = 860.0
+cruise_alt_m = 15.0
+max_mach = 0.75
+max_kmh_sl = 880.0
+min_kmh = 600.0
+ceiling_m = 10000.0
+climb_mps = 40.0
+accel_mps2 = 10.0
+turn_dps = 8.0
+fuel_kg = 400.0
+ff_cruise = 30.0
+ff_mil = 32.0
+seeker_km = 40.0
+profile = "sea_skim"
+warhead_kg = 220.0
+transponder = "none"
+provenance = "approximate"
+notes = "[H] Turbojet sea-skimmer; pops up to search with its active radar seeker in the target area."

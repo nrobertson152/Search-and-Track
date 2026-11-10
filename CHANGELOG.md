@@ -29,6 +29,11 @@ The whole game: two services, thirty years, sixteen watches, a career, a manual.
 - A black-and-white newsreel title screen, an operations file of index cards and dossiers, typed briefings on the duty desk, a stamped after-action report with a truth replay.
 - Map labels no longer pile onto each other: crowded names move or step aside for tracks.
 
+### Packaging
+- Linux AppImage: a single x86_64 file carrying its own Python 3.12, pygame-ce and numpy, for glibc 2.17 and newer. `tools/build_appimage.sh` builds it from pinned, checksummed downloads and smoke-tests it headless.
+- The AppImage workflow builds it on every pull request and push to `main`, and attaches it to a draft release when a version tag is pushed.
+- An application icon (a radar scope), also used for the game window.
+
 ### Fixes
 - Request buttons on the Comms console work (command kind is positional-only).
 - Pulse-Doppler losses are reported as the notch, not as clutter.

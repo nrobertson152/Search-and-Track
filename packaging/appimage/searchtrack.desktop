@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=Search and Track
+GenericName=Air Defense Command Simulator
+Comment=Cold War air-defense command simulator: NORAD/SAGE and PVO Strany, 1956–1987
+Exec=searchtrack
+Icon=searchtrack
+Terminal=false
+Categories=Game;Simulation;
+Keywords=radar;cold war;air defense;SAGE;NORAD;PVO;simulator;
+StartupWMClass=searchtrack

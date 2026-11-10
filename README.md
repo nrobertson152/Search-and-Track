@@ -35,6 +35,19 @@ Two services share one simulation and play nothing alike:
 
 ## Install and run
 
+### Linux: the AppImage
+
+One file with everything inside: its own Python, pygame-ce, numpy and the game. Download `SearchAndTrack-<version>-x86_64.AppImage` from [Releases](https://github.com/nrobertson152/Search-and-Track/releases), or the latest build from the artifacts of the newest [AppImage workflow run](https://github.com/nrobertson152/Search-and-Track/actions/workflows/appimage.yml), then:
+
+```sh
+chmod +x SearchAndTrack-*-x86_64.AppImage
+./SearchAndTrack-*-x86_64.AppImage
+```
+
+It runs on x86_64 Linux distributions from about 2014 onward (glibc 2.17 or newer). On a system without FUSE, add `--appimage-extract-and-run`.
+
+### From source
+
 Developed and tested on Linux, with Python 3.10 or newer (tested on 3.10 and 3.13). Its only dependencies are pygame-ce and numpy (plus tomli on Python 3.10), so it should run on Windows and macOS too.
 
 ```sh
@@ -74,6 +87,7 @@ Everything the simulation knows is plain text in `data/`:
 python -m pip install -e ".[dev]"
 python -m pytest                       # headless: SDL dummy drivers
 python -m searchtrack --screenshot out.png --scenario us_northern_vigil --seconds 1800
+tools/build_appimage.sh                # dist/SearchAndTrack-<version>-x86_64.AppImage
 ```
 
 The simulation (`src/searchtrack/sim`) is deterministic, runs on a fixed 1-second tick, and knows nothing about the screen; the interface (`src/searchtrack/ui`) is an immediate-mode GUI on pygame-ce. A model student plays every training lesson in the tests, and the interface tests drive the real screens by clicking their buttons. See [AGENTS.md](AGENTS.md) for how the project is run, [docs/architecture](docs/architecture/technical-architecture.md) for the design, and [CHANGELOG.md](CHANGELOG.md) for what changed.

@@ -43,6 +43,7 @@ class App:
         self.gui = Gui(self.screen, US, self.audio)
         self.gui.lang_mode = self.settings.get("labels", "ru+en")
         self.scenes: list = []
+        self.campaign = None          # faction whose career the current watch belongs to
         self.running = True
         self.clock = pygame.time.Clock()
         self.clock_t = 0.0
@@ -78,8 +79,18 @@ class App:
         self.audio.play("buzz")
 
     def start_debrief(self, world) -> None:
+        from .campaign import record_result
         from .scenes import DebriefScene
-        self.replace_all(DebriefScene(self, world))
+        on_done = (lambda f=world.faction: self.back_to_campaign(f)) if self.campaign else None
+        d = DebriefScene(self, world, on_done=on_done)
+        if not world.scenario_id.startswith("alert_"):
+            record_result(self, world, d.rep)
+        self.replace_all(d)
+
+    def back_to_campaign(self, faction: str) -> None:
+        from .campaign import CampaignScene
+        self.to_title()
+        self.push(CampaignScene(self, faction))
 
     def to_title(self) -> None:
         self.scenes = self.scenes[:1]
@@ -181,6 +192,13 @@ def screenshot(path: str, sid: str | None, seconds: float, console: int, mode: s
         app.start_briefing(sid)
         app.scene.t = 100.0
         app.frame([])
+    elif scene in ("campaign", "alert", "operations"):
+        from .campaign import AlertDutyScene, CampaignScene
+        from .scenes import OperationsScene
+        f = faction or "US"
+        app.push({"campaign": CampaignScene, "alert": AlertDutyScene}.get(scene, lambda a, fa: OperationsScene(a, fa))(app, f))
+        for _ in range(2):
+            app.frame([])
     else:
         world = scenario.build_world(sid)
         while world.t < seconds and not world.ended:

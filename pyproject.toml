@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "searchtrack"
-version = "0.1.0"
+version = "1.0.0"
 description = "Search and Track: a Cold War air-defense command simulator"
 readme = "README.md"
 license = { text = "GPL-3.0-or-later" }
@@ -26,4 +26,4 @@ where = ["src"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-pythonpath = ["src"]
+pythonpath = ["src", "."]

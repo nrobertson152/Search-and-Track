@@ -253,10 +253,10 @@ def evaluate(world: "World", site: RadarSite, rt: RadarType, tgt: Aircraft, *,
         thr = snr_for_pd(0.5, pfa)
         if jn > 3.0 and jn >= bd.cnr_db and bd.snr_db > thr:
             bd.limit = "jamming"
-        elif bd.cnr_db > 3.0 and bd.snr_db > thr:
-            bd.limit = "clutter"
         elif rt.pulse_doppler and bd.mti_db < -8.0:
             bd.limit = "notch"
+        elif bd.cnr_db > 3.0 and bd.snr_db > thr:
+            bd.limit = "clutter"
         elif mti_active and bd.mti_db < -8.0:
             bd.limit = "notch" if abs(bd.v_radial) < blind_speed(rt) * 0.5 else "blind"
         elif bd.sinr_db < thr - 1.0:

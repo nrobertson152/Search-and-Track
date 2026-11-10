@@ -55,7 +55,8 @@ RU: dict[str, str] = {
     "SOUND": "ЗВУК", "END SHIFT → DEBRIEF": "СДАТЬ СМЕНУ", "QUIT TO TITLE": "ВЫХОД", "SETTINGS": "НАСТРОЙКИ",
     "TAKE THE WATCH >>": "ЗАСТУПИТЬ НА ДЕЖУРСТВО", "BACK": "НАЗАД", "SUMMARY": "ИТОГИ",
     "DETECTION & ID": "ОБНАРУЖЕНИЕ", "TIMELINE": "ХРОНОЛОГИЯ", "BACK TO TITLE": "В НАЧАЛО",
-    "SAVE REPORT": "СОХРАНИТЬ", "CONTINUE": "ДАЛЕЕ", "NEXT": "ДАЛЕЕ", "AUTO-SLOW ON ALERTS": "ЗАМЕДЛЕНИЕ",
+    "SAVE REPORT": "СОХРАНИТЬ", "BRIEFING >>": "ИНСТРУКТАЖ >>", "NEW SEED": "НОВАЯ СМЕНА", "QUIET": "СПОКОЙНО",
+    "ROUTINE": "ОБЫЧНО", "BUSY": "НАПРЯЖЁННО", "CONTINUE": "ДАЛЕЕ", "NEXT": "ДАЛЕЕ", "AUTO-SLOW ON ALERTS": "ЗАМЕДЛЕНИЕ",
     "ON": "ВКЛ", "OFF": "ВЫКЛ",
     # ---- panel nameplates
     "SURVEILLANCE & IDENTIFICATION": "ЦЕЛИ", "COVERAGE ANALYSIS": "АНАЛИЗ РЛ ПОЛЯ",

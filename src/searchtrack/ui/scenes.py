@@ -172,6 +172,8 @@ class TitleScene(Scene):
 
     def _choose(self, key: str) -> None:
         app = self.app
+        from .campaign import AlertDutyScene, CampaignScene
+        app.campaign = None
         if key == "SCENARIOS":
             app.push(OperationsScene(app, self.faction, "scenario"))
         elif key == "TRAINING":
@@ -1258,18 +1260,3 @@ class DebriefScene(Scene):
                 gui.label((r.x, y), ln, size, col, kind)
             y += lh
         gui.screen.set_clip(None)
-
-
-# ====================================================================== (filled in below)
-class CampaignScene(Scene):  # pragma: no cover - replaced by the campaign module
-    def __init__(self, app, faction):
-        super().__init__(app)
-        app.pop() if False else None
-        self.inner = OperationsScene(app, faction, "scenario")
-
-    def draw(self, screen):
-        self.app.scenes[-1] = self.inner
-
-
-class AlertDutyScene(CampaignScene):  # pragma: no cover
-    pass

@@ -1,0 +1,169 @@
+# Warship classes for battle missions. Ships are not radar targets of the air picture:
+# surface contacts are found by the battle's sensor model (radar horizon, ESM).
+# radars: shipboard radars feed the owning side's air picture like any other radar site.
+# sams: one entry per fire channel (illuminator / guidance radar); missiles per channel.
+# hp: damage the hull absorbs; a 1000 kg warhead does about 90.
+# provenance: historical | approximate | fictional.
+
+[[ship]]
+id = "CVN-Nimitz"
+name = "Nimitz-class aircraft carrier"
+nation = "US"
+kind = "carrier"
+nato_name = "CVN"
+rcs_m2 = 60000.0
+max_kn = 31.0
+cruise_kn = 18.0
+hp = 600.0
+radars = [{ type = "AN/SPS-49", mast_m = 40.0 }, { type = "AN/SPS-48E", mast_m = 45.0 }]
+sams = [{ type = "SEA-SPARROW", missiles = 8 }, { type = "SEA-SPARROW", missiles = 8 }]
+ciws = 3
+chaff = 8
+esm_km = 400.0
+provenance = "approximate"
+notes = "[H] 90-aircraft air wing; NATO Sea Sparrow and Phalanx for self-defence. [A] Hull: about five heavy missile hits put her out of action, seven sink her; Soviet planners counted on needing many hits on a carrier."
+
+[[ship]]
+id = "CG-Ticonderoga"
+name = "Ticonderoga-class Aegis cruiser"
+nation = "US"
+kind = "cruiser"
+nato_name = "CG"
+rcs_m2 = 12000.0
+max_kn = 32.0
+cruise_kn = 18.0
+hp = 110.0
+radars = [{ type = "AN/SPY-1A", mast_m = 32.0 }]
+sams = [{ type = "SM-2MR", missiles = 16 }, { type = "SM-2MR", missiles = 16 }, { type = "SM-2MR", missiles = 16 },
+        { type = "SM-2MR", missiles = 16 }, { type = "SM-2MR", missiles = 16 }, { type = "SM-2MR", missiles = 18 }]
+ciws = 2
+chaff = 8
+esm_km = 450.0
+provenance = "approximate"
+notes = "[H] SPY-1 phased array and four SPG-62 illuminators time-shared among many missiles in flight."
+
+[[ship]]
+id = "CGN-Truxtun"
+name = "Truxtun nuclear cruiser"
+nation = "US"
+kind = "cruiser"
+nato_name = "CGN"
+rcs_m2 = 10000.0
+max_kn = 30.0
+cruise_kn = 18.0
+hp = 95.0
+radars = [{ type = "AN/SPS-48E", mast_m = 35.0 }, { type = "AN/SPS-49", mast_m = 30.0 }]
+sams = [{ type = "SM-2ER", missiles = 20 }, { type = "SM-2ER", missiles = 20 }, { type = "SM-2ER", missiles = 20 }]
+ciws = 2
+chaff = 6
+esm_km = 400.0
+provenance = "approximate"
+notes = "[H] Terrier/SM-2ER with two SPG-55 fire-control radars."
+
+[[ship]]
+id = "DDG-Kidd"
+name = "Kidd-class guided-missile destroyer"
+nation = "US"
+kind = "destroyer"
+nato_name = "DDG"
+rcs_m2 = 8000.0
+max_kn = 33.0
+cruise_kn = 18.0
+hp = 80.0
+radars = [{ type = "AN/SPS-48E", mast_m = 30.0 }]
+sams = [{ type = "SM-2MR", missiles = 18 }, { type = "SM-2MR", missiles = 18 }, { type = "SM-2MR", missiles = 16 }]
+ciws = 2
+chaff = 6
+esm_km = 400.0
+provenance = "approximate"
+
+[[ship]]
+id = "FFG-Perry"
+name = "Oliver Hazard Perry-class frigate"
+nation = "US"
+kind = "frigate"
+nato_name = "FFG"
+rcs_m2 = 4000.0
+max_kn = 29.0
+cruise_kn = 18.0
+hp = 50.0
+radars = [{ type = "AN/SPS-49", mast_m = 25.0 }]
+sams = [{ type = "SM-1MR", missiles = 36 }]
+ciws = 1
+chaff = 4
+esm_km = 350.0
+provenance = "approximate"
+
+[[ship]]
+id = "Kirov"
+name = "Kirov-class nuclear battlecruiser"
+name_ru = "ТАРКР пр. 1144"
+nation = "USSR"
+kind = "cruiser"
+nato_name = "KIROV"
+rcs_m2 = 30000.0
+max_kn = 31.0
+cruise_kn = 16.0
+hp = 170.0
+radars = [{ type = "MR-800", mast_m = 45.0 }, { type = "MR-710", mast_m = 40.0 }]
+sams = [{ type = "SA-N-6", missiles = 32 }, { type = "SA-N-6", missiles = 32 }, { type = "SA-N-6", missiles = 32 },
+        { type = "SA-N-4", missiles = 20 }, { type = "SA-N-4", missiles = 20 }]
+ciws = 8
+chaff = 10
+esm_km = 450.0
+provenance = "approximate"
+notes = "[H] Fort (S-300F) vertical launchers; the Pacific Fleet received Frunze in 1985."
+
+[[ship]]
+id = "Kresta-II"
+name = "Kresta II-class missile cruiser"
+name_ru = "БПК пр. 1134А"
+nation = "USSR"
+kind = "cruiser"
+nato_name = "KRESTA II"
+rcs_m2 = 9000.0
+max_kn = 34.0
+cruise_kn = 16.0
+hp = 80.0
+radars = [{ type = "MR-600", mast_m = 35.0 }]
+sams = [{ type = "SA-N-3", missiles = 22 }, { type = "SA-N-3", missiles = 22 }]
+ciws = 4
+chaff = 6
+esm_km = 400.0
+provenance = "approximate"
+
+[[ship]]
+id = "Sovremenny"
+name = "Sovremenny-class destroyer"
+name_ru = "ЭМ пр. 956"
+nation = "USSR"
+kind = "destroyer"
+nato_name = "SOVREMENNY"
+rcs_m2 = 8000.0
+max_kn = 32.0
+cruise_kn = 16.0
+hp = 75.0
+radars = [{ type = "MR-710", mast_m = 32.0 }]
+sams = [{ type = "SA-N-7", missiles = 24 }, { type = "SA-N-7", missiles = 24 }]
+ciws = 4
+chaff = 6
+esm_km = 400.0
+provenance = "approximate"
+
+[[ship]]
+id = "Krivak"
+name = "Krivak-class frigate"
+name_ru = "СКР пр. 1135"
+nation = "USSR"
+kind = "frigate"
+nato_name = "KRIVAK"
+rcs_m2 = 3500.0
+max_kn = 32.0
+cruise_kn = 16.0
+hp = 45.0
+radars = [{ type = "MR-310", mast_m = 25.0 }]
+sams = [{ type = "SA-N-4", missiles = 20 }]
+ciws = 0
+chaff = 4
+esm_km = 300.0
+provenance = "approximate"

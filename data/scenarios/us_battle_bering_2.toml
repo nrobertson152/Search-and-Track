@@ -1,0 +1,138 @@
+base = "us_battle_bering"
+id = "us_battle_bering_2"
+title = "The Second Raid"
+subtitle = "Bering Sea, the second night — hypothetical"
+summary = "The regiment comes back — what is left of it — with a fresh squadron of BACKFIREs coming down through the Bering Strait. And somewhere to the northwest the FRUNZE is closing with twenty Granit missiles. Strike her before she finds you, or hide from her."
+order = 7
+start = "1987-10-20T22:30:00"
+seed = 1988
+photo = ["A-6E", "Tu-22M3"]
+photo_caption = "A-6E Intruder on the catapult (file photograph)"
+
+briefing = """
+TASK FORCE 77.4 — CARL VINSON BATTLE GROUP, BERING SEA. THE SECOND NIGHT. THIS SCENARIO IS HYPOTHETICAL.
+
+SITUATION. Last night's raid has been beaten off at a price. The 568th Regiment is coming again with the BACKFIREs it has left, and a fresh squadron from Mongokhto has been tracked moving north: it can come down through the Bering Strait, from a direction our barrier patrols do not face. The surface action group led by the battlecruiser FRUNZE is closing from the northwest. She carries twenty P-700 Granit missiles — Mach 2.5, 550 km. If she gets a fix on us, she will fire them all.
+
+YOUR FORCES. What is left of the air wing and the group after last night. Six Intruders with Harpoons are ready for an alpha strike, with a Prowler and four Tomcats.
+
+COMMAND. Two problems at once. The Granits can be stopped before they are fired: hit the FRUNZE first, or keep her blind — kill the BEAR Ds and keep the ships silent. The BACKFIREs must be met further out than last night, and on two axes.
+
+NIGHT. Visual identification is out of the question; the staff identifies by the battle rules.
+"""
+
+# ---- played on its own, the second night starts from these losses (in the war, from the real ones)
+assumed_oob = { groups = { backfire_a = { lost = 2 }, backfire_b = { lost = 3 }, badger_g = { lost = 1 }, bear1 = { lost = 0 } }, squadrons = { vf51 = { lost = 2 } }, ships = { ffg46 = { state = "sunk", hp_frac = 0.0 } } }
+
+# ---- changes to the first night's forces and objectives
+group_patch = [
+  { id = "bear2", entry = { x = -560.0, y = 380.0, alt_m = 10500.0 }, exit = { x = -560.0, y = 380.0 }, route = [{ x = -540.0, y = -60.0 }] },
+  { id = "alpha", launch_km = 100.0 },
+  { id = "prowler", station = { x = -540.0, y = -300.0, alt_m = 8000.0, r_km = 18.0 } },
+]
+
+group_add = [
+  { id = "backfire_c", name = "BACKFIRE squadron C (Mongokhto)", callsign = "BACKFIRE C", side = "red", role = "strike", type = "Tu-22M3", n = 4, entry = { x = -540.0, y = 0.0, alt_m = 11000.0 }, exit = { x = -560.0, y = 200.0 }, route = [{ x = -470.0, y = -160.0 }], target = "tf77", launch_km = 270.0, abort_frac = 0.5, trigger = "phase" },
+  { id = "escort_c", name = "FOXHOUND escort (Strait)", callsign = "FOXHOUND 4", side = "red", role = "escort", type = "MiG-31", n = 2, entry = { x = -550.0, y = 10.0, alt_m = 12000.0 }, exit = { x = -560.0, y = 200.0 }, target = "backfire_c", commit_km = 110.0, trigger = "phase" },
+]
+
+objective_drop = ["archers", "frunze", "deny", "group", "carrier", "hawkeye"]
+
+objective_add = [
+  { id = "carrier", text = "Carl Vinson survives", kind = "ship_survives", params = { ship = "cvn70" }, points = 30 },
+  { id = "group", text = "Lose no more than one ship tonight", kind = "ships_survive", params = { max = 1 }, points = 10 },
+  { id = "archers", text = "Destroy half the BACKFIREs", kind = "kill_fraction", params = { groups = ["backfire_a", "backfire_b", "backfire_c"], frac = 0.5 }, points = 20 },
+  { id = "granit", text = "No Granit salvo: sink, cripple or blind the FRUNZE", kind = "prevent_salvo", params = { ship = "frunze" }, points = 15 },
+  { id = "hawkeye", text = "Keep the Hawkeye flying", kind = "protect_group", params = { group = "e2c" }, points = 10 },
+  { id = "frunze", text = "Put a ship of the Frunze group out of action", kind = "sink", params = { ships = ["frunze", "chapayev", "boyevoy", "razitelny"], n = 1 }, points = 10 },
+  { id = "deny", text = "Deny the shadowers a fix for fifteen minutes", kind = "deny_location", params = { before_min = 15.0 }, points = 5 },
+]
+
+[weather]
+k_factor = 1.333
+wind_from = 320.0
+wind_kmh = 60.0
+ceiling_m = 900.0
+visibility_km = 6.0
+night = true
+sea_state = 6.0
+
+[[battle.cap]]
+id = "west"
+name = "BARCAP WEST"
+x = -640.0
+y = -440.0
+alt_m = 8500.0
+squadron = "vf51"
+n = 2
+airborne = true
+fuel_frac = 0.85
+
+[[battle.cap]]
+id = "north"
+name = "BARCAP NORTH (Strait)"
+x = -440.0
+y = -220.0
+alt_m = 8500.0
+squadron = "vf111"
+n = 2
+airborne = true
+fuel_frac = 0.8
+
+[[battle.reinforcement]]
+id = "eagles"
+name = "F-15 Eagles to Galena"
+text = "Elmendorf can push four more F-15As forward to Galena: they can cover the Strait axis. They will be on alert there in about ten minutes."
+actions = [{ do = "ready", squadron = "galena_det", add = { "15" = 4 } }]
+
+[[battle.phase]]
+id = "night"
+name = "PHASE I — NIGHT WATCH"
+earliest_min = 0.0
+text = "BEAR D shadowers expected again, one from the west and one down the Strait. The FRUNZE group is somewhere 350-450 km to the northwest. Alpha strike on deck."
+actions = [{ do = "launch", groups = ["bear1"], delay_s = 150.0 }, { do = "launch", groups = ["bear2"], delay_s = 300.0 }]
+
+[[battle.phase]]
+id = "granit"
+name = "PHASE II — GRANIT"
+earliest_min = 20.0
+latest_min = 30.0
+when = { type = "located" }
+text = "Intelligence: the FRUNZE group has turned toward us and is working up to a missile attack. If she holds a fix on the battle group, expect a Granit salvo within minutes."
+actions = [{ do = "reinforcement", id = "eagles" }, { do = "launch", groups = ["ew_south", "ew_north"], delay_s = 120.0 }]
+
+[[battle.phase]]
+id = "raid"
+name = "PHASE III — THE SECOND RAID"
+earliest_min = 26.0
+latest_min = 34.0
+when = { type = "quiet", s = 150.0 }
+text = "Raid warning, two axes: the regiment's survivors from the west, a fresh BACKFIRE squadron coming down the Bering Strait from the north. BADGER jammers with them."
+actions = [
+  { do = "launch", groups = ["backfire_a", "escort_a"], delay_s = 240.0 },
+  { do = "launch", groups = ["backfire_c", "escort_c"], delay_s = 150.0 },
+  { do = "launch", groups = ["backfire_b"], delay_s = 360.0 },
+  { do = "launch", groups = ["badger_g"], delay_s = 480.0 },
+  { do = "decision", kind = "deck", title = "LAUNCH THE ALERT DECK?", text = "Two axes this time. Bring every Tomcat on deck to five-minute alert and let the staff throw them at both raids — or hold a reserve?", options = ["LAUNCH THE DECK", "HOLD THE RESERVE"], default = "LAUNCH THE DECK", timeout_s = 50.0, effects = { "LAUNCH THE DECK" = [{ do = "ready", squadron = "vf51", move = { "15" = "5", "45" = "5" } }, { do = "ready", squadron = "vf111", move = { "15" = "5", "45" = "5" } }, { do = "standing", reserve = 0 }, { do = "surge", squadrons = ["vf51"], x = -620.0, y = -470.0, alt_m = 9000.0, max_flights = 2 }, { do = "surge", squadrons = ["vf111"], x = -450.0, y = -230.0, alt_m = 9000.0, max_flights = 2 }], "HOLD THE RESERVE" = [{ do = "ready", squadron = "vf51", move = { "15" = "5" } }, { do = "surge", squadrons = ["vf51"], x = -520.0, y = -420.0, alt_m = 9000.0, max_flights = 1 }] } },
+]
+
+[[trigger]]
+id = "granit_fire"
+once = false
+cond = { type = "phase", at_least = 1 }
+actions = [{ do = "ship_salvo", ship = "frunze", weapon = "P-700", n = 10, target = "tf77", fix_age_s = 240.0 }]
+
+[[trigger]]
+id = "alpha_q"
+cond = { type = "time", t = 45.0 }
+actions = [{ do = "decision", kind = "strike", title = "STRIKE THE FRUNZE NOW?", text = "Six A-6Es with Harpoons, a Prowler and four Tomcats can go for the FRUNZE group now, before she can fire — 400 km northwest, into the S-300F. If they get through, there will be no Granits. If you hold them, they are here for whatever comes next, and the FRUNZE must be kept blind instead.", options = ["LAUNCH NOW", "HOLD"], default = "LAUNCH NOW", timeout_s = 60.0, effects = { "LAUNCH NOW" = [{ do = "launch", groups = ["alpha", "prowler", "alpha_escort"] }], "HOLD" = [] } }]
+
+[[trigger]]
+id = "emcon_q"
+cond = { type = "time", t = 20.0 }
+actions = [{ do = "decision", kind = "emcon", title = "EMISSION CONTROL?", text = "The FRUNZE needs a fix to fire, and the BEAR Ds listen before they look. Go silent — the Hawkeye and DARKSTAR keep the picture — or keep the ships' radars on?", options = ["GO SILENT", "KEEP RADIATING"], default = "GO SILENT", timeout_s = 60.0, effects = { "GO SILENT" = [{ do = "standing", emcon = true }], "KEEP RADIATING" = [] } }]
+
+[[trigger]]
+id = "emcon_off"
+cond = { type = "all", of = [{ type = "any", of = [{ type = "phase", at_least = 2 }, { type = "vampires", n = 2 }] }, { type = "standing", key = "emcon", is = [true] }] }
+actions = [{ do = "decision", kind = "emcon", title = "MISSILES INBOUND — RADARS ON?", text = "Missiles or bombers are coming. Aegis and the Terriers cannot shoot what their radars do not see. Light off every radar in the group now?", options = ["LIGHT THEM OFF", "STAY SILENT"], default = "LIGHT THEM OFF", timeout_s = 30.0, effects = { "LIGHT THEM OFF" = [{ do = "standing", emcon = false }], "STAY SILENT" = [] } }]

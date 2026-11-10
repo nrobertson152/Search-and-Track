@@ -1,0 +1,520 @@
+id = "northern_war_su"
+title = "The Defence of the North"
+faction = "USSR"
+order = 1
+summary = "Four days in October 1987, from the last hours of peace on the Kola border to the ceasefire over Moscow. The radars the Americans destroy stay destroyed; the regiments fight each night with what is left; the pilots who survive fly again, and the best of them lead. Five battles. One war. What you do with an enemy who can no longer fight is up to you."
+repair = 0.12
+
+[cast]
+general = "Lieutenant General Anatoly Krylov"
+deputy = "Colonel Viktor Orlov"
+officer = "Major Irina Volkova"
+soldier = "Private Ruslan Karimov"
+mother = "Gulnara Karimova"
+
+# ====================================================================== the opening
+
+[[intro]]
+kind = "teletype"
+title = "COMBAT ORDER"
+from = "Central Command Post, Air Defense Forces"
+to = "Commander, 10th Separate Air Defense Army"
+date = "19 October 1987"
+text = """
+TOP SECRET.
+
+1. BY DECISION OF THE GENERAL STAFF THE AIR DEFENSE FORCES ARE BROUGHT TO FULL COMBAT READINESS FROM 0900 MOSCOW TIME.
+2. NATO NAVAL FORCES IN THE NORWEGIAN SEA. CARRIER GROUP ASSESSED MOVING NORTH-EAST. STRATEGIC RECONNAISSANCE ACTIVITY ON THE NORTHERN BORDER SHARPLY INCREASED.
+3. FOREIGN AIRCRAFT APPROACHING THE STATE BORDER ARE TO BE MET AND ESCORTED. WEAPONS ARE NOT TO BE USED WITHOUT A SEPARATE ORDER OF THE CENTRAL COMMAND POST.
+4. REPORT READINESS BY 1200.
+"""
+
+[[intro]]
+kind = "letter"
+title = "A LETTER HOME"
+from = "{soldier}, radar company Teriberka"
+to = "{mother}, Samarkand"
+date = "18 October 1987"
+text = """
+Dear Mama,
+
+I am well. It is already snowing here and the sea is the colour of the inside of a pot. The sergeant says it is like this until May.
+
+We have been on the scopes day and night this week. I am not allowed to say why, but you will read in Pravda soon enough, or you will not, and either way do not worry.
+
+The officers are kind to me since I fixed the generator. Major Volkova says I have good eyes for the screen. I tell her it is from looking for melons in the market.
+
+Kiss Dilnoza for me. Tell her I will bring her a real fur hat.
+
+Your son, Ruslan
+"""
+
+# ====================================================================== 1 — the prologue
+
+
+[[mission]]
+scenario = "su_battle_prologue"
+title = "Prologue — Shadows on the Border"
+
+[[mission.page]]
+at = "after"
+when = "hard"
+kind = "diary"
+title = "FROM THE DUTY LOG"
+from = "{officer}"
+date = "{date}"
+text = """
+18:31. The order came while our pair from Monchegorsk was flying beside the RC-135, as they have done a hundred times. The pilot asked for confirmation twice. Then he fired.
+
+Thirty-two men on that aircraft, the intelligence officer says. I have spent four years listening to that aircraft's radio. I knew some of its crew's voices.
+
+It was war. They were reporting every radar we have to the people who will try to destroy them tonight. The decision was correct.
+
+Tonight we shot down {kills}. We lost {lost}. The war is one hour old.
+"""
+
+[[mission.page]]
+at = "after"
+when = "mercy"
+kind = "diary"
+title = "FROM THE DUTY LOG"
+from = "{officer}"
+date = "{date}"
+text = """
+18:31. The order to let the spy planes go came from our command post. Our pilots peeled away from the RC-135 and the Orion and turned for the Tomahawks that were already coming.
+
+The army commander has asked twice who decided it. He has not yet said what he thinks.
+
+Everything those aircraft heard tonight is now in Mildenhall and Norfolk. Tomorrow night we will find out what it costs us. But thirty-two men went home, and I find that I am not sorry.
+
+Tonight we shot down {kills}. We lost {lost}. The war is one hour old.
+"""
+
+[[mission]]
+scenario = "su_battle_kola"
+title = "Night 1 — The Northern Bastion"
+replacements = { monch_iap = 2, kilp_iap = 1 }
+
+[[mission.page]]
+at = "before"
+kind = "report"
+title = "INTELLIGENCE ASSESSMENT — THE FIRST NIGHT"
+from = "Intelligence Department, 10th Air Defense Army"
+date = "19 October 1987, 2100"
+text = """
+The American carrier group in the Norwegian Sea has turned north-east. Its task is the Northern Fleet: the bases on the Kola Inlet, the airfields that cover them, and the KIROV group in the Barents Sea.
+
+Expect: reconnaissance first, Tomahawks from the sea low over Finnmark, then the carrier strike with Hornets carrying anti-radiation missiles, and B-52s with Harpoons against the KIROV.
+
+The regiments' best so far: {ace}, {ace_kills} victories. Comrade General Krylov expects every regiment to be at its posts by 2200.
+"""
+
+# ====================================================================== 2 — the first night
+
+[[mission.page]]
+at = "after"
+when = "victory"
+kind = "newspaper"
+title = "THE NORTHERN SENTRY"
+from = "Newspaper of the 10th Air Defense Army"
+date = "{date}"
+text = """
+THE AGGRESSOR'S BLOW REPULSED
+
+In a fierce night battle over the Kola Peninsula the soldiers of the Air Defense Forces met the American carrier's attack and broke it. The enemy lost {kills} aircraft.
+
+{best} distinguished himself, destroying {best_kills} enemy aircraft in a single night. "We only did what the Motherland asked of us," he told our correspondent.
+
+The KIROV group remains at sea. The bastion holds.
+"""
+
+[[mission.page]]
+at = "after"
+when = "draw"
+kind = "newspaper"
+title = "THE NORTHERN SENTRY"
+from = "Newspaper of the 10th Air Defense Army"
+date = "{date}"
+text = """
+A HARD NIGHT ON THE KOLA
+
+The American attack fell on the airfields and radar companies of the peninsula last night. Our pilots and missile crews destroyed {kills} enemy aircraft; the enemy's missiles reached some of their targets.
+
+{best} destroyed {best_kills}. The repair teams are working without rest.
+"""
+
+[[mission.page]]
+at = "after"
+when = "defeat"
+kind = "teletype"
+title = "COMBAT REPORT"
+from = "Commander, 10th Air Defense Army"
+to = "Central Command Post"
+date = "{date}"
+text = """
+1. ENEMY CARRIER AIR STRIKE AND CRUISE MISSILES 2210-2340. RADAR FIELD AND AIRFIELDS HEAVILY DAMAGED.
+2. OWN LOSSES: {lost} AIRCRAFT. SHIPS OF THE KIROV GROUP HIT: {ships_lost}.
+3. ENEMY LOSSES: {kills} AIRCRAFT.
+4. REQUEST REINFORCEMENT BY TWO REGIMENTS. KRYLOV.
+"""
+
+[[mission]]
+scenario = "su_battle_kola_2"
+title = "Night 2 — The Second Strike"
+replacements = { monch_iap = 2, kilp_iap = 2 }
+
+[[mission.page]]
+at = "before"
+when = "down_rlr_teriberka"
+kind = "letter"
+title = "A LETTER HOME"
+from = "{soldier}"
+to = "{mother}"
+date = "20 October 1987"
+text = """
+Dear Mama,
+
+I am alive. I want you to read that first.
+
+The company was hit. The big antenna is gone, and the engineer says it will not turn again in this war. Sergeant Pavlenko was wounded in the leg and taken to Severomorsk. He was joking when they carried him away, so I think he will be all right.
+
+Major Volkova came in the morning and shook every soldier's hand. She did not say anything, she just shook our hands. Then she sent half of us to the missile battalion at Severomorsk, because they have screens and not enough people to sit at them.
+
+They say the Americans will come again tonight. I will be at my new screen.
+
+Ruslan
+"""
+
+[[mission.page]]
+at = "before"
+when = "no_down_rlr_teriberka"
+kind = "letter"
+title = "A LETTER HOME"
+from = "{soldier}"
+to = "{mother}"
+date = "20 October 1987"
+text = """
+Dear Mama,
+
+I am alive. I want you to read that first.
+
+Last night the American missiles came in over the sea towards the company. We watched them on our own screen, very low and very fast, until the battalion at Severomorsk shot them down. Sergeant Pavlenko said we were lucky, and then he went outside and was sick.
+
+Major Volkova came to the company in the morning and shook every soldier's hand. She did not say anything, she just shook our hands.
+
+They say the Americans will come again tonight. I will be at my screen.
+
+Ruslan
+"""
+
+[[mission.page]]
+at = "before"
+kind = "report"
+title = "INTELLIGENCE ASSESSMENT — THE SECOND NIGHT"
+from = "Intelligence Department"
+date = "20 October 1987, 2200"
+text = """
+The enemy will come back for the radars he missed. Expect air-launched cruise missiles from B-52s far out over the Barents — from the north, where the coastal companies look out to sea — and Tomcats sent deep to hunt the A-50.
+
+What the Americans destroyed last night stays destroyed. The regiments fight with what is left. The army's best pilot is {ace}, with {ace_kills} victories.
+"""
+
+# ====================================================================== 3 — the second night
+
+[[mission.page]]
+at = "after"
+when = "not_defeat"
+kind = "newspaper"
+title = "THE NORTHERN SENTRY"
+from = "Newspaper of the 10th Air Defense Army"
+date = "{date}"
+text = """
+THE SECOND BLOW BEATEN OFF
+
+For the second night the enemy threw his cruise missiles and his carrier aircraft at the Kola, and for the second night the shield held. {kills} enemy aircraft destroyed; we lost {lost}.
+
+The army's leading fighter pilot is now {ace} of {ace_unit}, with {ace_kills} victories. His comrades call him simply "the Hunter".
+"""
+
+[[mission.page]]
+at = "after"
+when = "defeat"
+kind = "diary"
+title = "FROM THE DUTY LOG"
+from = "{officer}"
+date = "{date}"
+text = """
+The cruise missiles came from the north, where we were weakest, as the intelligence department said they would. Knowing it did not help.
+
+We lost {lost} aircraft tonight. The radar field has holes in it I could drive a tank through. General Krylov did not sleep. Nobody did.
+
+We are still here. I am not sure what else to write.
+"""
+
+[[mission]]
+scenario = "su_battle_baltic"
+title = "Night 3 — The Baltic Front"
+replacements = { tapa_iap = 2, gromovo_iap = 2 }
+
+[[mission.page]]
+at = "before"
+kind = "teletype"
+title = "COMBAT ORDER"
+from = "Central Command Post"
+to = "Commander, 6th Separate Air Defense Army"
+date = "21 October 1987, 1600"
+text = """
+TOP SECRET.
+
+1. NATO TACTICAL AVIATION IN ENGLAND AND THE FRG PREPARING STRIKE ACROSS THE BALTIC AGAINST THE AIR DEFENSE OF THE LENINGRAD DIRECTION. EXPECTED TONIGHT.
+2. THE DUTY COMMANDER OF THE NORTHERN COMMAND POST, HAVING CONDUCTED TWO NIGHTS OF COMBAT ON THE KOLA, IS TRANSFERRED BY SPECIAL FLIGHT TO THE 6TH ARMY COMMAND POST TO DIRECT THE BATTLE.
+3. THE KOLA DIRECTION PASSES TO COLONEL ORLOV.
+"""
+
+[[mission.page]]
+at = "before"
+kind = "letter"
+title = "A NOTE FROM THE KOLA"
+from = "{deputy}"
+date = "21 October 1987"
+text = """
+Comrade Colonel,
+
+They tell me you are going to Leningrad. Take care of yourself there. The Americans who fly from England are not the Navy: they fly low, they fly fast, and they bring Wild Weasels who listen for every missile radar before it is switched on.
+
+The Su-27 regiment at Gromovo is the best we have. Use it against the Eagles, not against the bombers — the old MiG-23s can catch an F-111 if they are told where to look.
+
+We will hold the Kola until you come back.
+
+Orlov
+"""
+
+# ====================================================================== 4 — the Baltic
+
+[[mission.page]]
+at = "after"
+when = "not_defeat"
+kind = "teletype"
+title = "COMBAT REPORT"
+from = "Commander, 6th Air Defense Army"
+to = "Central Command Post"
+date = "{date}"
+text = """
+1. ENEMY STRIKE ACROSS THE BALTIC 2330-0040. F-111, F-4G, EF-111, F-15, CRUISE MISSILES FROM B-52.
+2. ENEMY AIRCRAFT DESTROYED: {kills}. OWN LOSSES: {lost}.
+3. THE AIR DEFENSE OF LENINGRAD REMAINS INTACT.
+"""
+
+[[mission.page]]
+at = "after"
+when = "defeat"
+kind = "teletype"
+title = "COMBAT REPORT"
+from = "Commander, 6th Air Defense Army"
+to = "Central Command Post"
+date = "{date}"
+text = """
+1. ENEMY STRIKE ACROSS THE BALTIC 2330-0040. MISSILE BATTALIONS AND AIRFIELDS OF THE LENINGRAD DIRECTION HEAVILY DAMAGED.
+2. ENEMY AIRCRAFT DESTROYED: {kills}. OWN LOSSES: {lost}.
+3. THE DIRECTION TO MOSCOW IS WEAKENED. REQUEST THE MOSCOW DISTRICT'S MiG-31s.
+"""
+
+[[mission]]
+scenario = "su_battle_moscow"
+title = "The Capital"
+
+[[mission.page]]
+at = "before"
+kind = "teletype"
+title = "TO ALL COMMANDS"
+from = "Ministry of Defence of the USSR"
+to = "All fronts, fleets and armies"
+date = "23 October 1987, 0400"
+text = """
+1. THE GOVERNMENTS OF THE USSR AND THE USA HAVE AGREED ON A CEASEFIRE ON ALL FRONTS FROM 0700 MOSCOW TIME 23 OCTOBER 1987.
+2. FROM 0700 ALL COMBAT ACTIONS ARE TO CEASE. ONLY WEAPONS ALREADY IN FLIGHT MAY BE ENGAGED.
+3. ANY USE OF WEAPONS AFTER 0700 WITHOUT THE ORDER OF THE CENTRAL COMMAND POST WILL BE INVESTIGATED.
+"""
+
+[[mission.page]]
+at = "before"
+kind = "letter"
+title = "A LETTER HOME"
+from = "{soldier}"
+to = "{mother}"
+date = "23 October 1987"
+text = """
+Dear Mama,
+
+The radio says it will stop at seven o'clock tomorrow morning. Everyone in the company is pretending not to count the hours.
+
+Major Volkova left for Leningrad with the colonel. Before she left she gave me her pen, because mine is broken, and said to write to you every day until I am home. So I am writing.
+
+One more night, they say. The Americans will try once more before it ends. I will be at my screen.
+
+Your son, Ruslan
+"""
+
+# ====================================================================== 5 — the capital
+
+[[mission.page]]
+at = "after"
+when = "mercy"
+kind = "report"
+title = "REPORT"
+from = "Commander, 656th Fighter Regiment, Tapa"
+date = "{date}"
+text = """
+07:21. A pair of MiG-23s escorted the damaged American B-52 westward across Estonia at a distance of two kilometres until it crossed the state border over the Baltic Sea at 07:38. The bomber was flying on three engines with a fuel leak from the right wing.
+
+At the border its crew rocked the wings. My leader, Captain Belov, rocked his in reply. I request that he not be punished for this.
+
+The bomber's crew of six was picked up by a Swedish ship after ditching near Gotland at 08:02. All alive.
+"""
+
+[[mission.page]]
+at = "after"
+when = "hard"
+kind = "diary"
+title = "FROM THE DUTY LOG"
+from = "{officer}"
+date = "{date}"
+text = """
+07:14. Permission was given, and the B-52 came down over Estonia, fourteen minutes after the ceasefire. Six men.
+
+The Americans have already protested. The Central Command Post has asked for the name of the officer who gave the order. The colonel gave them his own.
+
+It had fired at us an hour earlier. I tell myself that.
+"""
+
+# ====================================================================== the end
+
+[[epilogue]]
+when = "war_victory"
+kind = "newspaper"
+title = "THE NORTHERN SENTRY"
+from = "Newspaper of the 10th Air Defense Army"
+date = "24 October 1987"
+text = """
+THE SKY OVER THE MOTHERLAND IS CLEAR
+
+For four days the soldiers of the Air Defense Forces met the blows of the aggressor from the Barents Sea to the approaches of the capital, and not one enemy aircraft reached Moscow.
+
+The best fighter pilot of the war is {ace} of {ace_unit}, with {ace_kills} victories. He is to be presented for the title of Hero of the Soviet Union.
+"""
+
+[[epilogue]]
+when = "war_draw"
+kind = "newspaper"
+title = "THE NORTHERN SENTRY"
+from = "Newspaper of the 10th Air Defense Army"
+date = "24 October 1987"
+text = """
+THE CEASEFIRE
+
+The guns are silent. The shield held, at a price that the newspaper is not yet permitted to print. The radar companies are already rebuilding what was destroyed.
+
+The best fighter pilot of the war: {ace}, {ace_kills} victories.
+"""
+
+[[epilogue]]
+when = "war_defeat"
+kind = "diary"
+title = "FROM THE DUTY LOG"
+from = "{officer}"
+date = "24 October 1987"
+text = """
+The ceasefire found the north-west with half its radars destroyed and its regiments at a third of their strength. If it had lasted two more days, I do not know what would have stood between the Americans and Moscow.
+
+General Krylov has been called to Moscow. Nobody knows whether to congratulate him or to say goodbye.
+"""
+
+[[epilogue]]
+when = "mercy_4"
+kind = "letter"
+title = "A LETTER, YEARS LATER"
+from = "Via the Embassy of the United States"
+to = "The Command of the Air Defense of the Russian Federation"
+date = "May 1992"
+text = """
+Gentlemen,
+
+On the morning of 23 October 1987 I was the aircraft commander of a B-52G with three engines and not enough fuel, over Estonia, fourteen minutes after the ceasefire. Two of your MiG-23s came up beside us. I told my crew to get ready to eject.
+
+They escorted us to the coast instead, two kilometres off our wing, and at the border the leader rocked his wings. I rocked mine. We went into the sea off Gotland an hour later and all six of us came home.
+
+I would like to find that pilot. I would like to shake his hand. I have been waiting five years to be allowed to ask.
+"""
+
+[[epilogue]]
+when = "mercy_0"
+kind = "letter"
+title = "A LETTER, YEARS LATER"
+from = "Via the Embassy of the United States"
+to = "The Command of the Air Defense of the Russian Federation"
+date = "May 1992"
+text = """
+Gentlemen,
+
+In October 1987 I flew a reconnaissance aircraft off your northern coast, and on the night the war began your fighters were close enough to us that I could see the pilot's face. Then they turned away.
+
+I have never known who gave that order. I am writing to say that thirty-two men are alive because of it, and that I named my son after the pilot, whose number I wrote on my kneeboard that night: 602.
+
+If he is still flying, tell him an old Rivet Joint crew would be honoured to buy him a drink.
+"""
+
+[[epilogue]]
+when = ["hard_0", "hard_4"]
+kind = "diary"
+title = "AFTERWORD"
+from = "{officer}"
+date = "1997"
+text = """
+Ten years. The archives are open now, and young historians come to ask me about the war that almost happened and lasted four days.
+
+They ask about the RC-135, about the B-52 after seven o'clock. I tell them what the order was. I do not tell them that I knew some of those voices.
+
+We did our duty. I believed it then. I mostly believe it still.
+"""
+
+[[epilogue]]
+when = ["hard_0", "no_hard_4"]
+kind = "diary"
+title = "AFTERWORD"
+from = "{officer}"
+date = "1997"
+text = """
+Ten years. The archives are open now, and young historians come to ask me about the war that almost happened and lasted four days.
+
+They ask about the RC-135 over the Barents Sea at 18:31. I tell them what the order was, and that it was correct. I do not tell them that I had listened to that aircraft's radio for four years, and that I knew some of the voices.
+"""
+
+[[epilogue]]
+when = ["hard_4", "no_hard_0"]
+kind = "diary"
+title = "AFTERWORD"
+from = "{officer}"
+date = "1997"
+text = """
+Ten years. The archives are open now, and young historians come to ask me about the war that almost happened and lasted four days.
+
+They ask about the B-52 over Estonia, fourteen minutes after seven o'clock. The colonel gave them his own name. He was relieved of command in December and died in 1994. I have never told anyone who really gave the permission.
+"""
+
+[[epilogue]]
+kind = "letter"
+title = "THE LAST LETTER"
+from = "{soldier}"
+to = "{mother}"
+date = "24 October 1987"
+text = """
+Dear Mama,
+
+It is over. At seven o'clock the sergeant came into the cabin and switched off the alarm and sat down on the floor, and we all sat with him, and nobody said anything for a long time.
+
+This morning the sun came up over the sea for the first time in a week. It is still cold. I do not mind.
+
+I am coming home in the spring. Tell Dilnoza I have not forgotten the hat.
+
+Your son, Ruslan
+"""

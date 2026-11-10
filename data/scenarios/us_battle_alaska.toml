@@ -1,0 +1,490 @@
+id = "us_battle_alaska"
+title = "Bears over the Pole"
+subtitle = "Alaskan NORAD Region, 21 October 1987 — hypothetical"
+summary = "The Soviets have stopped throwing regiments at the carrier and gone for the bases that keep her alive. BEAR H carriers with AS-15 cruise missiles come at Alaska from the west — and then from over the top. Kill the carriers before they launch, hunt the missiles in the dark, keep Galena open."
+faction = "US"
+kind = "battle"
+photo = ["Tu-95MS", "F-15A"]
+photo_caption = "BEAR H — carrier of the AS-15 cruise missile (file photograph)"
+era = "1980s"
+difficulty = 4
+order = 7
+theater = "alaska"
+start = "1987-10-21T06:40:00"
+tz = "Z"
+duration_min = 100
+seed = 2110
+reliability = 6.0
+
+briefing = """
+ALASKAN NORAD REGION — ROCC ELMENDORF. 21 OCTOBER 1987, 0640Z. THIS SCENARIO IS HYPOTHETICAL.
+
+SITUATION. Two nights of raids on the Carl Vinson have cost the Soviet naval aviation half its BACKFIREs. Tonight they are going after what keeps the battle group alive: the Eagles at Galena and King Salmon, the radar line on the west coast, the tankers and the AWACS that fly from Elmendorf. Long-Range Aviation has BEAR H regiments at Anadyr and Ukrainka. Each BEAR H carries six AS-15 cruise missiles.
+
+YOUR FORCES. F-15A Eagles of the 21st Tactical Fighter Wing: detachments on alert at Galena and King Salmon, the 43rd and 54th squadrons at Elmendorf. Two E-3A Sentries airborne — DARKSTAR over Norton Sound, SENTRY 2 over Bristol Bay. The Seek Igloo radars from Tin City to King Salmon. Combat air patrols NOME, BETHEL and KOTZEBUE are up.
+
+COMMAND. You command the Region's air battle tonight. The ROCC staff identifies, commits the Eagles by your standing orders and keeps the patrols manned. You set the posture, single out priority targets (right-click a track), answer the decisions and take over wherever you see better.
+
+THE MISSILES. Once they are off the rails, the AS-15s go down to the hills at 60 metres and 750 km/h. The coastal radars see them a few dozen kilometres out. Only the Sentries and the Eagles' look-down radars see them early. Better to kill the carrier than chase its six missiles.
+"""
+
+[[intel]]
+title = "BEAR H"
+text = "Tu-95MS: turboprop, 750 km/h at 10-11 km, six Kh-55 on a rotary launcher. Big radar return, slow, no escort this far from home. It has to come within about 400 km of its target to launch on the terrain maps the missiles carry: that is where the Eagles must meet it."
+
+[[intel]]
+title = "AS-15 KENT"
+text = "Kh-55 cruise missile: radar cross-section about a tenth of a square metre, 750 km/h, 50-100 m above the terrain. It flies straight to its target from the launch point. An Eagle above its track sees it on the look-down radar at 40-60 km."
+
+[[intel]]
+title = "FOXHOUNDs"
+text = "MiG-31s from Anadyr have the reach to sweep the Bering Strait. They are not escorting the bombers: they are hunting the Sentries. Without DARKSTAR the Eagles are blind to low flyers in the north."
+
+[[intel]]
+title = "Jamming"
+text = "A BADGER J with noise jammers is expected over St. Lawrence Island against the coastal radars. It is a legitimate target, and a soft one."
+
+[automation]
+surveil = true
+ident = true
+height = true
+tech = false
+
+[weather]
+k_factor = 1.333
+wind_from = 20.0
+wind_kmh = 60.0
+ceiling_m = 900.0
+visibility_km = 8.0
+night = true
+sea_state = 5.0
+
+[hq]
+name = "ALASKAN NORAD REGION"
+readiness = "DEFCON 1"
+alert = "RED"
+weapons_status = "FREE"
+[hq.policy]
+response_s = [20.0, 50.0]
+declare_hostile = "grant"
+engage = "grant"
+ram = "deny"
+special_release = "deny"
+weapons_status_FREE = "grant"
+mode1_valid = ["24", "61"]
+track_start = 701
+
+[[link]]
+id = "D_west"
+name = "West coast radar microwave"
+kind = "data"
+delay_s = 2.0
+[[link]]
+id = "D_interior"
+name = "Interior radar microwave"
+kind = "data"
+delay_s = 2.0
+[[link]]
+id = "D_awacs"
+name = "AWACS JTIDS link"
+kind = "data"
+delay_s = 1.0
+[[link]]
+id = "V_galena"
+name = "Galena FOL line"
+kind = "voice"
+delay_s = 5.0
+[[link]]
+id = "V_kingsalmon"
+name = "King Salmon FOL line"
+kind = "voice"
+delay_s = 5.0
+[[link]]
+id = "V_elmendorf"
+name = "Elmendorf line"
+kind = "voice"
+delay_s = 4.0
+
+[[radar]]
+site = "tin_city"
+type = "AN/FPS-117"
+link = "D_west"
+[[radar]]
+site = "cape_romanzof"
+type = "AN/FPS-117"
+link = "D_west"
+[[radar]]
+site = "cape_newenham"
+type = "AN/FPS-117"
+link = "D_west"
+[[radar]]
+site = "kotzebue_r"
+type = "AN/FPS-117"
+link = "D_west"
+[[radar]]
+site = "campion"
+type = "AN/FPS-117"
+link = "D_interior"
+[[radar]]
+site = "tatalina"
+type = "AN/FPS-117"
+link = "D_interior"
+[[radar]]
+site = "indian_mtn"
+type = "AN/FPS-117"
+link = "D_interior"
+[[radar]]
+site = "sparrevohn"
+type = "AN/FPS-117"
+link = "D_interior"
+[[radar]]
+site = "king_salmon_r"
+type = "ARSR-3"
+link = "D_interior"
+
+[[airbase]]
+site = "galena"
+link = "V_galena"
+[[airbase]]
+site = "king_salmon"
+link = "V_kingsalmon"
+[[airbase]]
+site = "elmendorf"
+link = "V_elmendorf"
+[[airbase]]
+site = "eielson"
+
+[[squadron]]
+id = "galena_det"
+name = "43rd TFS det. Galena"
+base = "galena"
+type = "F-15A"
+callsign = "TWIN"
+ready = { "5" = 4, "15" = 4, "30" = 4 }
+pilots = 14
+turnaround_min = 30.0
+
+[[squadron]]
+id = "ks_det"
+name = "43rd TFS det. King Salmon"
+base = "king_salmon"
+type = "F-15A"
+callsign = "FANG"
+ready = { "5" = 4, "15" = 2 }
+pilots = 10
+turnaround_min = 30.0
+
+[[squadron]]
+id = "43tfs"
+name = "43rd TFS"
+base = "elmendorf"
+type = "F-15A"
+callsign = "COBRA"
+ready = { "5" = 2, "15" = 4 }
+pilots = 10
+turnaround_min = 35.0
+
+[[squadron]]
+id = "54tfs"
+name = "54th TFS"
+base = "elmendorf"
+type = "F-15A"
+callsign = "VIPER"
+ready = { "15" = 4, "30" = 4 }
+pilots = 10
+turnaround_min = 35.0
+
+# ====================================================================== the battle
+
+[battle]
+post = "ALASKAN NORAD REGION — AIR DEFENSE COMMANDER"
+post_sub = "ROCC ELMENDORF · REGION OPERATIONS CONTROL CENTER"
+red_target = ""
+vital = []
+hostile_west_of_lon = -166.0
+hostile_line_lat = 64.0
+brief_target = { lat = 64.74, lon = -156.94 }
+defended = ["galena", "king_salmon", "elmendorf"]
+view = { lat = 63.2, lon = -163.5, km = 860.0 }
+standing = { posture = "balanced", fighters = "auto", sam = "FREE", emcon = false, reserve = 2 }
+
+[[battle.red_sensor]]
+name = "Provideniya radar"
+lat = 64.38
+lon = -173.24
+mast_m = 250.0
+range_km = 330.0
+
+[[battle.red_sensor]]
+name = "Lavrentiya radar"
+lat = 65.58
+lon = -171.0
+mast_m = 250.0
+range_km = 300.0
+
+[[battle.cap]]
+id = "nome"
+name = "CAP NOME"
+lat = 64.6
+lon = -164.0
+alt_m = 9000.0
+squadron = "galena_det"
+n = 2
+airborne = true
+fuel_frac = 0.85
+
+[[battle.cap]]
+id = "kotzebue"
+name = "CAP KOTZEBUE"
+lat = 66.5
+lon = -161.5
+alt_m = 9500.0
+squadron = "galena_det"
+n = 2
+airborne = true
+fuel_frac = 0.9
+
+[[battle.cap]]
+id = "bethel"
+name = "CAP BETHEL"
+lat = 60.7
+lon = -163.0
+alt_m = 9000.0
+squadron = "ks_det"
+n = 2
+airborne = true
+fuel_frac = 0.85
+
+[[battle.reinforcement]]
+id = "eielson"
+name = "Eagles forward to King Salmon"
+text = "Elmendorf can push four F-15As of the 54th forward to King Salmon. They will be on five-minute alert there in about ten minutes — if the runway is open."
+actions = [{ do = "ready", squadron = "ks_det", add = { "5" = 4 } }, { do = "ready", squadron = "54tfs", move = { "30" = "15" } }]
+
+[[battle.phase]]
+id = "line"
+name = "PHASE I — THE RADAR LINE"
+earliest_min = 0.0
+text = "BEAR H regiments airborne from Anadyr. Two single BEARs are coming straight for the coast: Tin City and Cape Romanzof. They want the radar line down before the main blow. A BADGER J is forming over St. Lawrence Island."
+actions = [{ do = "launch", groups = ["badger"], delay_s = 30.0 }, { do = "launch", groups = ["bear_r1"], delay_s = 60.0 }, { do = "launch", groups = ["bear_r2"], delay_s = 150.0 }]
+
+[[battle.phase]]
+id = "main"
+name = "PHASE II — THE MAIN BLOW"
+earliest_min = 8.0
+latest_min = 14.0
+when = { type = "any", of = [{ type = "released", groups = ["bear_r1", "bear_r2"] }, { type = "quiet", s = 150.0 }] }
+text = "DARKSTAR holds four large targets coming east out of Chukotka — two for Galena, two along the south coast for King Salmon. FOXHOUNDs are out ahead of them, high and fast. They are coming for the Sentries."
+actions = [
+  { do = "launch", groups = ["bear_a"] },
+  { do = "launch", groups = ["bear_b"], delay_s = 120.0 },
+  { do = "launch", groups = ["sweep"], delay_s = 60.0 },
+  { do = "decision", kind = "aew", title = "DARKSTAR — FORWARD OR BACK?", text = "Move DARKSTAR 120 km west over the Seward Peninsula: it will see the BEARs and their missiles minutes earlier, deep enough for the Eagles to kill them before launch. But the FOXHOUNDs will be that much closer to it, and there is only one DARKSTAR.", options = ["MOVE IT FORWARD", "KEEP IT BACK"], default = "KEEP IT BACK", timeout_s = 50.0, effects = { "MOVE IT FORWARD" = [{ do = "group", group = "awacs1", station = { lat = 64.3, lon = -164.3, alt_m = 9000.0, r_km = 25.0 } }], "KEEP IT BACK" = [] } },
+  { do = "reinforcement", id = "eielson" },
+]
+
+[[battle.phase]]
+id = "pole"
+name = "PHASE III — OVER THE TOP"
+earliest_min = 20.0
+latest_min = 26.0
+when = { type = "quiet", s = 150.0 }
+text = "Kotzebue and Indian Mountain report large targets coming south out of the Chukchi Sea — over the top, where nobody has looked all night. Three BEARs, for Galena again."
+actions = [
+  { do = "launch", groups = ["bear_c"] },
+  { do = "decision", kind = "allocation", title = "GALENA'S LAST EAGLES — NORTH?", text = "Every Eagle still on the ground at Galena can launch now for a patrol line over Kotzebue Sound and meet the third regiment before it launches. Then there is nothing left on alert at Galena while the missiles of the first raids are still coming down on it.", options = ["SEND THEM NORTH", "KEEP THEM AT GALENA"], default = "SEND THEM NORTH", timeout_s = 50.0, effects = { "SEND THEM NORTH" = [{ do = "ready", squadron = "galena_det", move = { "15" = "5", "30" = "5" } }, { do = "surge", squadrons = ["galena_det"], lat = 66.4, lon = -161.0, alt_m = 9500.0, max_flights = 2 }], "KEEP THEM AT GALENA" = [{ do = "ready", squadron = "galena_det", move = { "15" = "5", "30" = "15" } }] } },
+]
+
+# ---- our aircraft flown by the battle AI
+[[group]]
+id = "awacs1"
+name = "DARKSTAR (E-3A)"
+callsign = "DARKSTAR"
+side = "blue"
+role = "awacs"
+type = "E-3A"
+n = 1
+base = "elmendorf"
+entry = { lat = 64.0, lon = -161.6, alt_m = 9000.0 }
+station = { lat = 64.0, lon = -161.6, alt_m = 9000.0, r_km = 30.0 }
+radar = "AN/APY-1"
+link = "D_awacs"
+t_min = 0.0
+
+[[group]]
+id = "awacs2"
+name = "SENTRY 2 (E-3A)"
+callsign = "SENTRY 2"
+side = "blue"
+role = "awacs"
+type = "E-3A"
+n = 1
+base = "elmendorf"
+entry = { lat = 59.9, lon = -159.4, alt_m = 9000.0 }
+station = { lat = 59.9, lon = -159.4, alt_m = 9000.0, r_km = 30.0 }
+radar = "AN/APY-1"
+link = "D_awacs"
+t_min = 0.0
+
+# ---- the enemy
+[[group]]
+id = "badger"
+name = "BADGER J jammer"
+callsign = "BADGER J"
+side = "red"
+role = "ew"
+type = "Tu-16P"
+n = 1
+entry = { lat = 63.5, lon = -173.3, alt_m = 9000.0 }
+exit = { lat = 63.5, lon = -173.3 }
+station = { lat = 63.3, lon = -170.2, alt_m = 9000.0, r_km = 18.0 }
+trigger = "phase"
+
+[[group]]
+id = "bear_r1"
+name = "BEAR H (Tin City)"
+callsign = "BEAR R1"
+side = "red"
+role = "strike"
+type = "Tu-95MS"
+n = 1
+weapons = { "Kh-55" = 6 }
+entry = { lat = 66.6, lon = -173.0, alt_m = 10500.0 }
+exit = { lat = 66.6, lon = -173.0 }
+target = "tin_city"
+launch_km = 210.0
+abort_frac = 1.0
+trigger = "phase"
+
+[[group]]
+id = "bear_r2"
+name = "BEAR H (Cape Romanzof)"
+callsign = "BEAR R2"
+side = "red"
+role = "strike"
+type = "Tu-95MS"
+n = 1
+weapons = { "Kh-55" = 6 }
+entry = { lat = 62.3, lon = -173.2, alt_m = 10500.0 }
+exit = { lat = 62.3, lon = -173.2 }
+target = "cape_romanzof"
+launch_km = 260.0
+abort_frac = 1.0
+trigger = "phase"
+
+[[group]]
+id = "bear_a"
+name = "BEAR H regiment A (Galena)"
+callsign = "BEAR A"
+side = "red"
+role = "strike"
+type = "Tu-95MS"
+n = 2
+weapons = { "Kh-55" = 6 }
+entry = { lat = 64.6, lon = -172.4, alt_m = 10500.0 }
+exit = { lat = 64.6, lon = -172.8 }
+route = [{ lat = 64.3, lon = -168.5, alt_m = 10500.0 }]
+target = "galena"
+launch_km = 350.0
+abort_frac = 0.6
+trigger = "phase"
+
+[[group]]
+id = "bear_b"
+name = "BEAR H regiment B (King Salmon)"
+callsign = "BEAR B"
+side = "red"
+role = "strike"
+type = "Tu-95MS"
+n = 2
+weapons = { "Kh-55" = 6 }
+entry = { lat = 59.6, lon = -170.6, alt_m = 10000.0 }
+exit = { lat = 59.6, lon = -171.0 }
+route = [{ lat = 59.3, lon = -166.5, alt_m = 10000.0 }]
+target = "king_salmon"
+launch_km = 350.0
+abort_frac = 0.6
+trigger = "phase"
+
+[[group]]
+id = "bear_c"
+name = "BEAR H regiment C (over the top)"
+callsign = "BEAR C"
+side = "red"
+role = "strike"
+type = "Tu-95MS"
+n = 3
+weapons = { "Kh-55" = 6 }
+entry = { lat = 68.8, lon = -167.5, alt_m = 11000.0 }
+exit = { lat = 68.8, lon = -168.5 }
+route = [{ lat = 67.9, lon = -164.5, alt_m = 11000.0 }]
+target = "galena"
+launch_km = 330.0
+abort_frac = 0.7
+trigger = "phase"
+
+[[group]]
+id = "sweep"
+name = "FOXHOUND sweep (Anadyr)"
+callsign = "FOXHOUND"
+side = "red"
+role = "sweep"
+type = "MiG-31"
+n = 4
+entry = { lat = 65.0, lon = -173.3, alt_m = 12000.0 }
+exit = { lat = 65.0, lon = -173.3 }
+route = [{ lat = 64.6, lon = -168.0, alt_m = 12000.0 }]
+station = { lat = 64.2, lon = -165.6, alt_m = 12000.0, r_km = 30.0 }
+commit_km = 170.0
+trigger = "phase"
+
+# ====================================================================== objectives
+
+[[objective]]
+id = "carriers"
+text = "Shoot down four in ten of the BEAR H carriers"
+kind = "kill_fraction"
+params = { groups = ["bear_r1", "bear_r2", "bear_a", "bear_b", "bear_c"], frac = 0.4 }
+points = 25
+
+[[objective]]
+id = "pole"
+text = "Shoot down two of the three BEARs from over the top"
+kind = "kill_fraction"
+params = { groups = ["bear_c"], frac = 0.66 }
+points = 10
+
+[[objective]]
+id = "missiles"
+text = "Shoot down one cruise missile in six"
+kind = "missiles_stopped"
+params = { types = ["AS-15"], frac = 0.167, planned = 54 }
+points = 20
+
+[[objective]]
+id = "bases"
+text = "Never more than one forward base closed at once"
+kind = "runways"
+params = { bases = ["galena", "king_salmon"], max_closed = 1 }
+points = 15
+
+[[objective]]
+id = "radars"
+text = "Lose no more than two radars destroyed"
+kind = "radars_survive"
+params = { max_destroyed = 2 }
+points = 10
+
+[[objective]]
+id = "darkstar"
+text = "DARKSTAR survives"
+kind = "protect_group"
+params = { group = "awacs1" }
+points = 10
+
+[[objective]]
+id = "eagles"
+text = "Lose no more than six Eagles"
+kind = "lose_at_most"
+params = { n = 6 }
+points = 10

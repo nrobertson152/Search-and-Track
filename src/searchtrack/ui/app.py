@@ -46,10 +46,13 @@ class App:
         self.settings = self.load_settings()
         self.audio = Audio(enabled=sound and not headless)
         self.audio.volume = float(self.settings.get("volume", 0.7))
+        from .music import Music
+        self.music = Music(self.audio, float(self.settings.get("music", 0.5)))
         self.gui = Gui(self.screen, US, self.audio)
-        self.gui.lang_mode = self.settings.get("labels", "ru+en")
+        self.gui.lang_mode = "en"     # every console and screen is in English; only the PVO board is lettered in Russian
         self.scenes: list = []
         self.campaign = None          # faction whose career the current watch belongs to
+        self.war = None               # id of the war the current battle belongs to
         self.running = True
         self.clock = pygame.time.Clock()
         self.clock_t = 0.0
@@ -88,10 +91,19 @@ class App:
         from .campaign import record_result
         from .scenes import DebriefScene
         on_done = (lambda f=world.faction: self.back_to_campaign(f)) if self.campaign else None
+        if self.war and world.battle.active:
+            from .war import book_battle
+            book_battle(self, world)
+            on_done = lambda f=world.faction: self.back_to_war(f)
         d = DebriefScene(self, world, on_done=on_done)
         if not world.scenario_id.startswith("alert_"):
             record_result(self, world, d.rep)
         self.replace_all(d)
+
+    def back_to_war(self, faction: str) -> None:
+        from .war import WarScene
+        self.to_title()
+        self.push(WarScene(self, faction))
 
     def back_to_campaign(self, faction: str) -> None:
         from .campaign import CampaignScene
@@ -103,7 +115,8 @@ class App:
         self.gui.set_theme(theme_for(self.scenes[0].faction))
 
     # ------------------------------------------------------------ persistence
-    DEFAULTS = {"labels": "ru+en", "volume": 0.7, "focus": 2, "film": True, "auto_slow": True}
+    DEFAULTS = {"board": "ru", "volume": 0.7, "music": 0.5, "focus": 2, "film": True, "auto_slow": True,
+                "difficulty": "regular"}
 
     def load_settings(self) -> dict:
         st = dict(self.DEFAULTS)
@@ -170,6 +183,7 @@ class App:
         sc.update(self.dt)
         sc.draw(self.screen)
         self.gui.end()
+        self.music.update(self.dt)
 
     def run(self) -> None:
         while self.running:
@@ -207,17 +221,44 @@ def screenshot(path: str, sid: str | None, seconds: float, console: int, mode: s
         app.scene.scroll = seconds if seconds < 5000 else 0
         for _ in range(2):
             app.frame([])
-    elif scene in ("campaign", "alert", "operations"):
+    elif scene == "story":
+        from ..sim import story, war
+        from .interlude import InterludeScene
+        from .theme import theme_for
+        f = faction or "US"
+        c = war.campaigns(f)[0]
+        ctx = story.context(war.new_state(c["id"]), c, None, {})
+        ctx.update(date="20 October 1987", kills=11, lost=3, ships_lost="none", outcome="VICTORY",
+                   best="LT Vic Navarro" if f == "US" else "Captain Oleg Belov", best_kills=3,
+                   ace="CDR Ron 'Hoss' Coleman" if f == "US" else "Major Igor Melnik", ace_kills=6,
+                   ace_unit="VF-51" if f == "US" else "177th IAP")
+        pages = story.every_page(c, ctx)
+        if c.get("lost"):                        # the pages of the night the carrier is lost name her
+            k = len(c.get("intro", [])) + sum(len(m.get("page", [])) for m in c.get("mission", []))
+            pages[k:k + len(c["lost"])] = story.pages(c["lost"], {**ctx, "ships_lost": "USS Carl Vinson"},
+                                                      check=False)
+        app.gui.set_theme(theme_for(f))
+        sc = InterludeScene(app, f, pages, start=console, title=c["title"].upper())
+        sc.shown = 1e9
+        app.push(sc)
+        for _ in range(2):
+            app.frame([])
+    elif scene in ("campaign", "alert", "operations", "war"):
         from .campaign import AlertDutyScene, CampaignScene
         from .scenes import OperationsScene
+        from .war import WarScene
         f = faction or "US"
-        app.push({"campaign": CampaignScene, "alert": AlertDutyScene}.get(scene, lambda a, fa: OperationsScene(a, fa))(app, f))
+        app.push({"campaign": CampaignScene, "alert": AlertDutyScene, "war": WarScene}.get(
+            scene, lambda a, fa: OperationsScene(a, fa))(app, f))
         for _ in range(2):
             app.frame([])
     else:
         world = scenario.build_world(sid)
         from ..sim.student import Student
         pupil = Student(world) if any(tr.id.startswith("lesson_") for tr in world.triggers) else None
+        if world.battle.active:
+            world.battle.spectator = True       # the staff fights it; the picture shows our side
+            autoplay_on = False
         while world.t < seconds and not world.ended:
             if autoplay_on and pupil is not None:
                 pupil.act()

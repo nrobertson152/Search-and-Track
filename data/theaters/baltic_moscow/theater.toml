@@ -250,6 +250,33 @@ lon = 24.85
 elev_m = 30.0
 unit = ""
 
+[[airbase]]
+id = "gromovo"
+name = "Gromovo"
+name_ru = "Громово"
+lat = 60.71
+lon = 30.11
+elev_m = 30.0
+kind = "military"
+
+[[sam_site]]
+id = "s300_leningrad"
+name = "S-300PT battalion Leningrad"
+name_ru = "ЗРДН С-300ПТ Ленинград"
+lat = 59.9
+lon = 29.8
+elev_m = 40.0
+unit = ""
+
+[[sam_site]]
+id = "s125_narva"
+name = "S-125 battalion Narva"
+name_ru = "ЗРДН С-125 Нарва"
+lat = 59.36
+lon = 28.05
+elev_m = 30.0
+unit = ""
+
 [[sam_site]]
 id = "s200_kingisepp"
 name = "S-200 battalion Kingisepp"

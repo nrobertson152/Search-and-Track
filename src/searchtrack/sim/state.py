@@ -76,6 +76,16 @@ class Aircraft:
     truth_label: str = ""                # what it really is (AAR / VID text)
     nationality: str = ""
     markings: str = ""
+    # ---- battle missions
+    group: str = ""                      # AirGroup id when the battle AI flies it
+    damage: float = 0.0                  # 0 intact .. 1 destroyed
+    homing: str = ""                     # anti-ship missile: ship it has locked
+    aim: list[float] = field(default_factory=list)   # anti-ship missile: aim point [x, y]
+    launcher: str = ""                   # anti-ship missile: who fired it
+    evade_t: float = -1.0                # defensive manoeuvre against a missile until
+    t_max: float = -1.0                  # anti-ship missile: self-destruct time
+    route: list[list[float]] = field(default_factory=list)   # cruise missile: waypoints before the aim point
+    pilot: str = ""                      # battles: who is flying it (BattleState.pilots)
 
 
 @dataclass
@@ -163,6 +173,7 @@ class Airbase:
     runway_ok: bool = True
     link: str = ""
     name_ru: str = ""
+    carrier: str = ""                    # aircraft carrier: id of the ship the base sails with
 
 
 @dataclass
@@ -264,6 +275,7 @@ class SamSite:
     last_result: str = ""
     fault_t: float = -1.0                # scripted fire-control fault until
     name_ru: str = ""
+    carrier: str = ""                    # shipborne fire channel: id of the ship
 
 
 @dataclass
@@ -490,3 +502,152 @@ class Stats:
     sim_kills: list[list[str]] = field(default_factory=list)          # exercise: [victim, shooter]
     forced: list[list[Any]] = field(default_factory=list)             # forced landings: [aircraft, base, t]
     locks: dict[str, float] = field(default_factory=dict)             # truth -> first fire-control lock
+
+
+# ====================================================================== battle missions
+
+@dataclass
+class Ship:
+    id: str
+    name: str
+    type_id: str
+    side: str = "blue"
+    x: float = 0.0
+    y: float = 0.0
+    hdg: float = 0.0
+    spd: float = 0.0                     # m/s
+    group: str = ""                      # task group; the guide steers the group's course
+    guide: bool = False
+    station_brg: float = 0.0             # station relative to the guide's heading (deg)...
+    station_km: float = 0.0              # ...and distance
+    route: list[list[float]] = field(default_factory=list)   # guide: [x, y] waypoints, cycled
+    wp: int = 0
+    speed_kn: float = 16.0
+    hp: float = 100.0
+    max_hp: float = 100.0
+    state: str = "afloat"                # afloat | damaged | crippled | sunk
+    chaff: int = 4
+    t_chaff: float = -1.0
+    emcon: bool = False                  # radars silent
+    evading_until: float = -1.0
+    hits: int = 0
+    name_ru: str = ""
+
+
+@dataclass
+class AirGroup:
+    """A formation flown by the battle AI (either side): a raid, an escort, a jammer, an AEW."""
+    id: str
+    name: str
+    callsign: str
+    side: str
+    role: str                            # strike escort sweep cap recon ew awacs tanker intercept
+    type_id: str
+    n: int = 2
+    members: list[str] = field(default_factory=list)
+    base: str = ""                       # airbase id; "" = enters and leaves at the map edge
+    entry: list[float] = field(default_factory=list)     # [x, y, alt] where it enters play
+    exit: list[float] = field(default_factory=list)      # [x, y] where it leaves play
+    state: str = "pending"               # pending outbound station attack egress rtb done
+    t_launch: float = 1e12
+    route: list[list[float]] = field(default_factory=list)   # [x, y, alt] transit waypoints
+    wp: int = 0
+    station: list[float] = field(default_factory=list)   # [x, y, alt, radius] orbit
+    target: str = ""                     # strike: ship id or task group; escort: group id
+    launch_km: float = 0.0               # strike: release range (0 = weapon maximum)
+    commit_km: float = 60.0              # fighters: engage enemies this close to what they guard
+    alt: float = 0.0
+    spd_kmh: float = 0.0
+    abort_frac: float = 0.5              # turn for home after losing this fraction
+    released: bool = False
+    t_state: float = 0.0
+    air_target: str = ""                 # truth id of the aircraft being engaged
+    t_next_shot: float = 0.0
+    losses: int = 0
+    kills: int = 0
+    jam: bool = False                    # ew: jam once on station
+    reported: bool = False               # recon: target reported
+    trigger: str = ""                    # launched by a director phase / decision rather than a time
+    aim: list[float] = field(default_factory=list)       # strike: where it believes the target is
+    radio_t: float = 0.0
+    note: str = ""
+
+
+@dataclass
+class Contact:
+    """One side's knowledge of an enemy aircraft or ship (perception model)."""
+    id: str                              # truth id
+    x: float
+    y: float
+    alt: float = 0.0
+    vx: float = 0.0                      # km/s
+    vy: float = 0.0
+    t: float = 0.0                       # last seen
+    err_km: float = 1.0
+    by: str = ""                         # sensor that holds it
+    kind: str = "air"                    # air | ship
+    t_first: float = 0.0
+    passive: bool = False                # bearing-and-emitter fix only (ESM)
+
+
+@dataclass
+class Decision:
+    """A call the commander has to make, with a timer and a default."""
+    id: int
+    t: float
+    kind: str
+    title: str
+    text: str
+    options: list[str] = field(default_factory=list)
+    default: str = ""
+    t_expire: float = 0.0
+    ref: str = ""
+    chosen: str = ""
+    t_chosen: float = -1.0
+    by: str = ""                         # player | staff | timeout
+    data: dict[str, Any] = field(default_factory=dict)
+
+
+@dataclass
+class Pilot:
+    """A named airman of one of our squadrons; in a war he carries his record from battle to battle."""
+    id: str
+    name: str                            # "CDR Jack 'Hollywood' Harlan"
+    squadron: str
+    rank: str = ""
+    surname: str = ""
+    kills: int = 0                       # over the whole war
+    sorties: int = 0
+    status: str = "active"               # active | flying | rescued | missing | kia
+    aircraft: str = ""                   # while flying
+    note: str = ""                       # what happened to him tonight
+
+
+@dataclass
+class BattleState:
+    active: bool = False
+    spectator: bool = False
+    post: str = ""                       # the control room's title
+    post_sub: str = ""
+    phase: int = -1
+    phases: list[dict[str, Any]] = field(default_factory=list)
+    t_phase: float = 0.0
+    groups: dict[str, AirGroup] = field(default_factory=dict)
+    red_air: dict[str, Contact] = field(default_factory=dict)          # red's picture of our aircraft
+    surface: dict[str, dict[str, Contact]] = field(default_factory=dict)   # side -> ship -> contact
+    red_sensors: list[dict[str, Any]] = field(default_factory=list)
+    standing: dict[str, Any] = field(default_factory=dict)             # standing orders
+    priority: list[str] = field(default_factory=list)                  # tracks the commander singled out
+    decisions: list[Decision] = field(default_factory=list)
+    decision_seq: int = 0
+    reinforcements: list[dict[str, Any]] = field(default_factory=list)
+    cap_stations: list[dict[str, Any]] = field(default_factory=list)
+    events: list[list[Any]] = field(default_factory=list)              # [t, kind, text, ref, x, y, side, level]
+    t_last_event: float = 0.0
+    counters: dict[str, float] = field(default_factory=dict)
+    red_plan: dict[str, Any] = field(default_factory=dict)
+    defended: list[str] = field(default_factory=list)                  # own assets the enemy is after
+    end_t: float = -1.0
+    outcome: str = ""
+    view: list[float] = field(default_factory=list)                     # [x, y, km across] at the start
+    pilots: dict[str, Pilot] = field(default_factory=dict)              # our aircrew, by id

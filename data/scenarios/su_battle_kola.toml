@@ -1,0 +1,634 @@
+id = "su_battle_kola"
+title = "The Northern Bastion"
+subtitle = "Kola Peninsula, October 1987 — hypothetical"
+summary = "War. The American Navy comes for the Northern Fleet's bases: cruise missiles low over Finnmark, a carrier strike with HARM shooters and jammers, then B-52s with Harpoons for the KIROV group in the Barents Sea. Keep the radars alive, the runways open and the flagship afloat."
+faction = "USSR"
+kind = "battle"
+photo = ["MiG-31", "A-6E"]
+photo_caption = "MiG-31 FOXHOUND — the long arm of the northern air defense (file photograph)"
+era = "1980s"
+difficulty = 3
+order = 6
+theater = "kola"
+start = "1987-10-19T22:10:00"
+tz = "MSK"
+duration_min = 85
+seed = 1941
+reliability = 6.0
+
+briefing = """
+COMMAND POST, NORTHERN AIR DEFENSE — KOLA PENINSULA. THIS SCENARIO IS HYPOTHETICAL.
+
+SITUATION. The war is six hours old. An American carrier group is in the Norwegian Sea and has turned north-east. Its task is the Northern Fleet: the bases on the Kola Inlet, the airfields that cover them, and the surface action group led by the nuclear cruiser KIROV, now at sea in the Barents to cover the submarine bastion. Expect reconnaissance first, cruise missiles from the sea, then the carrier's strike, and long-range bombers after it.
+
+YOUR FORCES. MiG-31 regiment at Monchegorsk, MiG-25PD at Kilp-Yavr, MiG-23P at Afrikanda. An A-50 radar aircraft over the interior. Radar companies on the coast and at the guidance points, S-300PT at Severomorsk, S-200 at Olenya, S-125 and S-75 battalions around the bases. At sea: KIROV, ADMIRAL MAKAROV, OTLICHNY and ZHARKY under fleet command, their missile systems fighting on our picture.
+
+COMMAND. You command the air defense of the sector. The duty staff identifies, commits the interceptors by your standing orders, keeps the patrol zones manned and gives the battalions their targets. You set the posture, single out priority targets (right-click a track), answer the decisions and take over wherever you see better.
+
+LOW FLYERS. Cruise missiles and strike aircraft come in under the radar horizon, over the hills of Finnmark. The coastal radars see them late; the A-50 and the MiG-31's look-down radar see them early. Every radar that is switched on can also be heard — and the Americans carry missiles that home on radars.
+"""
+
+[[intel]]
+title = "Tomahawk"
+text = "BGM-109C land-attack cruise missile: subsonic, 30-60 m over the terrain, small radar cross-section. Fired in streams from ships and submarines in the Norwegian Sea. Targets: airfields, radar companies, missile battalions. MiG-31s can hunt them; the S-300 and S-125 can shoot them down if their radars see them in time."
+
+[[intel]]
+title = "HARM"
+text = "AGM-88 anti-radiation missile on F/A-18 Hornets flying ahead of the strike. It homes on any radar that radiates. Battalion crews are trained to switch off when one is reported inbound — the missile then usually misses, but the battalion does not shoot either. Kill the Hornets first."
+
+[[intel]]
+title = "Strike aircraft"
+text = "A-6E Intruders: Harpoon anti-ship missiles against the fleet from about 100 km; Walleye guided bombs against airfields after a low-level run. EA-6B jammers blind our radars along their axis. F-14 Tomcats sweep ahead and escort."
+
+[[intel]]
+title = "B-52"
+text = "B-52G Stratofortresses from the United States, eight Harpoons each, against the KIROV group. They need to know where the fleet is: every minute it stays hidden makes their aim worse."
+
+[faction_override]
+report_delay_s = [12.0, 30.0]
+report_interval_s = 12.0
+company_capacity = 30
+report_error_rate = 0.01
+
+[automation]
+surveil = true
+ident = true
+height = true
+tech = false
+
+[weather]
+k_factor = 1.333
+wind_from = 250.0
+wind_kmh = 55.0
+ceiling_m = 1200.0
+visibility_km = 12.0
+night = true
+sea_state = 5.0
+
+[hq]
+name = "10th AIR DEFENSE ARMY"
+readiness = "FULL"
+alert = ""
+weapons_status = "FREE"
+[hq.policy]
+response_s = [20.0, 50.0]
+declare_hostile = "grant"
+engage = "grant"
+ram = "deny"
+special_release = "deny"
+weapons_status_FREE = "grant"
+iff_period = "WAR"
+track_start = 4001
+
+[[link]]
+id = "A_net"
+name = "Automated reporting net (ASU)"
+kind = "data"
+delay_s = 8.0
+[[link]]
+id = "D_a50"
+name = "A-50 data link"
+kind = "data"
+delay_s = 2.0
+[[link]]
+id = "D_fleet"
+name = "Fleet command post link"
+kind = "data"
+delay_s = 4.0
+[[link]]
+id = "T_gp"
+name = "Guidance point lines"
+[[link]]
+id = "T_airfields"
+name = "Airfield alert lines"
+[[link]]
+id = "T_sam"
+name = "SAM brigade line"
+
+[[radar]]
+site = "rlr_rybachy"
+type = "P-37"
+hf = ["PRV-13"]
+link = "A_net"
+[[radar]]
+site = "rlr_teriberka"
+type = "5N84"
+link = "A_net"
+[[radar]]
+site = "rlr_lovozero"
+type = "ST-68U"
+link = "A_net"
+[[radar]]
+site = "rlr_kovdor"
+type = "P-37"
+link = "A_net"
+[[radar]]
+site = "rlr_ponoi"
+type = "P-14"
+link = "A_net"
+[[radar]]
+site = "gp_kilpyavr"
+type = "P-37"
+hf = ["PRV-13"]
+gci = true
+link = "T_gp"
+[[radar]]
+site = "gp_monchegorsk"
+type = "ST-68U"
+gci = true
+link = "T_gp"
+[[radar]]
+site = "gp_afrikanda"
+type = "P-35"
+hf = ["PRV-11"]
+gci = true
+link = "T_gp"
+
+[[airbase]]
+site = "kilpyavr"
+link = "T_airfields"
+[[airbase]]
+site = "monchegorsk"
+link = "T_airfields"
+[[airbase]]
+site = "afrikanda"
+link = "T_airfields"
+[[airbase]]
+site = "severomorsk3"
+link = "T_airfields"
+[[airbase]]
+site = "olenya"
+link = "T_airfields"
+
+[[squadron]]
+id = "monch_iap"
+name = "174th GvIAP, Monchegorsk"
+base = "monchegorsk"
+type = "MiG-31"
+callsign = "602"
+ready = { "3" = 4, "7" = 4, "20" = 4 }
+pilots = 16
+turnaround_min = 30.0
+iff_codes = { period = "WAR" }
+
+[[squadron]]
+id = "kilp_iap"
+name = "941st IAP, Kilp-Yavr"
+base = "kilpyavr"
+type = "MiG-25PD"
+callsign = "740"
+ready = { "3" = 4, "7" = 4 }
+pilots = 10
+turnaround_min = 30.0
+iff_codes = { period = "WAR" }
+
+[[squadron]]
+id = "afr_iap"
+name = "431st IAP, Afrikanda"
+base = "afrikanda"
+type = "MiG-23P"
+callsign = "622"
+ready = { "3" = 2, "7" = 4 }
+pilots = 8
+turnaround_min = 30.0
+iff_codes = { period = "WAR" }
+
+[[sam]]
+site = "zrdn_severomorsk"
+type = "S-300PT"
+link = "T_sam"
+missiles = 12
+reloads = 12
+auto = true
+[[sam]]
+site = "zrdn_polyarny"
+type = "S-125"
+link = "T_sam"
+missiles = 8
+reloads = 8
+auto = true
+[[sam]]
+site = "zrdn_murmansk"
+type = "S-75"
+link = "T_sam"
+missiles = 6
+reloads = 6
+auto = true
+[[sam]]
+site = "zrdn_olenya"
+type = "S-200"
+link = "T_sam"
+missiles = 6
+reloads = 4
+auto = true
+[[sam]]
+site = "zrdn_kandalaksha"
+type = "S-125"
+link = "T_sam"
+missiles = 8
+reloads = 8
+auto = true
+
+# ====================================================================== the battle
+
+[battle]
+post = "NORTHERN AIR DEFENSE — COMMAND POST"
+post_sub = "10th AIR DEFENSE ARMY · KOLA SECTOR"
+red_target = "nfleet"
+vital = ["kirov"]
+hostile_west_of_lon = 30.8
+hostile_line_lat = 69.8
+hostile_north_of_lat = 70.65
+brief_target = { lat = 70.2, lon = 34.6 }
+defended = ["kilpyavr", "severomorsk3", "monchegorsk", "olenya"]
+view = { x = -150.0, y = 180.0, km = 760.0 }
+standing = { posture = "balanced", fighters = "auto", sam = "FREE", emcon = false, reserve = 2 }
+
+[[battle.red_sensor]]
+name = "Honningsvag radar"
+lat = 70.98
+lon = 25.97
+mast_m = 300.0
+range_km = 320.0
+
+[[battle.cap]]
+id = "north"
+name = "PATROL ZONE NORTH (fleet)"
+lat = 70.05
+lon = 33.3
+alt_m = 9000.0
+squadron = "monch_iap"
+n = 2
+airborne = true
+fuel_frac = 0.85
+
+[[battle.cap]]
+id = "west"
+name = "PATROL ZONE WEST (Pechenga)"
+lat = 69.55
+lon = 31.2
+alt_m = 9000.0
+squadron = "kilp_iap"
+n = 2
+airborne = true
+fuel_frac = 0.8
+
+[[battle.reinforcement]]
+id = "savatiya"
+name = "MiG-31s from Savatiya"
+text = "The army can send four MiG-31s of the 518th regiment from Savatiya to Monchegorsk. They will be on three-minute alert there in about ten minutes."
+actions = [{ do = "ready", squadron = "monch_iap", add = { "7" = 4 } }]
+
+[[battle.phase]]
+id = "watch"
+name = "PHASE I — THE WATCH"
+earliest_min = 0.0
+text = "NATO reconnaissance is up: an RC-135 off Vardo, an Orion coming to look for the fleet, and Norwegian radars watching. Intelligence expects a Blackbird. Keep the fleet hidden; take the shadowers down."
+actions = [{ do = "launch", groups = ["p3c"], delay_s = 90.0 }, { do = "launch", groups = ["sr71"], delay_s = 240.0 }]
+
+[[battle.phase]]
+id = "missiles"
+name = "PHASE II — CRUISE MISSILES"
+earliest_min = 6.0
+latest_min = 10.0
+when = { type = "any", of = [{ type = "located" }, { type = "quiet", s = 120.0 }] }
+quiet_s = 120.0
+text = "The fleet's command post reports missile launches in the Norwegian Sea: Tomahawks, about twenty, heading east low over Finnmark. Targets will be our airfields, radars and missile battalions. They come in under the radar horizon: the coastal companies will see them late."
+actions = [
+  { do = "salvo", weapon = "TLAM-C", n = 8, from = { lat = 69.25, lon = 29.5 }, route = [{ lat = 69.12, lon = 30.7 }], targets = ["kilpyavr", "severomorsk3", "monchegorsk", "olenya"], stream_km = 7.0 },
+  { do = "salvo", weapon = "TLAM-C", n = 8, from = { lat = 70.5, lon = 29.0 }, route = [{ lat = 70.2, lon = 30.9 }], targets = ["rlr_rybachy", "zrdn_severomorsk", "rlr_teriberka", "zrdn_polyarny"], stream_km = 7.0 },
+  { do = "decision", kind = "aew", title = "LOW FLYERS — MAINSTAY FORWARD?", text = "Move the A-50 north-west over Pechenga: its radar will see the missiles crossing Finnmark minutes earlier and give the MiG-31s time to catch them. But the carrier's Tomcats will be close, and the A-50 is the one aircraft we cannot replace.", options = ["MOVE IT FORWARD", "KEEP IT BACK"], default = "MOVE IT FORWARD", timeout_s = 50.0, effects = { "MOVE IT FORWARD" = [{ do = "group", group = "a50", station = { lat = 69.25, lon = 32.4, alt_m = 9000.0, r_km = 25.0 } }], "KEEP IT BACK" = [] } },
+]
+
+[[battle.phase]]
+id = "strike"
+name = "PHASE III — THE CARRIER STRIKE"
+earliest_min = 17.0
+latest_min = 23.0
+when = { type = "quiet", s = 90.0 }
+text = "Radio intercept: the carrier is launching. Two raids are forming over the Norwegian Sea — one high toward the fleet with jammers and anti-radiation missile carriers, one low over Finnmark toward the coast. Tomcats ahead of both."
+actions = [
+  { do = "launch", groups = ["ew_ship", "ew_land"] },
+  { do = "launch", groups = ["sweep"], delay_s = 30.0 },
+  { do = "launch", groups = ["a6_ship", "sead_ship", "esc_ship"], delay_s = 120.0 },
+  { do = "launch", groups = ["a6_land", "sead_land"], delay_s = 150.0 },
+  { do = "decision", kind = "allocation", title = "TWO RAIDS — WHERE DO THE MiG-31s GO?", text = "One raid is going for the fleet, the other for the bases. The alert MiG-31s at Monchegorsk can go to a patrol line over the fleet, to one over the coast — or be split between both and be strong nowhere.", options = ["COVER THE FLEET", "COVER THE BASES", "SPLIT"], default = "SPLIT", timeout_s = 50.0, effects = { "COVER THE FLEET" = [{ do = "ready", squadron = "monch_iap", move = { "7" = "3" } }, { do = "surge", squadrons = ["monch_iap"], lat = 70.25, lon = 31.8, alt_m = 10000.0, max_flights = 3 }], "COVER THE BASES" = [{ do = "ready", squadron = "monch_iap", move = { "7" = "3" } }, { do = "surge", squadrons = ["monch_iap", "kilp_iap"], lat = 69.35, lon = 30.6, alt_m = 8000.0, max_flights = 3 }], "SPLIT" = [{ do = "surge", squadrons = ["monch_iap"], lat = 70.2, lon = 31.6, alt_m = 10000.0, max_flights = 1 }, { do = "surge", squadrons = ["kilp_iap"], lat = 69.35, lon = 30.8, alt_m = 8000.0, max_flights = 1 }] } },
+  { do = "reinforcement", id = "savatiya" },
+]
+
+[[battle.phase]]
+id = "bombers"
+name = "PHASE IV — THE BOMBERS"
+earliest_min = 29.0
+latest_min = 36.0
+when = { type = "any", of = [{ type = "released", groups = ["a6_ship"] }, { type = "group", group = "a6_ship", is = ["done"] }] }
+text = "Long-range radar reports large targets over the Norwegian Sea heading north-east: B-52s, three of them, with Harpoons for the KIROV group. They will fire from about 100 km."
+actions = [
+  { do = "launch", groups = ["b52"], delay_s = 60.0 },
+  { do = "decision", kind = "fleet", title = "KIROV — RUN FOR THE INLET?", text = "Fleet command asks: should the KIROV group leave its patrol line and run south into the Kola Inlet, under the S-300 and the S-125 battalions? It would be far safer there — and the submarine bastion would lose its cover.", options = ["HOLD THE LINE", "RUN FOR THE INLET"], default = "HOLD THE LINE", timeout_s = 60.0, effects = { "HOLD THE LINE" = [], "RUN FOR THE INLET" = [{ do = "fleet", group = "nfleet", route = [{ lat = 69.55, lon = 33.8 }, { lat = 69.38, lon = 33.65 }], speed_kn = 26.0 }] } },
+]
+
+[[trigger]]
+id = "emcon_q"
+cond = { type = "time", t = 20.0 }
+actions = [{ do = "decision", kind = "emcon", title = "FLEET RADARS — EMISSION CONTROL?", text = "The RC-135 off Vardo listens to everything that radiates, and an Orion is on its way. Should the KIROV group switch off its search radars — the A-50 and the coastal companies keep the picture over it — or keep radiating and see for itself?", options = ["GO SILENT", "KEEP RADIATING"], default = "GO SILENT", timeout_s = 60.0, effects = { "GO SILENT" = [{ do = "standing", emcon = true }], "KEEP RADIATING" = [] } }]
+
+[[trigger]]
+id = "emcon_off"
+cond = { type = "all", of = [{ type = "phase", at_least = 2 }, { type = "standing", key = "emcon", is = [true] }] }
+actions = [{ do = "decision", kind = "emcon", title = "STRIKE INBOUND — FLEET RADARS ON?", text = "The carrier strike is airborne. The fleet's missile systems cannot shoot what their radars do not see — but the Hornets will be listening for them. Light them off now, or stay silent a little longer?", options = ["LIGHT THEM OFF", "STAY SILENT"], default = "LIGHT THEM OFF", timeout_s = 40.0, effects = { "LIGHT THEM OFF" = [{ do = "standing", emcon = false }], "STAY SILENT" = [] } }]
+
+# ---- the Northern Fleet's surface action group (under our picture)
+[[ship]]
+id = "kirov"
+name = "Kirov"
+name_ru = "Киров"
+type = "Kirov"
+side = "blue"
+group = "nfleet"
+guide = true
+lat = 70.28
+lon = 33.9
+course = 90.0
+speed_kn = 12.0
+route = [{ lat = 70.22, lon = 36.2 }, { lat = 70.32, lon = 33.4 }]
+link = "D_fleet"
+
+[[ship]]
+id = "makarov"
+name = "Admiral Makarov"
+name_ru = "Адмирал Макаров"
+type = "Kresta-II"
+side = "blue"
+group = "nfleet"
+station = [300.0, 14.0]
+link = "D_fleet"
+
+[[ship]]
+id = "otlichny"
+name = "Otlichny"
+name_ru = "Отличный"
+type = "Sovremenny"
+side = "blue"
+group = "nfleet"
+station = [240.0, 12.0]
+link = "D_fleet"
+
+[[ship]]
+id = "zharky"
+name = "Zharky"
+name_ru = "Жаркий"
+type = "Krivak"
+side = "blue"
+group = "nfleet"
+station = [0.0, 16.0]
+link = "D_fleet"
+
+# ---- our aircraft flown by the battle AI
+[[group]]
+id = "a50"
+name = "A-50 radar aircraft"
+callsign = "MAINSTAY"
+side = "blue"
+role = "awacs"
+type = "A-50"
+n = 1
+base = "olenya"
+entry = { lat = 68.45, lon = 35.8, alt_m = 9000.0 }
+station = { lat = 68.45, lon = 35.8, alt_m = 9000.0, r_km = 28.0 }
+radar = "SHMEL"
+link = "D_a50"
+t_min = 0.0
+
+# ---- the enemy
+[[group]]
+id = "rc135"
+name = "RC-135V Rivet Joint"
+callsign = "RIVET"
+side = "red"
+role = "elint"
+type = "RC-135V"
+n = 1
+entry = { lat = 70.95, lon = 27.5, alt_m = 10500.0 }
+exit = { lat = 71.2, lon = 22.0 }
+station = { lat = 70.95, lon = 29.6, alt_m = 10500.0, r_km = 28.0 }
+t_min = 0.0
+
+[[group]]
+id = "p3c"
+name = "P-3C Orion (Andoya)"
+callsign = "ORION"
+side = "red"
+role = "recon"
+type = "P-3C"
+n = 1
+entry = { lat = 70.95, lon = 23.0, alt_m = 6000.0 }
+exit = { lat = 70.95, lon = 21.5 }
+route = [{ lat = 70.85, lon = 28.5, alt_m = 6000.0 }]
+target = "nfleet"
+trigger = "phase"
+
+[[group]]
+id = "sr71"
+name = "SR-71A Blackbird"
+callsign = "BLACKBIRD"
+side = "red"
+role = "transit"
+type = "SR-71A"
+n = 1
+entry = { lat = 70.9, lon = 22.5, alt_m = 24000.0 }
+exit = { lat = 71.4, lon = 41.5 }
+route = [{ lat = 70.55, lon = 28.0, alt_m = 24000.0 }, { lat = 70.4, lon = 33.0, alt_m = 24000.0 }, { lat = 70.3, lon = 38.5, alt_m = 24000.0 }, { lat = 71.4, lon = 41.5, alt_m = 24000.0 }]
+trigger = "phase"
+
+[[group]]
+id = "ew_ship"
+name = "EA-6B Prowler (north)"
+callsign = "PROWLER 1"
+side = "red"
+role = "ew"
+type = "EA-6B"
+n = 1
+entry = { lat = 70.95, lon = 25.5, alt_m = 8000.0 }
+exit = { lat = 70.95, lon = 24.0 }
+station = { lat = 70.85, lon = 28.6, alt_m = 8000.0, r_km = 16.0 }
+trigger = "phase"
+
+[[group]]
+id = "ew_land"
+name = "EA-6B Prowler (south)"
+callsign = "PROWLER 2"
+side = "red"
+role = "ew"
+type = "EA-6B"
+n = 1
+entry = { lat = 70.2, lon = 25.5, alt_m = 8000.0 }
+exit = { lat = 70.3, lon = 24.0 }
+station = { lat = 70.05, lon = 28.4, alt_m = 8000.0, r_km = 16.0 }
+trigger = "phase"
+
+[[group]]
+id = "sweep"
+name = "F-14A fighter sweep"
+callsign = "VICTORY"
+side = "red"
+role = "sweep"
+type = "F-14A"
+n = 4
+entry = { lat = 70.5, lon = 26.0, alt_m = 9500.0 }
+exit = { lat = 70.6, lon = 24.0 }
+route = [{ lat = 70.0, lon = 28.5, alt_m = 9500.0 }]
+station = { lat = 69.75, lon = 30.4, alt_m = 9500.0, r_km = 30.0 }
+commit_km = 110.0
+trigger = "phase"
+
+[[group]]
+id = "a6_ship"
+name = "A-6E strike on the fleet"
+callsign = "MILLER"
+side = "red"
+role = "strike"
+type = "A-6E"
+n = 8
+entry = { lat = 70.95, lon = 26.5, alt_m = 8000.0 }
+exit = { lat = 71.0, lon = 24.0 }
+route = [{ lat = 70.85, lon = 29.5, alt_m = 8000.0 }]
+target = "nfleet"
+launch_km = 100.0
+abort_frac = 0.5
+trigger = "phase"
+
+[[group]]
+id = "sead_ship"
+name = "F/A-18A HARM shooters (fleet raid)"
+callsign = "RAGIN"
+side = "red"
+role = "sead"
+type = "FA-18A"
+n = 2
+entry = { lat = 70.9, lon = 26.6, alt_m = 8500.0 }
+exit = { lat = 70.95, lon = 24.0 }
+target = "a6_ship"
+commit_km = 40.0
+trigger = "phase"
+
+[[group]]
+id = "esc_ship"
+name = "F-14A escort (fleet raid)"
+callsign = "JOLLY"
+side = "red"
+role = "escort"
+type = "F-14A"
+n = 4
+entry = { lat = 71.0, lon = 26.3, alt_m = 9500.0 }
+exit = { lat = 71.0, lon = 24.0 }
+target = "a6_ship"
+commit_km = 80.0
+trigger = "phase"
+
+[[group]]
+id = "a6_land"
+name = "A-6E low-level strike on Kilp-Yavr"
+callsign = "RAVEN"
+side = "red"
+role = "strike"
+type = "A-6E"
+n = 6
+alt_m = 150.0
+weapons = { "WALLEYE" = 2 }
+entry = { lat = 69.5, lon = 28.0, alt_m = 150.0 }
+exit = { lat = 69.9, lon = 25.0 }
+route = [{ lat = 69.2, lon = 30.4, alt_m = 150.0 }, { lat = 69.1, lon = 31.6, alt_m = 150.0 }]
+target = "kilpyavr"
+launch_km = 22.0
+abort_frac = 0.5
+trigger = "phase"
+
+[[group]]
+id = "sead_land"
+name = "F/A-18A HARM shooters (coast raid)"
+callsign = "HORNET"
+side = "red"
+role = "sead"
+type = "FA-18A"
+n = 4
+entry = { lat = 69.75, lon = 27.4, alt_m = 7000.0 }
+exit = { lat = 70.0, lon = 25.0 }
+target = "a6_land"
+commit_km = 40.0
+trigger = "phase"
+
+[[group]]
+id = "b52"
+name = "B-52G Harpoon carriers (42nd Bomb Wing)"
+callsign = "DOOM"
+side = "red"
+role = "strike"
+type = "B-52G"
+n = 3
+weapons = { "AGM-84A" = 8 }
+entry = { lat = 71.05, lon = 27.0, alt_m = 10500.0 }
+exit = { lat = 71.05, lon = 25.0 }
+route = [{ lat = 71.0, lon = 30.5, alt_m = 10500.0 }]
+target = "nfleet"
+launch_km = 100.0
+abort_frac = 0.67
+trigger = "phase"
+
+# ====================================================================== objectives
+
+[[objective]]
+id = "kirov"
+text = "KIROV survives"
+kind = "ship_survives"
+params = { ship = "kirov" }
+points = 25
+
+[[objective]]
+id = "ships"
+text = "Lose no more than one ship of the KIROV group"
+kind = "ships_survive"
+params = { max = 1 }
+points = 10
+
+[[objective]]
+id = "strikers"
+text = "Shoot down half the strike aircraft"
+kind = "kill_fraction"
+params = { groups = ["a6_ship", "a6_land", "b52"], frac = 0.5 }
+points = 15
+
+[[objective]]
+id = "runways"
+text = "Never more than two fighter airfields closed at once"
+kind = "runways"
+params = { bases = ["kilpyavr", "monchegorsk", "afrikanda", "severomorsk3"], max_closed = 2 }
+points = 15
+
+[[objective]]
+id = "radars"
+text = "Lose no more than two radars destroyed"
+kind = "radars_survive"
+params = { max_destroyed = 2 }
+points = 10
+
+[[objective]]
+id = "tomahawks"
+text = "Shoot down half the cruise missiles"
+kind = "missiles_stopped"
+params = { types = ["TLAM-C"], frac = 0.5, planned = 16 }
+points = 10
+
+[[objective]]
+id = "bastion"
+text = "The KIROV group holds its patrol line until T+45"
+kind = "hold_area"
+params = { ship = "kirov", lat = 70.27, lon = 34.8, r_km = 75.0, until_min = 45.0 }
+points = 10
+
+[[objective]]
+id = "hidden"
+text = "Deny NATO a fix on the fleet for twelve minutes"
+kind = "deny_location"
+params = { before_min = 12.0 }
+points = 5

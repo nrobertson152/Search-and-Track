@@ -1,0 +1,693 @@
+id = "northern_war_us"
+title = "The War in the North Pacific"
+faction = "US"
+order = 1
+summary = "Four days in October 1987, from the last hours of peace to the ceasefire, with the Carl Vinson battle group and the Eagles of Alaska. Every aircraft and ship you lose stays lost; every pilot who survives flies again, and the aces of the first night lead the last. Five battles. One war. What you do with the enemy's crews when they are helpless is up to you."
+repair = 0.15
+lost_text = "USS Carl Vinson is lost. The battle group's war ends with her; the Eagles of Alaska fight on."
+vital = ["cvn70"]
+
+[cast]
+admiral = "Rear Admiral Thomas Kessler"
+cag = "Captain Frank Delaney"
+intel = "Lieutenant Commander Paul Ostrowski"
+sailor = "OS2 Danny Ruiz"
+wife = "Carmen"
+rocc = "Colonel Margaret Hale"
+
+# ====================================================================== the opening
+
+[[intro]]
+kind = "teletype"
+title = "FLASH"
+from = "CINCPACFLT PEARL HARBOR HI"
+to = "CTF 77.4"
+date = "19 October 1987"
+text = """
+SECRET. IMMEDIATE.
+
+1. NCA HAS DIRECTED DEFCON 2 EFFECTIVE 0930Z.
+2. SOVIET PACIFIC FLEET SURFACE GROUPS AT SEA FROM PETROPAVLOVSK AND VLADIVOSTOK. LONG RANGE AVIATION AND NAVAL MISSILE REGIMENTS DISPERSED SINCE 11 OCT. BACKFIRE REGIMENT 568 MRAP ASSESSED READY AT ALEKSEYEVKA.
+3. CTF 77.4 CONTINUE BERING SEA OPERATIONS. HOLD SOVIET NAVAL AVIATION AWAY FROM ALASKA.
+4. RULES OF ENGAGEMENT UNCHANGED: WEAPONS TIGHT. NOTHING IN THIS MESSAGE AUTHORIZES THE USE OF FORCE.
+5. GOD SPEED.
+"""
+
+[[intro]]
+kind = "letter"
+title = "A LETTER HOME"
+from = "{sailor}, USS Carl Vinson"
+to = "{wife}, Chula Vista, California"
+date = "18 October 1987"
+text = """
+Carmen —
+
+The COD takes the mail off tomorrow so I'm writing fast. We're somewhere cold. I can't say where but you can guess from the fact that I'm wearing both sweaters you packed.
+
+Nobody tells us anything but the chiefs have stopped joking, and the Bears came out to look at us twice today. The Tomcat guys fly alongside them and wave. One of them told me the Russian tail gunner had a camera bigger than his head.
+
+Don't watch the news. Whatever they're saying, it's not as bad as they make it sound. Kiss Mikey for me and tell him his dad works the radar that keeps the bad guys away. That's even true.
+
+Love you more than coffee,
+Danny
+"""
+
+# ====================================================================== 1 — the prologue
+
+
+[[mission]]
+scenario = "us_battle_prologue"
+title = "Prologue — The Bear Watch"
+
+[[mission.page]]
+at = "after"
+when = "hard"
+kind = "diary"
+title = "CAG'S NOTEBOOK"
+from = "{cag}"
+date = "{date}"
+text = """
+1535Z. The FLASH came while EAGLE 02 was sitting a hundred feet off the BEAR's wing, close enough to see the gunner's face. Thirty seconds later the BEAR was in the water.
+
+It was the right call. That crew had been reporting our position to Anadyr for twenty minutes and the BACKFIREs would have had it within the hour. I'd sign the order again.
+
+I'm writing it down because the kid who fired is twenty-four and he asked me in the ready room whether they got out. I told him I didn't know. I don't.
+
+Tonight: {kills} of theirs down, {lost} of ours. The war is six hours old.
+"""
+
+[[mission.page]]
+at = "after"
+when = "mercy"
+kind = "diary"
+title = "CAG'S NOTEBOOK"
+from = "{cag}"
+date = "{date}"
+text = """
+1535Z. The FLASH came while our fighters were sitting on the BEARs' wings. The order to let them go came from the flag plot, and I passed it on myself.
+
+The admiral hasn't said a word about it since. Neither have I. Those two crews will be in Anadyr tonight telling their colonel exactly where we are, and tomorrow night we may pay for that.
+
+But I keep thinking about the gunner who waved at Eagle 02 this afternoon. He's home. I'm glad. I'm not sure I'm supposed to be.
+
+Tonight: {kills} of theirs down, {lost} of ours. The war is six hours old.
+"""
+
+[[mission.page]]
+at = "after"
+when = "defeat"
+kind = "teletype"
+title = "OPREP-3 PINNACLE"
+from = "CTF 77.4"
+to = "CINCPACFLT"
+date = "{date}"
+text = """
+1. HOSTILITIES COMMENCED 1535Z. BATTLE GROUP ENGAGED BY BADGER AND BACKFIRE AIRCRAFT WITHIN THE HOUR.
+2. OWN LOSSES: {lost} AIRCRAFT. SHIPS: {ships_lost}.
+3. ENEMY LOSSES: {kills} AIRCRAFT.
+4. BATTLE GROUP REMAINS ON STATION. EXPECT MAIN RAID TONIGHT.
+"""
+
+[[mission]]
+scenario = "us_battle_bering"
+title = "Night 1 — The Outer Air Battle"
+skip_without = ["cvn70"]
+replacements = { vf51 = 2, vf111 = 1 }
+
+[[mission.page]]
+at = "before"
+kind = "report"
+title = "INTELLIGENCE SUMMARY — THE FIRST NIGHT"
+from = "{intel}, battle group intelligence"
+date = "19 October 1987, 2100Z"
+text = """
+The 568th Naval Missile Regiment is airborne from Alekseyevka: two squadrons of BACKFIRE, twelve aircraft, two Kh-22 each. That's twenty-four missiles at Mach 3, and every one of them will lock the biggest return it sees. That is the carrier.
+
+They need our position first. Expect BEAR Ds to come looking and BADGER Js to blind us. The FRUNZE group is 400 km northwest covering their approach, and her S-300F will kill anything we send at her without saturation.
+
+Admiral Kessler's intent: kill the archers before they shoot. Meet the BACKFIREs as far out as the barrier patrols can reach. Everything else is secondary.
+
+So far the air wing's best is {ace} with {ace_kills}. Expect that to change tonight.
+"""
+
+# ====================================================================== 2 — the first night
+
+[[mission.page]]
+at = "after"
+when = "victory"
+kind = "newspaper"
+title = "THE BATTLE GROUP DAILY"
+from = "Printed aboard USS Carl Vinson"
+date = "{date}"
+text = """
+BACKFIRES TURNED BACK IN BERING SEA
+
+Navy fighters from the Carl Vinson met the Soviet Union's most dangerous bomber regiment four hundred kilometres from the ships last night and broke it up before most of its missiles could be fired. Air wing officers put the enemy's losses at {kills} aircraft.
+
+{best} was credited with {best_kills} of them. "We were told to kill the archers before they shot," said one Tomcat crewman. "That's what we did."
+
+The battle group's own losses: {lost} aircraft. Ships damaged or lost: {ships_lost}.
+"""
+
+[[mission.page]]
+at = "after"
+when = "draw"
+kind = "newspaper"
+title = "THE BATTLE GROUP DAILY"
+from = "Printed aboard USS Carl Vinson"
+date = "{date}"
+text = """
+HARD NIGHT IN THE BERING SEA
+
+The 568th came in on two axes last night and some of its missiles got through. Damage control parties are still working. Ships hit: {ships_lost}.
+
+The air wing claims {kills} Soviet aircraft for {lost} of its own. {best} brought back {best_kills}.
+
+"They'll be back," said the admiral's chief of staff. "So will we."
+"""
+
+[[mission.page]]
+at = "after"
+when = "defeat"
+kind = "teletype"
+title = "OPREP-3 PINNACLE"
+from = "CTF 77.4"
+to = "CINCPACFLT"
+date = "{date}"
+text = """
+1. BATTLE GROUP ATTACKED 2200Z-2330Z BY BACKFIRE REGIMENT WITH KH-22.
+2. SHIPS HIT: {ships_lost}.
+3. OWN AIRCRAFT LOST: {lost}. ENEMY AIRCRAFT DESTROYED: {kills}.
+4. REQUEST REPLACEMENT AIRCRAFT AND AIRCREW SOONEST. BATTLE GROUP WILL HOLD.
+"""
+
+[[mission]]
+scenario = "us_battle_bering_2"
+title = "Night 2 — The Second Raid"
+skip_without = ["cvn70"]
+replacements = { vf51 = 2, vf111 = 2 }
+ship_join = [
+  { id = "cg53", name = "USS Mobile Bay", type = "CG-Ticonderoga", side = "blue", group = "tf77", station = [320.0, 30.0], link = "D_navy" },
+  { id = "ddg994", name = "USS Callaghan", type = "DDG-Kidd", side = "blue", group = "tf77", station = [265.0, 22.0], link = "D_navy" },
+]
+
+[[mission.page]]
+at = "before"
+kind = "letter"
+title = "A LETTER HOME"
+from = "{sailor}, USS Carl Vinson"
+to = "{wife}"
+date = "20 October 1987"
+text = """
+Carmen —
+
+I'm okay. I want you to read that first in case you hear things.
+
+Last night was the worst night of my life and I spent all of it in a chair in CIC watching dots on a screen. The dots were missiles. Some of the dots were our guys. I can't tell you more than that and I wouldn't want to.
+
+Everybody's walking around today like they're surprised to be alive. The cooks made steak. Nobody ate much.
+
+They say the Russians will come again tonight. I'm on watch at 2000. I'll write when I'm off.
+
+Danny
+"""
+
+[[mission.page]]
+at = "before"
+kind = "teletype"
+title = "REINFORCEMENT"
+from = "CINCPACFLT PEARL HARBOR HI"
+to = "CTF 77.4"
+date = "20 October 1987, 1200Z"
+text = """
+SECRET. IMMEDIATE.
+
+1. USS MOBILE BAY (CG 53) AND USS CALLAGHAN (DDG 994), DETACHED FROM CONVOY ESCORT AT ADAK, CHOP TO CTF 77.4 EFFECTIVE 201800Z.
+2. MOBILE BAY TO THE AIR DEFENSE PICKET STATION UP-THREAT. CALLAGHAN TO THE SCREEN.
+3. NO FURTHER SURFACE REINFORCEMENT AVAILABLE BEFORE 25 OCT. MAKE THEM COUNT.
+"""
+
+[[mission.page]]
+at = "before"
+kind = "report"
+title = "INTELLIGENCE SUMMARY — THE SECOND NIGHT"
+from = "{intel}"
+date = "20 October 1987, 2200Z"
+text = """
+The 568th is coming back with what it has left, and a fresh BACKFIRE squadron from Mongokhto has been tracked moving north. It can come down through the Bering Strait, behind the barrier patrols.
+
+More dangerous: the FRUNZE group has turned east. Twenty P-700 Granits, Mach 2.5, 550 km. If she gets a fix on us she will fire all of them. She can be struck first, or kept blind.
+
+The air wing's best is now {ace}, {ace_kills} kills. The ready rooms have started a board.
+"""
+
+# ====================================================================== 3 — the second night
+
+[[mission.page]]
+at = "after"
+when = "not_defeat"
+kind = "newspaper"
+title = "THE BATTLE GROUP DAILY"
+from = "Printed aboard USS Carl Vinson"
+date = "{date}"
+text = """
+SECOND RAID BEATEN OFF
+
+For the second night running the Soviet naval air arm threw its BACKFIREs at the battle group, and for the second night running the carrier is still here. The air wing claims {kills} enemy aircraft; it lost {lost}.
+
+{best} flew three sorties and came back with {best_kills} kills. The leading pilot of the air wing is now {ace}, with {ace_kills}.
+
+Ships damaged or lost tonight: {ships_lost}.
+"""
+
+[[mission.page]]
+at = "after"
+when = "defeat"
+kind = "diary"
+title = "CAG'S NOTEBOOK"
+from = "{cag}"
+date = "{date}"
+text = """
+The Granits came in at 0012Z. I watched them on the screen in CATCC and I have never felt so useless in my life.
+
+We lost {lost} airplanes tonight. Ships: {ships_lost}. The admiral asked me how many Tomcats I can put up tomorrow and I gave him a number I am not sure of.
+
+We are not beaten. We are not winning either.
+"""
+
+[[mission]]
+scenario = "us_battle_alaska"
+title = "Night 3 — Bears over the Pole"
+replacements = { galena_det = 2, ks_det = 2 }
+cast = { personnel = "21st Tactical Fighter Wing, Personnel" }
+
+[[mission.page]]
+at = "before"
+when = "no_vital_lost"
+kind = "teletype"
+title = "OPERATIONAL IMMEDIATE"
+from = "CINCPAC"
+to = "CTF 77.4 / COMALNORAD"
+date = "21 October 1987, 0400Z"
+text = """
+SECRET.
+
+1. LONG RANGE AVIATION BEAR H REGIMENTS FROM ANADYR AND UKRAINKA ASSESSED PREPARING STRIKE ON ALASKAN AIR BASES TONIGHT WITH AS-15 CRUISE MISSILES. TARGETS: GALENA, KING SALMON, WEST COAST RADARS.
+2. LOSS OF GALENA AND KING SALMON WOULD REMOVE AIR COVER FROM CTF 77.4.
+3. COMALNORAD REPORTS ROCC ELMENDORF SHORT OF SENIOR WEAPONS CONTROLLERS AFTER 48 HRS CONTINUOUS OPS.
+4. CTF 77.4 AIR DEFENSE COMMANDER WILL PROCEED ELMENDORF BY COD AND ASSUME DIRECTION OF REGION AIR BATTLE FOR NIGHT 21 OCT. RETURN TO BATTLE GROUP ON COMPLETION.
+"""
+
+[[mission.page]]
+at = "before"
+when = "vital_lost"
+kind = "teletype"
+title = "OPERATIONAL IMMEDIATE"
+from = "CINCPAC"
+to = "CTF 77.4 / COMALNORAD"
+date = "21 October 1987, 0400Z"
+text = """
+SECRET.
+
+1. WITH THE LOSS OF CARL VINSON, SURVIVING AIRCRAFT OF CVW-15 RECOVERED AT GALENA AND KING SALMON. CTF 77.4 AIR DEFENSE COMMANDER AND STAFF EVACUATED TO ELMENDORF.
+2. LONG RANGE AVIATION BEAR H REGIMENTS ASSESSED PREPARING STRIKE ON ALASKAN AIR BASES TONIGHT WITH AS-15 CRUISE MISSILES.
+3. CTF 77.4 AIR DEFENSE COMMANDER WILL ASSUME DIRECTION OF REGION AIR BATTLE FOR NIGHT 21 OCT. NAVY AIRCREW AT GALENA PLACED UNDER COMALNORAD.
+4. THE BATTLE GROUP HAS DONE ITS DUTY. ALASKA MUST NOW HOLD WITHOUT IT.
+"""
+
+[[mission.page]]
+at = "before"
+when = "vital_lost"
+kind = "letter"
+title = "A NOTE ON THE DESK"
+from = "{rocc}, Director, ROCC Elmendorf"
+date = "21 October 1987"
+text = """
+Commander —
+
+Welcome to Elmendorf. I'm sorry about your ship. I won't pretend tonight makes up for her, but your people at Galena are flying again and they asked for a voice on the scope that they know.
+
+The BEARs are slow. That's the trouble: they don't need to come close. Each BEAR H carries six AS-15s, and once those are off the rails they go down to the tundra and my ground radars won't see them until they're over the fence. Kill the carriers. If you can't, the Sentries and the Eagles' look-down radars are all we've got.
+
+My people are good and they are very tired. So am I. The coffee is in the back.
+
+M. Hale
+"""
+
+[[mission.page]]
+at = "before"
+when = "no_vital_lost"
+kind = "letter"
+title = "A NOTE ON THE DESK"
+from = "{rocc}, Director, ROCC Elmendorf"
+date = "21 October 1987"
+text = """
+Commander —
+
+Welcome to Elmendorf. I'm told you've been fighting BACKFIREs for two nights, so the BEARs should feel slow.
+
+They are slow. That's the trouble: they don't need to come close. Each BEAR H carries six AS-15s, and once those are off the rails they go down to the tundra and my ground radars won't see them until they're over the fence. Kill the carriers. If you can't, the Sentries and the Eagles' look-down radars are all we've got.
+
+My people are good and they are very tired. So am I. The coffee is in the back.
+
+M. Hale
+"""
+
+# ====================================================================== 4 — Alaska
+
+[[mission.page]]
+at = "after"
+when = ["not_defeat", "no_vital_lost"]
+kind = "teletype"
+title = "OPREP-3"
+from = "COMALNORAD"
+to = "CINCPAC / CTF 77.4"
+date = "{date}"
+text = """
+1. BEAR H RAIDS ON ALASKAN BASES 0700Z-0830Z. ENEMY AIRCRAFT DESTROYED: {kills}. OWN LOSSES: {lost}.
+2. GALENA AND KING SALMON OPERATIONAL. RADAR LINE DEGRADED BUT FUNCTIONING.
+3. CTF 77.4 AIR DEFENSE COMMANDER RETURNING TO BATTLE GROUP. WELL DONE. HALE SENDS.
+"""
+
+[[mission.page]]
+at = "after"
+when = "defeat"
+kind = "teletype"
+title = "OPREP-3"
+from = "COMALNORAD"
+to = "CINCPAC / CTF 77.4"
+date = "{date}"
+text = """
+1. BEAR H RAIDS ON ALASKAN BASES 0700Z-0830Z. MULTIPLE CRUISE MISSILE IMPACTS GALENA AND KING SALMON.
+2. ENEMY AIRCRAFT DESTROYED: {kills}. OWN LOSSES: {lost}.
+3. FORWARD BASES REDUCED CAPABILITY NEXT 24 HRS. CTF 77.4 CAN EXPECT LITTLE AIR FORCE COVER.
+"""
+
+[[mission]]
+scenario = "us_battle_finale"
+title = "The Last Night"
+skip_without = ["cvn70"]
+
+[[mission.page]]
+at = "before"
+kind = "teletype"
+title = "FLASH"
+from = "NATIONAL COMMAND AUTHORITY"
+to = "ALL COMMANDS"
+date = "23 October 1987, 0100Z"
+text = """
+UNCLASSIFIED.
+
+1. THE UNITED STATES AND THE UNION OF SOVIET SOCIALIST REPUBLICS HAVE AGREED TO A CEASEFIRE ON ALL FRONTS EFFECTIVE 230400Z OCT 87.
+2. ALL COMMANDS WILL CEASE OFFENSIVE OPERATIONS AT 0400Z. AFTER 0400Z, DEFEND ONLY AGAINST WEAPONS IN FLIGHT.
+3. COMMANDERS ARE REMINDED THAT A SINGLE ENGAGEMENT AFTER 0400Z MAY BE TAKEN AS A RESUMPTION OF HOSTILITIES.
+"""
+
+[[mission.page]]
+at = "before"
+kind = "letter"
+title = "A LETTER HOME"
+from = "{sailor}, USS Carl Vinson"
+to = "{wife}"
+date = "23 October 1987"
+text = """
+Carmen —
+
+They just put it on the 1MC. It ends at 0400 Zulu. That's eight at night your time, Thursday.
+
+Nobody cheered. The chief said the Russians are going to throw everything they have left at us before then, and the chief is never wrong about the bad stuff.
+
+So one more night. Then I'm coming home, and I'm going to sleep for a week, and then I'm going to take Mikey to the zoo and not look at the sky once.
+
+Danny
+"""
+
+# ====================================================================== 5 — the last night
+
+[[mission.page]]
+at = "after"
+when = "mercy"
+kind = "report"
+title = "RESCUE REPORT"
+from = "HS-6, USS Carl Vinson"
+date = "{date}"
+text = """
+0441Z. Helicopter INDIAN 612 recovered four survivors of a Tu-22M3 BACKFIRE that ditched 24 km west of the battle group after the ceasefire. Sea state 3, water temperature 4 degrees. All four hypothermic; the navigator has a broken arm.
+
+The aircraft commander, a Major, asked through the interpreter whether the war was over. He was told it was. He did not say anything else for some time.
+
+The four were transferred to the ship's sick bay and are being treated. The BACKFIRE was carrying no missiles.
+"""
+
+[[mission.page]]
+at = "after"
+when = "hard"
+kind = "diary"
+title = "CAG'S NOTEBOOK"
+from = "{cag}"
+date = "{date}"
+text = """
+0412Z. The order was given and the BACKFIRE went into the sea twenty-five kilometres from the ship. It was carrying no missiles.
+
+I don't know what it was doing. Maybe it was lost. Maybe it was coming for us with nothing left but itself. Nobody will ever know, because nobody went to look.
+
+The war was over by then. Twelve minutes over.
+"""
+
+# ====================================================================== the end
+
+[[epilogue]]
+when = "ended_early"
+kind = "newspaper"
+title = "THE BATTLE GROUP DAILY — LAST EDITION"
+from = "Printed at Pearl Harbor"
+date = "7 November 1987"
+text = """
+CARL VINSON LOST
+
+The carrier went down at night in the Bering Sea with most of her crew saved by the ships of her screen. What was left of the air wing flew to Galena and King Salmon and fought on beside the Air Force's Eagles until the end.
+
+The war ended four days after it began, at 0400Z on 23 October. The surviving ships came home to Pearl Harbor on 6 November. The crowds on the pier were silent.
+
+The air wing's leading pilot was {ace}, with {ace_kills} kills.
+"""
+
+[[epilogue]]
+when = ["vital_lost", "no_ended_early"]
+kind = "newspaper"
+title = "THE BATTLE GROUP DAILY — LAST EDITION"
+from = "Printed at Pearl Harbor"
+date = "7 November 1987"
+text = """
+CARL VINSON LOST ON THE LAST NIGHT
+
+For three nights the carrier came through everything the Soviet naval air arm could send. On the fourth, in the last hours before the ceasefire, it found her. The ships of her screen took off most of her crew; her airplanes, those still flying, went to Galena.
+
+The ceasefire came at 0400Z on 23 October. The surviving ships came home to Pearl Harbor on 6 November. The crowds on the pier were silent.
+
+The air wing's leading pilot was {ace}, with {ace_kills} kills.
+"""
+
+[[epilogue]]
+when = ["war_victory", "no_vital_lost"]
+kind = "newspaper"
+title = "THE BATTLE GROUP DAILY — HOMEWARD BOUND"
+from = "Printed aboard USS Carl Vinson"
+date = "24 October 1987"
+text = """
+CEASEFIRE HOLDS — BATTLE GROUP ORDERED HOME
+
+For four days the Carl Vinson battle group held the Soviet Pacific Fleet's naval aviation away from Alaska. It met three raids that were meant to sink it, and it is still here.
+
+The air wing's leading pilot is {ace} of {ace_unit}, with {ace_kills} kills. Admiral Kessler, asked what he would remember, said: "The faces of the ones who didn't come back. And that the ones who did, did their job."
+
+The battle group will be in Pearl Harbor on 6 November.
+"""
+
+[[epilogue]]
+when = ["war_draw", "no_vital_lost"]
+kind = "newspaper"
+title = "THE BATTLE GROUP DAILY — HOMEWARD BOUND"
+from = "Printed aboard USS Carl Vinson"
+date = "24 October 1987"
+text = """
+CEASEFIRE HOLDS
+
+Four days, four battles, and a ceasefire that nobody on either side quite believes in yet. The battle group did what it was sent to do — the Soviet bombers never reached Alaska — and it paid for it.
+
+The air wing's leading pilot is {ace}, with {ace_kills} kills. The ships are going home.
+"""
+
+[[epilogue]]
+when = ["war_defeat", "no_vital_lost"]
+kind = "newspaper"
+title = "THE BATTLE GROUP DAILY"
+from = "Printed aboard USS Carl Vinson"
+date = "24 October 1987"
+text = """
+THE GUNS ARE SILENT
+
+The ceasefire found the battle group battered and short of everything: aircraft, missiles, sleep. The admiral's report to Pearl Harbor is said to be four lines long.
+
+The Soviet naval air arm did not sink the carrier. It did not have to: for the last two nights the battle group could do little but defend itself.
+"""
+
+[[epilogue]]
+when = "mercy_0"
+kind = "letter"
+title = "A LETTER, YEARS LATER"
+from = "Via the Embassy of the Russian Federation"
+to = "Commander in Chief, U.S. Pacific Fleet"
+date = "May 1992"
+text = """
+Dear Sir,
+
+In October 1987 I was the navigator of a Tu-95RTs reconnaissance aircraft of the 304th Regiment. On the afternoon the war began, two of your fighters were flying beside us. We knew what the radio meant before our commander did. We waited for the missiles.
+
+They did not come. Your fighters turned away, and we flew home, and we never flew against your ships again.
+
+I do not know who gave that order. I am writing to his Navy to say that ten men are alive because of it. One of them is my son's godfather. We drink to the American fighter pilot every year on the nineteenth of October.
+"""
+
+[[epilogue]]
+when = "mercy_4"
+kind = "letter"
+title = "A LETTER, YEARS LATER"
+from = "Via the Embassy of the Russian Federation"
+to = "Commander in Chief, U.S. Pacific Fleet"
+date = "May 1992"
+text = """
+Dear Sir,
+
+You will not know my name. In October 1987 I was an officer of naval aviation in the Pacific. On the worst night of my life an American commander let my crew live when he did not have to.
+
+I have tried for five years to find out who he was. Now that it is possible to write such a letter, I am writing it to his Navy and hoping that it finds him.
+
+Please tell him that four men went home to their families because of him. Please tell him that one of them has a daughter now, and that she is named for the sea.
+"""
+
+[[epilogue]]
+when = ["hard_0", "hard_4"]
+kind = "diary"
+title = "AFTERWORD"
+from = "{cag}"
+date = "1997"
+text = """
+Ten years. People ask me what it was like and I tell them about the airplanes, because that is what they want to hear.
+
+I don't tell them about the BEAR at 1535Z, or the BACKFIRE after the ceasefire. We did what the rules allowed and what the war seemed to need. I believed it then.
+
+I still mostly believe it. Mostly is the word that keeps me up.
+"""
+
+[[epilogue]]
+when = ["hard_0", "no_hard_4"]
+kind = "diary"
+title = "AFTERWORD"
+from = "{cag}"
+date = "1997"
+text = """
+Ten years. People ask me what it was like and I tell them about the airplanes, because that is what they want to hear.
+
+I don't tell them about the BEAR at 1535Z, thirty seconds after the FLASH, with a kid from Ohio sitting a hundred feet off its wing. It was the right call. The rules said so and the war said so.
+
+I just wish I had found out whether they got out.
+"""
+
+[[epilogue]]
+when = ["hard_4", "no_hard_0"]
+kind = "diary"
+title = "AFTERWORD"
+from = "{cag}"
+date = "1997"
+text = """
+Ten years. People ask me what it was like and I tell them about the airplanes, because that is what they want to hear.
+
+I don't tell them about the BACKFIRE twelve minutes after the ceasefire. We couldn't be sure what it was carrying, and the order was given, and it was legal. That is what I tell myself.
+
+It was carrying nothing. I have known that for ten years.
+"""
+
+[[epilogue]]
+when = "vital_lost"
+kind = "letter"
+title = "THE LAST LETTER"
+from = "{sailor}"
+to = "{wife}"
+date = "24 October 1987"
+text = """
+Carmen —
+
+I'm alive. I'm writing on borrowed paper with a borrowed pen, because everything I owned went down with the Vinson, boots included.
+
+I was in the water about forty minutes before a boat from one of the escorts pulled me out by my collar. I don't remember being cold, which the corpsman says is the bad kind of cold. I'm fine now. Some of the guys from my division aren't, and I'm not going to write about that.
+
+It's over now. The ceasefire held. They say we'll be home in two weeks. I don't want a party. I just want to sit on the porch with you and Mikey and not look at the sky.
+
+Danny
+"""
+
+[[epilogue]]
+when = "no_vital_lost"
+kind = "letter"
+title = "THE LAST LETTER"
+from = "{sailor}"
+to = "{wife}"
+date = "24 October 1987"
+text = """
+Carmen —
+
+It's over. It's really over.
+
+I went up on the flight deck this morning for the first time in four days. The sea was grey and flat and there was nothing in the sky but birds. The last Tomcat of the night came in over the stern, and when it caught the wire everybody up there cheered like it was the World Series.
+
+We're coming home. Tell Mikey the radar kept the bad guys away. Tell him it was harder than I thought.
+
+Danny
+"""
+
+# ====================================================================== the night she is lost
+# Told instead of that battle's own after-pages, which assume the carrier came through it.
+
+[[lost]]
+kind = "teletype"
+title = "OPREP-3 PINNACLE"
+from = "CTF 77.4"
+to = "CINCPACFLT / CINCPAC"
+date = "{date}"
+text = """
+FLASH. SECRET.
+
+1. USS CARL VINSON (CVN 70) STRUCK BY ANTI-SHIP MISSILES. FIRES OUT OF CONTROL ON THE HANGAR DECK. SHIP DEAD IN THE WATER. ABANDON SHIP ORDERED.
+2. SCREEN RECOVERING SURVIVORS. AIRBORNE AIRCRAFT OF CVW-15 DIVERTED TO GALENA AND KING SALMON.
+3. OWN AIRCRAFT LOST: {lost}. ENEMY AIRCRAFT DESTROYED: {kills}. SHIPS LOST: {ships_lost}.
+4. CTF 77.4 AND STAFF TRANSFERRING BY HELICOPTER TO THE SCREEN.
+"""
+
+[[lost]]
+when = "not_over"
+kind = "diary"
+title = "CAG'S NOTEBOOK"
+from = "{cag}"
+date = "{date}"
+text = """
+I was on the flight deck when the order came. The last Tomcat on the catapult went anyway, with no deck to come back to. He made Galena with four hundred pounds of fuel, and the tower thought he was a Russian.
+
+I put the ready-room logbooks in a mail sack and carried it down the net myself. I don't know why. It seemed important that somebody should know who flew.
+
+Tonight: {kills} of theirs down, {lost} of ours, and the ship. Tomorrow what is left of the air wing goes ashore, and the Air Force will have to teach us to fight from a runway that doesn't move.
+"""
+
+[[lost]]
+when = "over"
+kind = "diary"
+title = "CAG'S NOTEBOOK"
+from = "{cag}"
+date = "{date}"
+text = """
+I was on the flight deck when the order came. Three nights she took everything they had, and on the last night, with the ceasefire a few hours off, one of them got through.
+
+I put the ready-room logbooks in a mail sack and carried it down the net myself. I don't know why. It seemed important that somebody should know who flew.
+
+Tonight: {kills} of theirs down, {lost} of ours, and the ship. The war is over. Nobody cheered.
+"""

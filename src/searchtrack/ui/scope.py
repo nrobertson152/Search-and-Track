@@ -20,13 +20,14 @@ from .theme import TEXT, Theme
 
 
 class Scope:
-    def __init__(self, world, theme: Theme, rect: pygame.Rect):
+    def __init__(self, world, theme: Theme, rect: pygame.Rect, compact: bool = False):
         self.world = world
         self.theme = theme
         self.rect = rect
-        self.D = min(rect.w, rect.h) - 96
+        self.compact = compact            # a small instrument tube: thin bezel, no legends
+        self.D = min(rect.w, rect.h) - (34 if compact else 96)
         self.R = self.D // 2
-        self.center = (rect.centerx, rect.centery + 14)
+        self.center = (rect.centerx, rect.centery) if compact else (rect.centerx, rect.centery + 14)
         self.site_id = next(iter(world.radars), "")
         self.range_km = 0.0
         self.glow = pygame.Surface((self.D, self.D))
@@ -264,6 +265,20 @@ class Scope:
     def _bezel(self, screen, site, rt, up: bool) -> None:
         th = self.theme
         cx, cy = self.center
+        if self.compact:
+            # a Soviet instrument tube: black bakelite ring, white numerals at the quarters
+            pygame.draw.circle(screen, (16, 16, 15), (cx, cy), self.R + 15, 14)
+            pygame.draw.circle(screen, (96, 98, 94), (cx, cy), self.R + 15, 2)
+            pygame.draw.circle(screen, (6, 6, 6), (cx, cy), self.R + 2, 3)
+            for a in range(0, 360, 15):
+                ra = math.radians(a)
+                r0, r1 = self.R + 4, self.R + (11 if a % 90 == 0 else 7)
+                pygame.draw.line(screen, (210, 208, 196), (cx + r0 * math.sin(ra), cy - r0 * math.cos(ra)),
+                                 (cx + r1 * math.sin(ra), cy - r1 * math.cos(ra)), 1)
+            if not up:
+                t = TEXT.render(site.status.upper(), 14, th.alert, "eng")
+                screen.blit(t, (cx - t.get_width() // 2, cy - 8))
+            return
         pygame.draw.circle(screen, (24, 24, 26), (cx, cy), self.R + 22, 20)
         pygame.draw.circle(screen, (70, 70, 74), (cx, cy), self.R + 22, 2)
         pygame.draw.circle(screen, (8, 8, 8), (cx, cy), self.R + 2, 3)

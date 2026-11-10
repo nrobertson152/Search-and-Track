@@ -127,7 +127,7 @@ def request(world: "World", kind: str, ref: str = "", value: str = "") -> Reques
         lo, hi = lo * 1.3, hi * 1.5
     req = Request(world.next_id("req"), kind, ref, value, world.t, world.t + world.rng.uniform(lo, hi))
     world.hq.requests.append(req)
-    send(world, "voice", "SD" if world.faction_def.id == "US" else "ДЕЖУРНЫЙ", REQUEST_TEXT.get(kind, kind).format(ref=ref, value=value),
+    send(world, "voice", "SD" if world.faction_def.id == "US" else "DUTY OFFICER", REQUEST_TEXT.get(kind, kind).format(ref=ref, value=value),
          0, False, ref, "request")
     world.log_event("cmd", REQUEST_TEXT.get(kind, kind).format(ref=ref, value=value), ref)
     return req

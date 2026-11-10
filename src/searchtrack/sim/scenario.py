@@ -17,17 +17,51 @@ def scenario_dir() -> Path:
     return catalog().data_dir / "scenarios"
 
 
+PATCHABLE = ("group", "ship", "objective", "trigger", "squadron", "sam", "radar")
+
+
+def resolve(d: dict[str, Any]) -> dict[str, Any]:
+    """A scenario may be written as changes to another one (`base = "<id>"`): its keys replace the
+    base's, the [battle] table is merged key by key, and lists of tables can be edited in place
+    with `<name>_patch` (by id), `<name>_add` and `<name>_drop` -- e.g. the second night of a battle."""
+    if "base" not in d:
+        return d
+    out = dict(resolve(load_toml(scenario_dir() / f"{d['base']}.toml")))
+    for k, v in d.items():
+        if k == "base" or any(k.startswith(f"{n}_") and k[len(n) + 1:] in ("patch", "add", "drop") for n in PATCHABLE):
+            continue
+        if k == "battle" and isinstance(v, dict):
+            out["battle"] = {**out.get("battle", {}), **v}
+        else:
+            out[k] = v
+    for n in PATCHABLE:
+        key = "site" if n in ("sam", "radar") else "id"
+        items = [dict(x) for x in out.get(n, [])]
+        drop = set(d.get(f"{n}_drop", []))
+        items = [x for x in items if x.get(key) not in drop]
+        for patch in d.get(f"{n}_patch", []):
+            for x in items:
+                if x.get(key) == patch[key]:
+                    x.update(patch)
+        items += [dict(x) for x in d.get(f"{n}_add", [])]
+        if items or n in out:
+            out[n] = items
+    out.pop("base", None)
+    return out
+
+
 def list_scenarios() -> list[dict[str, Any]]:
     out = []
     for p in sorted(scenario_dir().glob("*.toml")):
-        d = load_toml(p)
+        d = resolve(load_toml(p))
         out.append({"id": d["id"], "title": d["title"], "faction": d["faction"], "kind": d.get("kind", "scenario"),
                     "subtitle": d.get("subtitle", ""), "summary": d.get("summary", ""), "order": d.get("order", 50),
                     "path": str(p), "start": d.get("start", ""), "theater": d.get("theater", ""),
                     "photo": list(d.get("photo", [])), "photo_caption": d.get("photo_caption", ""),
                     "difficulty": d.get("difficulty", 2), "era": d.get("era", d.get("start", "1960")[:3] + "0s"),
                     "duration_min": d.get("duration_min", 120), "n_objectives": len(d.get("objective", [])),
-                    "campaign": d.get("campaign", True), "night": d.get("weather", {}).get("night", False)})
+                    "campaign": d.get("campaign", True), "night": d.get("weather", {}).get("night", False),
+                    "battle": "battle" in d})
     out.sort(key=lambda s: (s["faction"], s["order"]))
     return out
 
@@ -48,14 +82,24 @@ def load_scenario(path_or_id: str) -> dict[str, Any]:
     p = Path(path_or_id)
     if not p.exists():
         p = scenario_dir() / f"{path_or_id}.toml"
-    return load_toml(p)
+    return resolve(load_toml(p))
 
 
-def build_world(path_or_id: str, seed: Optional[int] = None) -> World:
-    return build_world_from(load_scenario(path_or_id), seed)
+def build_world(path_or_id: str, seed: Optional[int] = None, assumed: bool = True) -> World:
+    return build_world_from(load_scenario(path_or_id), seed, assumed)
 
 
-def build_world_from(sc: dict[str, Any], seed: Optional[int] = None) -> World:
+def build_world_from(sc: dict[str, Any], seed: Optional[int] = None, assumed: bool = True) -> World:
+    """`assumed`: a later battle of a war played on its own starts from the losses its scenario
+    assumes (`assumed_oob`); inside a war, the war's own order of battle is applied instead."""
+    w = _build_world_from(sc, seed)
+    if assumed and sc.get("assumed_oob"):
+        from .war import apply
+        apply(w, sc["assumed_oob"])
+    return w
+
+
+def _build_world_from(sc: dict[str, Any], seed: Optional[int] = None) -> World:
     th = theater(sc["theater"])
     w = World(scenario_id=sc["id"], title=sc["title"], faction=sc["faction"], theater_id=sc["theater"],
               duration=sc.get("duration_min", 120) * 60.0, start_clock=sc.get("start", "1962-10-24T22:00:00"),
@@ -153,6 +197,9 @@ def build_world_from(sc: dict[str, Any], seed: Optional[int] = None) -> World:
                                     ready_missiles=m.get("missiles", st.launchers), reloads=m.get("reloads", 6),
                                     salvo_size=m.get("salvo", st.salvo), auto=m.get("auto", False),
                                     link=m.get("link", ""), name_ru=s.get("name_ru", ""))
+    if "battle" in sc:
+        from . import battle
+        battle.setup(w, sc)
     # scripted flights and flight plans (plus generated civil traffic)
     flights = list(sc.get("flight", [])) + generate_traffic(w, th, sc.get("traffic", []))
     for f in flights:
@@ -482,6 +529,11 @@ def cond(w: World, c: dict) -> bool:
         return w.vars.get("ui_" + c["event"], 0.0) >= 1.0
     if t == "since":
         return c["var"] in w.vars and w.t - w.vars[c["var"]] >= c["s"]
+    if w.battle.active:
+        from .battle import director
+        r = director.cond(w, c)
+        if r is not None:
+            return r
     raise ValueError(f"unknown condition type {t}")
 
 
@@ -584,6 +636,10 @@ def act(w: World, a: dict) -> None:
             if key in a:
                 setattr(w.weather, key, a[key])
     else:
+        from .battle import director
+        if k in director.ACTIONS:
+            director.act(w, a)
+            return
         raise ValueError(f"unknown action {k}")
 
 
@@ -721,6 +777,12 @@ def evaluate_objectives(w: World, final: bool = False) -> None:
             if final:
                 ready = sum(sum(q.ready.values()) for q in w.squadrons.values())
                 _set(w, o, "done" if ready >= p.get("min", 2) else "failed")
+            continue
+        elif w.battle.active:
+            from .battle import director
+            r = director.objective(w, o, final)
+            if r:
+                _set(w, o, r)
             continue
         if final and o.status == "open":
             _set(w, o, "done" if k in END_PASS else "failed")

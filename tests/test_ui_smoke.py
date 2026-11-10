@@ -67,7 +67,7 @@ def test_full_training_loop_through_the_ui(app):
 
 def test_soviet_title_and_board(app):
     from searchtrack.ui.scenes import CommandScene
-    press(app, "SELECT ПВО")
+    press(app, "SELECT PVO")
     assert app.scene.faction == "USSR"
     press(app, "SCENARIOS")
     app.scene.sel_id = "su_may_day"
@@ -77,3 +77,87 @@ def test_soviet_title_and_board(app):
     assert isinstance(sc, CommandScene) and sc.theme.map_style == "board"
     for _ in range(3):
         app.frame([], mouse=(0, 0))
+    # the PVO command post is its own room: board keys under the board, the cabinet on the right
+    for label in ("BOARD", "RADAR SCOPE", "NETWORK", "ADVANCE", "8×", "<", ">", "RANGE", "MENU"):
+        assert label in app.gui.drawn, label
+    assert app.gui.drawn["ADVANCE"].x > sc.L.display.right       # in the cabinet, not over the board
+    assert sc.L.console.right < sc.L.display.x                    # the operator's desk is on the left
+
+
+def right_click(app, pos):
+    app.frame([pygame.event.Event(pygame.MOUSEBUTTONDOWN, button=3, pos=pos)], mouse=pos)
+    app.frame([pygame.event.Event(pygame.MOUSEBUTTONUP, button=3, pos=pos)], mouse=pos)
+
+
+def test_right_click_orders_send_the_nearest_interceptor(app):
+    from searchtrack.ui.scenes import CommandScene
+    press(app, "SELECT PVO")
+    press(app, "SCENARIOS")
+    app.scene.sel_id = "su_may_day"
+    press(app, "BRIEFING")
+    press(app, "TAKE THE WATCH")
+    sc = app.scene
+    assert isinstance(sc, CommandScene)
+    w = sc.world
+    while not any(t.identity in ("unknown", "suspect", "hostile") and not t.lost for t in w.tracks.values()):
+        w.step()
+    sc.render_t = w.t
+    trk = next(t for t in w.tracks.values() if t.identity in ("unknown", "suspect", "hostile") and not t.lost)
+    sc.map.center_on(trk.x, trk.y)
+    app.frame([], mouse=(0, 0))
+    before = len(w.flights)
+    right_click(app, sc.map.w2s(trk.x, trk.y))
+    assert sc.ctx and sc.sel.get("track") == trk.id
+    assert "ORDER ID PASS" in app.gui.drawn and "ID PASS" not in sc.ctx["title"]
+    click(app, app.gui.drawn["ORDER ID PASS"].center)
+    assert sc.ctx is None
+    assert len(w.flights) == before + 1 or any(f.target == trk.id for f in w.flights.values())
+    fl = next(f for f in w.flights.values() if f.target == trk.id)
+    assert fl.task == "id" and fl.geometry == "stern"
+    # a second order on the same track re-tasks the flight that is already on it
+    right_click(app, sc.map.w2s(trk.x, trk.y))
+    click(app, app.gui.drawn["ORDER INTERCEPT"].center)
+    assert fl.task == "intercept" and sum(1 for f in w.flights.values() if f.target == trk.id) == 1
+    # a click elsewhere closes the menu without acting
+    right_click(app, sc.map.w2s(trk.x, trk.y))
+    click(app, (sc.L.display.x + 5, sc.L.display.bottom - 5))
+    assert sc.ctx is None
+
+
+def test_war_room_to_a_battle_and_back(app):
+    """Title → THE WAR → briefing → battle → debrief books the night into the war → back to the war room."""
+    from searchtrack.sim import scenario
+    from searchtrack.ui.scenes import BriefingScene, CommandScene, DebriefScene
+    from searchtrack.ui.war import WarScene, load_war
+    from searchtrack.ui.interlude import InterludeScene
+    press(app, "SELECT PVO")
+    press(app, "THE WAR")
+    app.frame([], mouse=(0, 0))
+    assert isinstance(app.scene, InterludeScene)                 # the war opens with its papers
+    press(app, "NEXT")
+    press(app, "SKIP ALL")
+    assert isinstance(app.scene, WarScene) and app.scene.cid == "northern_war_su"
+    press(app, "BRIEFING")
+    assert isinstance(app.scene, BriefingScene) and app.scene.world.scenario_id == "su_battle_prologue"
+    press(app, "SPECTATE")
+    sc = app.scene
+    assert isinstance(sc, CommandScene) and sc.world.battle.spectator
+    for _ in range(3):
+        app.frame([], mouse=(0, 0))
+    w = sc.world
+    w.battle.groups["a6_land"].losses = 2
+    scenario.end(w, "test")
+    w.battle.outcome = "DRAW"
+    app.start_debrief(w)
+    assert isinstance(app.scene, DebriefScene)
+    st = load_war(app, "northern_war_su")
+    assert st["mission"] == 1 and st["oob"]["groups"]["a6_land"]["lost"] == 2
+    press(app, "CONTINUE")
+    app.frame([], mouse=(0, 0))
+    assert isinstance(app.scene, InterludeScene)                 # what the night meant, and what comes next
+    assert app.scene.pages and app.scene.pages[-1]["kind"] == "report"   # the next night's intelligence
+    press(app, "SKIP ALL")
+    assert isinstance(app.scene, WarScene)
+    press(app, "BRIEFING")
+    assert app.scene.world.scenario_id == "su_battle_kola"
+    assert app.scene.world.battle.groups["a6_land"].n == 4

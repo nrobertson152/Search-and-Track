@@ -13,8 +13,8 @@ from .theme import TEXT, theme_for
 RANKS = {
     "US": [(0, "Second Lieutenant"), (60, "First Lieutenant"), (160, "Captain"), (300, "Major"),
            (460, "Lieutenant Colonel"), (640, "Colonel")],
-    "USSR": [(0, "Лейтенант · Lieutenant"), (60, "Старший лейтенант · Senior Lieutenant"), (160, "Капитан · Captain"),
-             (300, "Майор · Major"), (460, "Подполковник · Lieutenant Colonel"), (640, "Полковник · Colonel")],
+    "USSR": [(0, "Lieutenant"), (60, "Senior Lieutenant"), (160, "Captain"), (300, "Major"),
+             (460, "Lieutenant Colonel"), (640, "Colonel")],
 }
 
 
@@ -102,7 +102,7 @@ class CampaignScene(Scene):
             self.paper = paper((560, 800), (226, 220, 196) if not ru else (222, 218, 196), seed=9, age=1.2)
         screen.blit(self.paper, (40, 50))
         ink = (40, 34, 26)
-        gui.label((70, 70), "ЛИЧНОЕ ДЕЛО · SERVICE RECORD" if ru else "SERVICE RECORD — AF FORM 11", 15, (140, 40, 30), "eng")
+        gui.label((70, 70), "PERSONAL FILE · PVO OFFICER" if ru else "SERVICE RECORD — AF FORM 11", 15, (140, 40, 30), "eng")
         gui.label((70, 100), "Air defense controller", 26, ink, "title")
         gui.label((70, 140), rank_for(self.faction, points), 20, ink, "eng")
         gui.label((70, 168), f"Career points: {points}", 14, (90, 80, 64), "eng_r")
@@ -124,15 +124,15 @@ class CampaignScene(Scene):
         if not done:
             gui.label((70, y), "— none yet —", 14, (110, 100, 84), "eng_r")
         if good >= 3:
-            st = stamp("БЛАГОДАРНОСТЬ" if ru else "COMMENDATION", (30, 60, 150), 24, -8,
-                       "COMMENDATION" if ru else "AIR DEFENSE COMMAND", seed=3)
+            st = stamp("COMMENDATION", (30, 60, 150), 24, -8,
+                       "ARMY COMMANDER" if ru else "AIR DEFENSE COMMAND", seed=3)
             screen.blit(st, (320, 720))
         if any(v.get("civil") for v in done.values()):
-            st = stamp("ВЫГОВОР" if ru else "REPRIMAND", (170, 30, 26), 24, 6, "REPRIMAND" if ru else "BOARD OF INQUIRY",
+            st = stamp("REPRIMAND", (170, 30, 26), 24, 6, "PARTY COMMITTEE" if ru else "BOARD OF INQUIRY",
                        seed=4)
             screen.blit(st, (80, 730))
         # ---- the campaign: one card per watch, in historical order
-        gui.label((640, 40), "КАМПАНИЯ · CAREER" if ru else "CAREER — THE WATCHES OF YOUR SERVICE", 28,
+        gui.label((640, 40), "CAREER — THE WATCHES OF YOUR SERVICE", 28,
                   (226, 220, 200), "title")
         y = 96
         for m in self.missions:
@@ -184,7 +184,7 @@ class AlertDutyScene(Scene):
         gui.set_theme(th)
         screen.blit(self.desk, (0, 0))
         ru = self.faction == "USSR"
-        gui.label((60, 30), "БОЕВОЕ ДЕЖУРСТВО · ALERT DUTY" if ru else "ALERT DUTY", 30, (226, 220, 200), "title")
+        gui.label((60, 30), "COMBAT ALERT DUTY" if ru else "ALERT DUTY", 30, (226, 220, 200), "title")
         gui.label((62, 74), "A generated watch on a historical order of battle. Every seed is a different night.", 14,
                   (190, 184, 160), "eng_r")
         y = 120

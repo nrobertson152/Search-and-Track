@@ -60,6 +60,7 @@ class MapView:
         self._cov = None
         self._cov_key = None
         self.drag = None
+        self.fx = None                     # battle overlay (ui/battlefx.py) when a battle is on
         self.light_gun: Optional[tuple[float, float]] = None
         self.hover_world = (0.0, 0.0)
         self._base_labels: list[pygame.Rect] = []     # label rects baked into the base layer (screen coords)
@@ -86,16 +87,21 @@ class MapView:
 
     # ------------------------------------------------------------ input
     def handle(self, gui, events) -> Optional[tuple]:
-        """Returns ('pick', world_xy, screen_xy) on a left click inside the map."""
+        """Returns ('pick', world_xy, screen_xy) on a left click inside the map and ('menu', ...) on a
+        right click that did not drag the map."""
         r = self.rect
         m = gui.mouse
         inside = r.collidepoint(m)
         if inside:
             self.hover_world = self.s2w(*m)
+        menu = None
         for e in events:
             if e.type == pygame.MOUSEBUTTONDOWN and e.button in (2, 3) and r.collidepoint(e.pos):
                 self.drag = (e.pos, self.cx, self.cy)
             elif e.type == pygame.MOUSEBUTTONUP and e.button in (2, 3):
+                if e.button == 3 and self.drag and math.hypot(e.pos[0] - self.drag[0][0],
+                                                              e.pos[1] - self.drag[0][1]) < 6:
+                    menu = ("menu", self.s2w(*e.pos), e.pos)
                 self.drag = None
             elif e.type == pygame.MOUSEMOTION and self.drag:
                 (px, py), cx, cy = self.drag
@@ -104,6 +110,8 @@ class MapView:
         if inside and gui.wheel:
             self.zoom(1.25 ** gui.wheel, m)
             gui.wheel = 0
+        if menu:
+            return menu
         if inside and gui.released and not gui.consumed and r.collidepoint(gui.press_pos) \
                 and math.hypot(m[0] - gui.press_pos[0], m[1] - gui.press_pos[1]) < 6:
             gui.consumed = True
@@ -112,6 +120,10 @@ class MapView:
 
     def pick(self, sx: int, sy: int, radius: int = 14) -> Optional[tuple[str, str]]:
         w = self.world
+        if self.fx is not None:
+            hit = self.fx.pick(self, sx, sy)
+            if hit is not None:
+                return hit
         best, bd = None, radius
         for f in w.flights.values():
             if f.state in ("landed", "lost", "scrambling"):
@@ -220,7 +232,7 @@ class MapView:
             while gx <= x1:
                 gy = math.floor((y0 + 1000.0) / step) * step - 1000.0
                 while gy <= y1:
-                    lab = tracking.grid_label(w, gx + 1, gy + 1)[0]
+                    lab = tracking.grid_letter(w, gx + 1, gy + 1, cyrillic=getattr(self, "lang_mode", "ru") != "en")
                     sx, sy = tp(gx + 4, gy + step - 4)
                     surf.blit(TEXT.render(lab, 16, (76, 128, 124), "eng"), (sx + 2, sy - 2))
                     gy += step
@@ -280,6 +292,15 @@ class MapView:
         return surf
 
     # ------------------------------------------------------------ draw
+    def draw_base_only(self, screen: pygame.Surface) -> None:
+        """Just the map (coasts, grid, names): the replay draws its own picture on it."""
+        key = (round(self.cx, 2), round(self.cy, 2), round(self.scale, 4), self.layers["zones"], self.layers["labels"],
+               self.rect.size, getattr(self, "lang_mode", ""))
+        if key != self._base_key:
+            self._base = self._build_base()
+            self._base_key = key
+        screen.blit(self._base, self.rect.topleft)
+
     def draw(self, screen: pygame.Surface, sel: dict, tr: float) -> None:
         th = self.theme
         w = self.world
@@ -312,7 +333,8 @@ class MapView:
         # static sites
         if self.layers["sites"]:
             for s in w.radars.values():
-                self._site(screen, s, sel)
+                if not s.carrier:
+                    self._site(screen, s, sel)
             for b in w.airbases.values():
                 if b.side != "blue":
                     continue
@@ -325,7 +347,8 @@ class MapView:
                     if r is not None:
                         screen.blit(img, r)
             for sm in w.sams.values():
-                self._sam(screen, sm, sel)
+                if not sm.carrier and sm.side == w.own_side:
+                    self._sam(screen, sm, sel)
         # range rings for selected radar
         if self.layers["rings"] and sel.get("site") in w.radars:
             s = w.radars[sel["site"]]
@@ -345,12 +368,21 @@ class MapView:
                 sx, sy = self.w2s(p.x, p.y)
                 c = _fade(th.phosphor, 1.0 - age / 45.0)
                 pygame.draw.circle(screen, c, (sx, sy), 2)
-        # jam strobes
-        for st in w.strobes:
+        # jam strobes (in a battle, only the latest strobe per radar and jammer bearing, faint)
+        strobes = w.strobes
+        if self.fx is not None:
+            last: dict = {}
+            for st in w.strobes:
+                if st.strobe_az is not None and w.t - st.t < 12.0:
+                    last[(st.radar, round(st.strobe_az / 4.0))] = st
+            strobes = list(last.values())
+        for st in strobes:
             site = w.radars.get(st.radar)
             if site is None or st.strobe_az is None:
                 continue
             age = w.t - st.t
+            if self.fx is not None:
+                age = age * 2.0 + 10.0
             sx, sy = self.w2s(site.x, site.y)
             rt = w.catalog.radars[site.type_id]
             a = math.radians(st.strobe_az)
@@ -362,19 +394,23 @@ class MapView:
                 sx, sy = self.w2s(a.x, a.y)
                 pygame.draw.circle(screen, (255, 0, 255), (sx, sy), 3, 1)
                 screen.blit(TEXT.render(a.callsign[:12], 9, (255, 0, 255), "ui"), (sx + 4, sy + 2))
-        # tracks
-        for tk in sorted(w.tracks.values(), key=lambda t: t.id == sel.get("track")):
-            self._track(screen, tk, tk.id == sel.get("track"))
-        # interceptors and missiles
-        for f in w.flights.values():
-            self._flight(screen, f, f.id == sel.get("flight"))
-        for m in w.missiles.values():
-            if m.state != "flying" or w.t < m.t_launch:
-                continue
-            sx, sy = self.w2s(m.x, m.y)
-            ex, ey = self.w2s(m.x - m.vx / 1000.0 * 6, m.y - m.vy / 1000.0 * 6)
-            pygame.draw.line(screen, th.alert, (sx, sy), (ex, ey), 1)
-            pygame.draw.circle(screen, th.lamp_white, (sx, sy), 2)
+        if self.fx is not None:
+            # battle: tactical symbols, ships, weapons in flight and effects
+            self.fx.draw_map(screen, self, sel)
+        else:
+            # tracks
+            for tk in sorted(w.tracks.values(), key=lambda t: t.id == sel.get("track")):
+                self._track(screen, tk, tk.id == sel.get("track"))
+            # interceptors and missiles
+            for f in w.flights.values():
+                self._flight(screen, f, f.id == sel.get("flight"))
+            for m in w.missiles.values():
+                if m.state != "flying" or w.t < m.t_launch:
+                    continue
+                sx, sy = self.w2s(m.x, m.y)
+                ex, ey = self.w2s(m.x - m.vx / 1000.0 * 6, m.y - m.vy / 1000.0 * 6)
+                pygame.draw.line(screen, th.alert, (sx, sy), (ex, ey), 1)
+                pygame.draw.circle(screen, th.lamp_white, (sx, sy), 2)
         # light gun
         if self.light_gun and not board:
             sx, sy = self.w2s(*self.light_gun)
@@ -493,7 +529,8 @@ class MapView:
             screen.blit(TEXT.render(f"{sub}  {clock(w, tk.t_update)}  ({age / 60:.0f}m)", 10, _fade(col, 0.85), "cyr"),
                         (lx + r + 3, ly))
             if tk.jammer:
-                screen.blit(TEXT.render("ПОМЕХА", 10, th.accent, "cyr"), (lx + r + 3, ly + 13))
+                screen.blit(TEXT.render("ПОМЕХА" if getattr(self, "lang_mode", "ru") != "en" else "JAMMING", 10,
+                                        th.accent, "cyr"), (lx + r + 3, ly + 13))
             if selected:
                 pygame.draw.circle(screen, th.lamp_white, (lx, ly), r + 5, 1)
             return

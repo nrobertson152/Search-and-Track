@@ -14,7 +14,7 @@ def main() -> None:
     ap.add_argument("--seconds", type=float, default=600.0, help="simulated time before the screenshot")
     ap.add_argument("--console", type=int, default=0)
     ap.add_argument("--mode", default="map", choices=["map", "scope", "net"])
-    ap.add_argument("--scene", default="command", choices=["title", "briefing", "command", "debrief", "campaign", "alert", "operations", "manual"])
+    ap.add_argument("--scene", default="command", choices=["title", "briefing", "command", "debrief", "campaign", "alert", "operations", "manual", "war", "story"])
     ap.add_argument("--faction", default=None)
     ap.add_argument("--coverage", action="store_true")
     ap.add_argument("--no-autoplay", action="store_true")

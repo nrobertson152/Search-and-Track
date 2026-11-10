@@ -113,7 +113,7 @@ USSR = Theme(
     id_colors={"pending": (235, 235, 225), "friend": (255, 95, 80), "unknown": (240, 210, 100),
                "suspect": (100, 175, 255), "hostile": (120, 190, 255), "faker": (200, 200, 200)},
     map_style="board", label_font="eng", units="metric", data_font="cyr", doc_font="cyr", title_font="title_ru",
-    title="ПВО СТРАНЫ — КОМАНДНЫЙ ПУНКТ 4-й ОА ПВО", subtitle="4th SEPARATE AIR DEFENSE ARMY · COMMAND POST",
+    title="PVO STRANY — ARMY COMMAND POST", subtitle="4th SEPARATE AIR DEFENSE ARMY",
     room_tint=(4, 10, 18), housing_ink=(36, 40, 46), housing_ink_dim=(70, 76, 82),
 )
 
@@ -128,10 +128,12 @@ class Text:
     def __init__(self):
         self._fonts: dict[tuple[str, int], pygame.font.Font] = {}
         self._cache: dict[tuple, pygame.Surface] = {}
+        self._wraps: dict[tuple, tuple] = {}
 
     def reset(self) -> None:
         self._fonts.clear()
         self._cache.clear()
+        self._wraps.clear()
 
     def font(self, kind: str, size: int) -> pygame.font.Font:
         key = (kind, size)
@@ -151,16 +153,57 @@ class Text:
         if s is None:
             if len(self._cache) > 6000:
                 self._cache.clear()
-            s = self.font(kind, size).render(text, True, color)
+            if self._spaced(text, size, kind):
+                s = self._render_spaced(text, size, color, kind)
+            else:
+                s = self.font(kind, size).render(text, True, color)
             self._cache[key] = s
         return s
 
+    # The narrow engraving face has a 2 px word space at panel sizes, which runs words together
+    # ("COMPANYLINES"); small panel lettering is set word by word with a wider space instead.
+    @staticmethod
+    def _spaced(text: str, size: int, kind: str) -> bool:
+        return kind in ("eng", "eng_r") and size <= 16 and " " in text
+
+    @staticmethod
+    def _gap(size: int) -> int:
+        return max(3, round(size * 0.3))
+
+    def _render_spaced(self, text: str, size: int, color, kind: str) -> pygame.Surface:
+        f = self.font(kind, size)
+        words = text.split(" ")
+        surfs = [f.render(w, True, color) if w else None for w in words]
+        S = pygame.Surface((max(1, self.width(text, size, kind)), f.size(text)[1]), pygame.SRCALPHA)
+        x = 0
+        for i, w in enumerate(surfs):
+            if i:
+                x += self._gap(size)
+            if w is not None:
+                S.blit(w, (x, 0), special_flags=pygame.BLEND_RGBA_MAX)
+                x += w.get_width()
+        return S
+
     def width(self, text: str, size: int = 13, kind: str = "ui") -> int:
-        return self.font(kind, size).size(text)[0]
+        f = self.font(kind, size)
+        if self._spaced(text, size, kind):
+            words = text.split(" ")
+            return sum(f.size(w)[0] for w in words if w) + self._gap(size) * (len(words) - 1)
+        return f.size(text)[0]
 
     def wrap(self, text: str, width: int, size: int = 13, kind: str = "ui") -> list[str]:
+        key = (text, width, size, kind)
+        hit = self._wraps.get(key)
+        if hit is not None:
+            return list(hit)
+        out = self._wrap(text, width, size, kind)
+        if len(self._wraps) > 3000:
+            self._wraps.clear()
+        self._wraps[key] = tuple(out)
+        return out
+
+    def _wrap(self, text: str, width: int, size: int = 13, kind: str = "ui") -> list[str]:
         out: list[str] = []
-        f = self.font(kind, size)
         for para in text.split("\n"):
             if not para.strip():
                 out.append("")
@@ -170,7 +213,7 @@ class Text:
             line = " " * indent
             for w in words:
                 cand = (line + " " + w) if line.strip() else (" " * indent + w)
-                if f.size(cand)[0] <= width:
+                if self.width(cand, size, kind) <= width:
                     line = cand
                 else:
                     if line.strip():

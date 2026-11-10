@@ -14,8 +14,8 @@ from . import doctrine, flight, gci, ident, radar, sam, tracking
 from .catalog import Catalog, FactionDef, load_catalog, load_toml
 from .geo import Projection
 from .serialize import dumps, from_data, transient
-from .state import (Aircraft, Airbase, Flight, FlightPlan, HeightFinder, HQState, Link, LogEntry, Message, Missile,
-                    Objective, RadarSite, Report, SamSite, Squadron, Stats, Track, Trigger, Weather)
+from .state import (Aircraft, Airbase, BattleState, Flight, FlightPlan, HeightFinder, HQState, Link, LogEntry, Message,
+                    Missile, Objective, RadarSite, Report, SamSite, Ship, Squadron, Stats, Track, Trigger, Weather)
 from .terrain import HorizonMask, Terrain, compute_mask
 
 DT = 1.0
@@ -123,6 +123,8 @@ class World:
     headlines: list[dict[str, Any]] = field(default_factory=list)
     lesson: dict[str, Any] = field(default_factory=dict)   # current instructor step (training)
     ids: dict[str, int] = field(default_factory=dict)
+    ships: dict[str, Ship] = field(default_factory=dict)
+    battle: BattleState = field(default_factory=BattleState)
     track_seq: int = 0
     reliability: float = 1.0
     ended: bool = False
@@ -387,7 +389,9 @@ class World:
         for s in self.sams.values():
             if s.lock == victim:
                 s.lock = deb.id
-        own_shooter = shooter in self.sams or shooter in self.flights or shooter.startswith("FL")
+        own_shooter = (shooter in self.sams and self.sams[shooter].side == self.own_side) or \
+            shooter in self.flights or shooter.startswith("FL") or \
+            (shooter in self.battle.groups and self.battle.groups[shooter].side == self.own_side)
         self.stats.kills.append([victim, shooter or cause, ac.side])
         if ac.side == "civil":
             self.vars["civil_losses"] = self.vars.get("civil_losses", 0.0) + 1
@@ -399,6 +403,9 @@ class World:
             self.alert(f"{ac.callsign} lost ({cause})", victim, 1)
         self.vars[f"destroyed_{victim}"] = 1.0
         self.log_event("result", f"{ac.callsign or victim} destroyed — {cause}", victim)
+        if self.battle.active:
+            from .battle import combat
+            combat.on_destroyed(self, ac, cause, shooter)
         for fl in self.flights.values():
             if fl.contact == victim:
                 fl.contact = ""
@@ -436,10 +443,15 @@ class World:
             return
         from . import scenario
         scenario.update(self)
+        if self.battle.active:
+            from . import battle
+            battle.pre_step(self, dt)
         for ac in list(self.aircraft.values()):
             flight.step_mission(self, ac, dt)
         for fl in list(self.flights.values()):
             gci.flight_step(self, fl, dt)
+        if self.battle.active:
+            battle.mid_step(self, dt)
         for ac in list(self.aircraft.values()):
             flight.step_aircraft(self, ac, dt)
         for m in list(self.missiles.values()):
@@ -469,6 +481,8 @@ class World:
         for s in self.sams.values():
             sam.sam_step(self, s, dt)
         gci.recover_squadrons(self)
+        if self.battle.active:
+            battle.post_step(self, dt)
         self._upgrades()
         doctrine.comms_step(self)
         doctrine.hq_step(self)
@@ -476,7 +490,7 @@ class World:
         self._links_step()
         self._weather_step(dt)
         scenario.evaluate_objectives(self)
-        if self.tick % 10 == 0:
+        if self.tick % (5 if self.battle.active else 10) == 0:
             self._snapshot()
         if self.tick % 60 == 0:
             self._cleanup()
@@ -487,7 +501,17 @@ class World:
 
     # ------------------------------------------------------------ subsystems
     def _carry(self, site: RadarSite) -> None:
-        """Airborne radar rides with its aircraft; off the air if the aircraft is not airborne."""
+        """Airborne radar rides with its aircraft; off the air if the aircraft is not airborne.
+        Shipborne radar sails with its ship, and is silent under emission control."""
+        sh = self.ships.get(site.carrier)
+        if sh is not None:
+            site.x, site.y, site.elev = sh.x, sh.y, 0.0
+            off = sh.state in ("sunk", "crippled") or sh.emcon
+            if off and site.status != "down":
+                site.status, site.fail_t = "down", 1e12
+            elif not off and site.status == "down" and site.fail_t >= 1e11:
+                site.status, site.fail_t = "ok", -1.0
+            return
         ac = self.aircraft.get(site.carrier)
         if ac is None or ac.state != "airborne":
             if site.status != "down":
@@ -607,7 +631,13 @@ class World:
         acs = [[a.id, round(a.x, 1), round(a.y, 1), round(a.alt), a.side, a.kind]
                for a in self.aircraft.values() if a.state == "airborne"]
         trs = [[k.id, round(k.x, 1), round(k.y, 1), k.identity] for k in self.tracks.values() if not k.lost]
-        self.stats.truth_snaps.append([round(self.t), acs, trs])
+        snap = [round(self.t), acs, trs]
+        if self.battle.active:     # battles: ships and missiles too, for the replay
+            snap.append([[s.id, round(s.x, 2), round(s.y, 2), round(s.hdg), s.side, s.state]
+                         for s in self.ships.values()])
+            snap.append([[m.id, round(m.x, 1), round(m.y, 1), m.side, m.kind]
+                         for m in self.missiles.values() if m.state == "flying" and self.t >= m.t_launch])
+        self.stats.truth_snaps.append(snap)
 
     def _cleanup(self) -> None:
         for mid in [m.id for m in self.missiles.values() if m.state == "done" and self.t - m.t_launch > 120.0]:

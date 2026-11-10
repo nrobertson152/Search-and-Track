@@ -8,7 +8,7 @@ import math
 from dataclasses import dataclass, field
 from typing import Any, Callable
 
-from . import doctrine, gci, sam, tracking
+from . import doctrine, gci, orders, sam, tracking
 from .world import World
 
 Result = tuple[bool, str]
@@ -133,7 +133,7 @@ def _report(w: World, track: str) -> Result:
     hdg = (math.degrees(math.atan2(trk.vx, trk.vy)) % 360.0)
     pos = tracking.grid_label(w, trk.x, trk.y) if w.faction_def.pipeline == "manual" else f"{trk.x:.0f}/{trk.y:.0f}"
     text = f"TRACK {trk.id} {doctrine.id_label(w, trk.identity)} AT {pos}, {alt}, HDG {hdg:03.0f}, {spd:.0f} KM/H, SIZE {trk.size}"
-    doctrine.send(w, "voice", "SD" if w.faction == "US" else "ДЕЖУРНЫЙ", "Reported to HQ: " + text, 0, False, track,
+    doctrine.send(w, "voice", "SD" if w.faction == "US" else "DUTY OFFICER", "Reported to HQ: " + text, 0, False, track,
                   "report")
     return True, "Reported to higher HQ"
 
@@ -328,6 +328,86 @@ def _readiness(w: World, squadron: str, bucket: float, n: int = 1) -> Result:
         prep = max(120.0, (min(float(k) for k, v in sq.ready.items() if float(k) > bucket and v > 0) - bucket) * 45.0)
         sq.upgrading.append([w.t + prep + i * 60.0, float(bucket)])
     return True, f"{sq.name}: {n} aircraft to {bucket:g}-minute readiness"
+
+
+@handler("quick")
+def _quick(w: World, track: str, order: str, n: int = 2) -> Result:
+    """One-click order: the duty officer picks the unit (see sim/orders.py)."""
+    if track not in w.tracks or w.tracks[track].lost:
+        return False, "no such track"
+    if order in orders.TASKS:
+        pick, why = orders.interceptor(w, track)
+        if pick is None:
+            return False, f"No interceptor available — {why}"
+        geometry = "lead" if order == "intercept" else "stern"
+        if pick.kind == "flight" and w.flights[pick.id].target == track:
+            fl = w.flights[pick.id]
+            if fl.task == order:
+                return False, f"{fl.callsign} is already on {track} ({order.upper()})"
+            fl.geometry = geometry
+            ok, msg = _task(w, flight=pick.id, task=order)
+        elif pick.kind == "flight":
+            ok, msg = _assign(w, flight=pick.id, track=track, task=order, geometry=geometry)
+        else:
+            ok, msg = _scramble(w, squadron=pick.id, n=n, task=order, track=track, geometry=geometry)
+        return ok, msg
+    if order == "missiles":
+        pick, why = orders.missile_unit(w, track)
+        if pick is None:
+            return False, f"No missile unit available — {why}"
+        s = w.sams[pick.id]
+        if w.t < s.t_ready and s.t_ready > w.t + s.readiness_min * 60.0:
+            _sam_alert(w, site=s.id)
+        return _sam_assign(w, site=pick.id, track=track)
+    return False, f"unknown order {order}"
+
+
+# ------------------------------------------------------------------ battle command
+
+@handler("decide")
+def _decide(w: World, decision: int, option: str) -> Result:
+    from .battle import staff
+    return staff.decide(w, int(decision), option, "player")
+
+
+@handler("standing")
+def _standing(w: World, key: str, value) -> Result:
+    if not w.battle.active:
+        return False, "no battle in progress"
+    allowed = {"posture": ("aggressive", "balanced", "defensive"), "fighters": ("auto", "manual"),
+               "sam": ("FREE", "TIGHT", "HOLD"), "emcon": (True, False), "reserve": tuple(range(0, 13))}
+    if key not in allowed or value not in allowed[key]:
+        return False, f"standing order {key}: not {value}"
+    w.battle.standing[key] = value
+    from .battle.core import event
+    event(w, "standing", f"Standing order: {key.upper()} {str(value).upper()}", "", level=1)
+    return True, f"Standing order {key.upper()}: {str(value).upper()}"
+
+
+@handler("priority")
+def _priority(w: World, track: str, on: bool = True) -> Result:
+    if track not in w.tracks:
+        return False, "no such track"
+    pr = w.battle.priority
+    if on and track not in pr:
+        pr.append(track)
+    elif not on and track in pr:
+        pr.remove(track)
+    return True, f"{track}: {'PRIORITY TARGET — staff commits on it first' if on else 'priority cleared'}"
+
+
+@handler("reinforce")
+def _reinforce(w: World, id: str) -> Result:
+    from .battle.director import call_reinforcement
+    return call_reinforcement(w, id)
+
+
+@handler("spectator")
+def _spectator(w: World, on: bool) -> Result:
+    if not w.battle.active:
+        return False, "no battle in progress"
+    w.battle.spectator = bool(on)
+    return True, "Spectating: the staff commands both sides" if on else "You have the command"
 
 
 # ------------------------------------------------------------------ missiles

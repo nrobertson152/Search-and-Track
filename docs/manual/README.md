@@ -13,3 +13,4 @@ The same manual is in the game: OPERATOR'S MANUAL on the title screen, or Esc �
 9. [The Network](09-network.md) — Lines, computers, faults and alerts
 10. [Debrief, Career and Alert Duty](10-careers.md) — How the shift is judged, and what comes after it
 11. [Historical Notes](11-history.md) — What the scenarios draw on, and how far to trust the numbers
+12. [Battles and the War](12-battles.md) — Whole air battles fought by both sides, the staff that runs them, and wars that remember

@@ -69,7 +69,7 @@ class Gui:
         self.consumed = False
         self.drawn: dict[str, Rect] = {}      # label -> rect of buttons drawn this frame (tests, tutorials)
         self.highlight: set[str] = set()      # labels the instructor wants pointed out
-        self.lang_mode = "ru+en"              # Soviet engraving: ru+en | ru | en
+        self.lang_mode = "en"                 # legends are English; the PVO plotting board keeps its Russian lettering
         self._cache: dict[tuple, pygame.Surface] = {}
         self._texture = self._make_texture()
 
@@ -416,9 +416,9 @@ class Gui:
         return S
 
     def button(self, r: Rect, text: str, lit: bool = False, enabled: bool = True, tip: str | None = None,
-               color=None, size: int = 12) -> bool:
+               color=None, size: int = 12, key: str | None = None) -> bool:
         th = self.theme
-        self.drawn[text] = r
+        self.drawn[key or text] = r
         lampc = color or th.key_lit
         hov = enabled and self.hover(r)
         press = hov and self.down and r.collidepoint(self.press_pos)

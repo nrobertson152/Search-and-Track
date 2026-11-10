@@ -113,6 +113,13 @@ class AircraftType:
     weapons: dict[str, int] = field(default_factory=dict)
     datalink: str = ""               # sage | lazur | ""
     transponder: str = "none"        # sif | kremniy | atc | none
+    surface_radar_km: float = 0.0    # radar range against a large warship (battle missions)
+    esm_km: float = 0.0              # passive detection range of a radiating ship radar
+    jammer: str = ""                 # default jammer of an electronic-warfare aircraft
+    seeker_km: float = 0.0           # missiles: seeker acquisition range
+    profile: str = ""                # missiles: high_dive | sea_skim | terrain | arm | glide
+    seeker_share: bool = False       # missiles: a salvo spreads itself over the targets it finds
+    warhead_kg: float = 0.0          # missiles
     silhouette: str = ""
     provenance: str = "approximate"
     notes: str = ""
@@ -141,6 +148,29 @@ class WeaponType:
     salvo: int = 2
     special: bool = False            # nuclear: needs release authority
     lethal_m: float = 30.0
+    missile: str = ""                # asm: aircraft type id of the missile entity it launches
+    speed_mps: float = 0.0           # average flight speed (0 = 750 m/s, rockets 650)
+    provenance: str = "approximate"
+    notes: str = ""
+
+
+@dataclass
+class ShipType:
+    id: str
+    name: str
+    name_ru: str = ""
+    nation: str = ""
+    kind: str = "destroyer"          # carrier | cruiser | destroyer | frigate | aux
+    nato_name: str = ""
+    rcs_m2: float = 5000.0
+    max_kn: float = 30.0
+    cruise_kn: float = 16.0
+    hp: float = 80.0
+    radars: list[dict[str, Any]] = field(default_factory=list)
+    sams: list[dict[str, Any]] = field(default_factory=list)
+    ciws: int = 0
+    chaff: int = 4
+    esm_km: float = 300.0
     provenance: str = "approximate"
     notes: str = ""
 
@@ -220,6 +250,7 @@ class Catalog:
     sams: dict[str, SamType] = field(default_factory=dict)
     jammers: dict[str, JammerType] = field(default_factory=dict)
     factions: dict[str, FactionDef] = field(default_factory=dict)
+    ships: dict[str, ShipType] = field(default_factory=dict)
     data_dir: Path = DATA_DIR
 
 
@@ -249,7 +280,8 @@ def load_catalog(data_dir: Path | None = None) -> Catalog:
             ("weapons.toml", "weapon", WeaponType, cat.weapons),
             ("sams.toml", "sam", SamType, cat.sams),
             ("jammers.toml", "jammer", JammerType, cat.jammers),
-            ("factions.toml", "faction", FactionDef, cat.factions)]
+            ("factions.toml", "faction", FactionDef, cat.factions),
+            ("ships.toml", "ship", ShipType, cat.ships)]
     for fname, key, cls, target in spec:
         raw = tomllib.loads((d / fname).read_text(encoding="utf-8"))
         for entry in raw.get(key, []):

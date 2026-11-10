@@ -1,0 +1,641 @@
+id = "us_battle_bering"
+title = "The Outer Air Battle"
+subtitle = "Bering Sea, October 1987 — hypothetical"
+summary = "War. The Carl Vinson battle group is in the Bering Sea and the Soviet Pacific Fleet's missile regiment is coming for it: shadowers first, then jammers, then two squadrons of BACKFIREs with Kh-22s, Mach 3 missiles that dive from 22 km. Kill the archers before they shoot, survive the arrows, and send the Intruders against the Frunze group."
+faction = "US"
+kind = "battle"
+photo = ["F-14A", "Tu-22M3"]
+photo_caption = "F-14A Tomcat — the fleet's long lance (file photograph)"
+era = "1980s"
+difficulty = 3
+order = 5
+theater = "alaska"
+start = "1987-10-19T21:40:00"
+tz = "Z"
+duration_min = 85
+seed = 1987
+reliability = 6.0
+
+briefing = """
+TASK FORCE 77.4 — CARL VINSON BATTLE GROUP, BERING SEA. THIS SCENARIO IS HYPOTHETICAL.
+
+SITUATION. The war is six hours old. The battle group is steaming in the eastern Bering Sea, 400 km from the Soviet coast, to hold the Pacific Fleet's naval aviation away from Alaska. The 568th Naval Missile Regiment (Tu-22M3 BACKFIRE) has been tracked moving forward. Before a regiment can fire it needs the fleet's position: expect BEAR D shadowers first, BADGER jammers to blind the picture, then the raid. A Soviet surface action group led by the battlecruiser FRUNZE is covering their approach 400 km to the northwest.
+
+YOUR FORCES. CVN-70 Carl Vinson with VF-51 and VF-111 (F-14A), VA-52 (A-6E with Harpoon), an E-2C Hawkeye and an EA-6B. Aegis cruiser Bunker Hill, nuclear cruiser Truxtun, destroyer Chandler, frigates Reid and Rentz (radar picket to the west). USAF F-15As at King Salmon and Galena, E-3A DARKSTAR on station over the coast, and the Alaskan radar line.
+
+COMMAND. You are the battle group's air-defense commander. The staff runs the routine: it identifies, commits fighters by your standing orders, manns the patrols and gives the missile cruisers their targets. You set the posture, single out priority targets (right-click a track), answer the decisions, and step in wherever you see better. Everything works from the radar picture: what the radars do not see, nobody can shoot.
+
+THE OUTER AIR BATTLE. A BACKFIRE launches from 250-300 km. Every bomber killed before it fires is two Mach-3 missiles that never come. Every missile that does come is hard to kill: Aegis, the Terriers and the close-in guns get their chance in the last minutes.
+
+EMISSION CONTROL. The shadowers listen for our radars. A silent fleet is hard to find — and half blind.
+"""
+
+[[intel]]
+title = "BACKFIRE"
+text = "Tu-22M3: Mach 1.9 dash, two Kh-22 each. The regiment attacks in squadrons of six from two directions to split the defences, launching at about 270 km. Its radar comes on in the last 300 km — our ESM will hear it."
+
+[[intel]]
+title = "Kh-22 / AS-4 KITCHEN"
+text = "Liquid-fuelled, Mach 3+ at 22 km, steep terminal dive, 1000 kg warhead. Its radar seeker locks the biggest return it sees: that is usually the carrier."
+
+[[intel]]
+title = "BEAR D"
+text = "Tu-95RTs: finds carrier groups with its big radar or by listening to theirs, then relays targeting data. If it holds us long enough, the raid gets an accurate aim point. Kill it, or deny it."
+
+[[intel]]
+title = "Frunze group"
+text = "Battlecruiser FRUNZE (S-300F, 96 missiles), Kresta II VASILY CHAPAYEV, destroyer BOYEVOY, frigate RAZITELNY. Saturate it: one Harpoon at a time will not get through."
+
+[automation]
+surveil = true
+ident = true
+height = true
+tech = false
+
+[weather]
+k_factor = 1.333
+wind_from = 300.0
+wind_kmh = 45.0
+ceiling_m = 1500.0
+visibility_km = 15.0
+night = false
+sea_state = 5.0
+
+[hq]
+name = "THIRD FLEET"
+readiness = "DEFCON 1"
+alert = "RED"
+weapons_status = "FREE"
+[hq.policy]
+response_s = [20.0, 50.0]
+declare_hostile = "grant"
+engage = "grant"
+ram = "deny"
+special_release = "deny"
+weapons_status_FREE = "grant"
+mode1_valid = ["24", "61"]
+track_start = 1001
+
+[[link]]
+id = "D_navy"
+name = "Link 11 (battle group)"
+kind = "data"
+delay_s = 2.0
+[[link]]
+id = "D_west"
+name = "West coast radar microwave"
+kind = "data"
+delay_s = 2.0
+[[link]]
+id = "D_awacs"
+name = "AWACS JTIDS link"
+kind = "data"
+delay_s = 1.0
+[[link]]
+id = "V_galena"
+name = "Galena FOL line"
+kind = "voice"
+delay_s = 5.0
+[[link]]
+id = "V_kingsalmon"
+name = "King Salmon FOL line"
+kind = "voice"
+delay_s = 5.0
+
+[[radar]]
+site = "cape_newenham"
+type = "AN/FPS-117"
+link = "D_west"
+[[radar]]
+site = "cape_romanzof"
+type = "AN/FPS-117"
+link = "D_west"
+[[radar]]
+site = "tin_city"
+type = "AN/FPS-117"
+link = "D_west"
+
+[[airbase]]
+site = "galena"
+link = "V_galena"
+[[airbase]]
+site = "king_salmon"
+link = "V_kingsalmon"
+[[airbase]]
+site = "elmendorf"
+
+[[squadron]]
+id = "vf51"
+name = "VF-51 Screaming Eagles"
+base = "cvn70"
+type = "F-14A"
+callsign = "EAGLE"
+ready = { "5" = 4, "15" = 4, "45" = 4 }
+pilots = 18
+turnaround_min = 35.0
+
+[[squadron]]
+id = "vf111"
+name = "VF-111 Sundowners"
+base = "cvn70"
+type = "F-14A"
+callsign = "SUNDOWN"
+ready = { "5" = 2, "15" = 4, "45" = 2 }
+pilots = 12
+turnaround_min = 35.0
+
+[[squadron]]
+id = "ks_det"
+name = "43rd TFS det. King Salmon"
+base = "king_salmon"
+type = "F-15A"
+callsign = "FANG"
+ready = { "5" = 2, "15" = 2 }
+pilots = 8
+loadout = { "AIM-7F" = 4, "AIM-9L" = 4, "M61" = 6 }
+
+[[squadron]]
+id = "galena_det"
+name = "43rd TFS det. Galena"
+base = "galena"
+type = "F-15A"
+callsign = "TWIN"
+ready = { "5" = 2, "15" = 2 }
+pilots = 8
+loadout = { "AIM-7F" = 4, "AIM-9L" = 4, "M61" = 6 }
+
+# ====================================================================== the battle
+
+[battle]
+post = "TASK FORCE 77.4 — AIR DEFENSE COMMANDER"
+post_sub = "CVN-70 CARL VINSON · COMBAT DIRECTION CENTER"
+red_target = "tf77"
+vital = ["cvn70"]
+hostile_west_of_lon = -164.0
+hostile_line_lat = 60.0
+brief_target = { x = -360.0, y = -500.0 }
+view = { x = -480.0, y = -420.0, km = 620.0 }
+standing = { posture = "balanced", fighters = "auto", sam = "FREE", emcon = false, reserve = 2 }
+
+[[battle.red_sensor]]
+name = "Provideniya radar"
+x = -702.0
+y = 146.0
+mast_m = 250.0
+range_km = 330.0
+
+[[battle.cap]]
+id = "west"
+name = "BARCAP WEST"
+x = -570.0
+y = -460.0
+alt_m = 8500.0
+squadron = "vf51"
+n = 2
+airborne = true
+fuel_frac = 0.85
+
+[[battle.cap]]
+id = "southwest"
+name = "BARCAP SOUTHWEST"
+x = -560.0
+y = -580.0
+alt_m = 8500.0
+squadron = "vf51"
+n = 2
+airborne = true
+fuel_frac = 0.8
+
+[[battle.cap]]
+id = "north"
+name = "BARCAP NORTH"
+x = -480.0
+y = -380.0
+alt_m = 8500.0
+squadron = "vf111"
+n = 2
+airborne = true
+fuel_frac = 0.7
+
+[[battle.reinforcement]]
+id = "eagles"
+name = "F-15 Eagles to King Salmon"
+text = "Elmendorf can push four more F-15As forward to King Salmon. They will be on alert there in about ten minutes."
+actions = [{ do = "ready", squadron = "ks_det", add = { "15" = 4 } }]
+
+[[battle.phase]]
+id = "hunt"
+name = "PHASE I — THE HUNT"
+earliest_min = 0.0
+text = "Two BEAR D shadowers expected from the southwest and the northwest. Deny them the task group's position. BARCAPs WEST and NORTH are up; the alert Tomcats are on deck."
+actions = [{ do = "launch", groups = ["bear1"], delay_s = 120.0 }, { do = "launch", groups = ["bear2"], delay_s = 420.0 }]
+
+[[battle.phase]]
+id = "ew"
+name = "PHASE II — ELECTRONIC ATTACK"
+earliest_min = 7.0
+latest_min = 14.0
+when = { type = "located" }
+quiet_s = 180.0
+text = "ESM reports BADGER jammers forming up to the west, and FOXHOUNDs. They are clearing the way for the regiment. Expect the picture to degrade along the threat axis."
+actions = [
+  { do = "launch", groups = ["ew_south", "ew_north"] },
+  { do = "launch", groups = ["foxhound"], delay_s = 60.0 },
+  { do = "decision", kind = "caps", title = "PUSH THE CAPS OUT?", text = "Intelligence expects the regiment within half an hour. Move the three barrier patrols 50-60 km further west: more time to kill BACKFIREs before they can fire — but closer to the FOXHOUNDs, and further from the fleet.", options = ["PUSH OUT", "KEEP THEM CLOSE"], default = "PUSH OUT", timeout_s = 60.0, effects = { "PUSH OUT" = [{ do = "cap_station", id = "west", x = -625.0, y = -440.0 }, { do = "cap_station", id = "southwest", x = -615.0, y = -585.0 }, { do = "cap_station", id = "north", x = -540.0, y = -380.0 }], "KEEP THEM CLOSE" = [] } },
+]
+
+[[battle.phase]]
+id = "raid"
+name = "PHASE III — THE RAID"
+earliest_min = 13.0
+latest_min = 21.0
+when = { type = "any", of = [{ type = "located" }, { type = "quiet", s = 150.0 }] }
+text = "Raid warning. Kamchatka reports the missile regiment airborne forty minutes ago: two squadrons of BACKFIRE expected on the western edge in about five minutes, BADGERs behind them. Kill the archers before they shoot."
+actions = [
+  { do = "launch", groups = ["backfire_a", "escort_a"], delay_s = 300.0 },
+  { do = "launch", groups = ["backfire_b"], delay_s = 420.0 },
+  { do = "launch", groups = ["badger_g"], delay_s = 600.0 },
+  { do = "decision", kind = "deck", title = "LAUNCH THE ALERT DECK?", text = "The raid is coming. Bring every Tomcat on deck to five-minute alert now — the staff can throw them all at the bombers — or keep the 45-minute reserve for the second wave?", options = ["LAUNCH THE DECK", "HOLD THE RESERVE"], default = "LAUNCH THE DECK", timeout_s = 50.0, effects = { "LAUNCH THE DECK" = [{ do = "ready", squadron = "vf51", move = { "15" = "5", "45" = "5" } }, { do = "ready", squadron = "vf111", move = { "15" = "5", "45" = "5" } }, { do = "standing", reserve = 0 }, { do = "surge", squadrons = ["vf51", "vf111"], x = -560.0, y = -470.0, alt_m = 9000.0, max_flights = 3 }], "HOLD THE RESERVE" = [{ do = "ready", squadron = "vf51", move = { "15" = "5" } }, { do = "ready", squadron = "vf111", move = { "15" = "5" } }, { do = "surge", squadrons = ["vf51"], x = -500.0, y = -450.0, alt_m = 9000.0, max_flights = 1 }] } },
+  { do = "reinforcement", id = "eagles" },
+]
+
+[[battle.phase]]
+id = "strike"
+name = "PHASE IV — COUNTERSTRIKE"
+earliest_min = 19.0
+latest_min = 30.0
+when = { type = "any", of = [{ type = "released", groups = ["backfire_a", "backfire_b"] }, { type = "group", group = "backfire_a", is = ["done"] }] }
+text = "The Frunze group is still covering the regiment's approach. Alpha strike ready on deck: six Intruders with Harpoons, a Prowler, four Tomcats in escort."
+actions = [
+  { do = "decision", kind = "strike", title = "LAUNCH THE ALPHA STRIKE?", text = "Six A-6Es with twelve Harpoons against the Frunze group, 400 km northwest. FRUNZE's S-300F will meet them; the Prowler will jam its radars. Launch now, while the regiment is busy, or hold the Intruders?", options = ["LAUNCH", "HOLD"], default = "LAUNCH", timeout_s = 60.0, effects = { "LAUNCH" = [{ do = "launch", groups = ["alpha", "prowler", "alpha_escort"] }], "HOLD" = [] } },
+]
+
+[[trigger]]
+id = "emcon_q"
+cond = { type = "time", t = 20.0 }
+actions = [{ do = "decision", kind = "emcon", title = "EMISSION CONTROL?", text = "A BEAR D is coming to find us, and it listens before it looks: our ship radars can be heard 450 km away. Go silent — ships' radars off, the Hawkeye and DARKSTAR keep the picture — and make it come close enough for the Tomcats? Or keep radiating and see everything?", options = ["GO SILENT", "KEEP RADIATING"], default = "GO SILENT", timeout_s = 60.0, effects = { "GO SILENT" = [{ do = "standing", emcon = true }], "KEEP RADIATING" = [] } }]
+
+[[trigger]]
+id = "emcon_off"
+cond = { type = "all", of = [{ type = "phase", at_least = 2 }, { type = "standing", key = "emcon", is = [true] }] }
+actions = [{ do = "decision", kind = "emcon", title = "RAID INBOUND — RADARS ON?", text = "The regiment is airborne. Aegis and the Terriers cannot shoot what their radars do not see. Light off every radar in the group now, or stay silent a little longer?", options = ["LIGHT THEM OFF", "STAY SILENT"], default = "LIGHT THEM OFF", timeout_s = 40.0, effects = { "LIGHT THEM OFF" = [{ do = "standing", emcon = false }], "STAY SILENT" = [] } }]
+
+# ---- the battle group
+[[ship]]
+id = "cvn70"
+name = "USS Carl Vinson"
+type = "CVN-Nimitz"
+side = "blue"
+group = "tf77"
+guide = true
+x = -340.0
+y = -520.0
+course = 300.0
+speed_kn = 16.0
+route = [{ x = -440.0, y = -470.0 }, { x = -330.0, y = -560.0 }]
+link = "D_navy"
+
+[[ship]]
+id = "cg52"
+name = "USS Bunker Hill"
+type = "CG-Ticonderoga"
+side = "blue"
+group = "tf77"
+station = [300.0, 28.0]
+link = "D_navy"
+
+[[ship]]
+id = "cgn35"
+name = "USS Truxtun"
+type = "CGN-Truxtun"
+side = "blue"
+group = "tf77"
+station = [235.0, 24.0]
+link = "D_navy"
+
+[[ship]]
+id = "ddg996"
+name = "USS Chandler"
+type = "DDG-Kidd"
+side = "blue"
+group = "tf77"
+station = [0.0, 20.0]
+link = "D_navy"
+
+[[ship]]
+id = "ffg30"
+name = "USS Reid"
+type = "FFG-Perry"
+side = "blue"
+group = "tf77"
+station = [150.0, 16.0]
+link = "D_navy"
+
+[[ship]]
+id = "ffg46"
+name = "USS Rentz"
+type = "FFG-Perry"
+side = "blue"
+group = "tf77"
+station = [275.0, 70.0]
+link = "D_navy"
+
+# ---- the Frunze group
+[[ship]]
+id = "frunze"
+name = "Frunze"
+name_ru = "Фрунзе"
+type = "Kirov"
+side = "red"
+group = "sag"
+guide = true
+x = -640.0
+y = -200.0
+course = 160.0
+speed_kn = 14.0
+route = [{ x = -600.0, y = -300.0 }, { x = -680.0, y = -180.0 }]
+
+[[ship]]
+id = "chapayev"
+name = "Vasily Chapayev"
+name_ru = "Василий Чапаев"
+type = "Kresta-II"
+side = "red"
+group = "sag"
+station = [90.0, 14.0]
+
+[[ship]]
+id = "boyevoy"
+name = "Boyevoy"
+name_ru = "Боевой"
+type = "Sovremenny"
+side = "red"
+group = "sag"
+station = [270.0, 14.0]
+
+[[ship]]
+id = "razitelny"
+name = "Razitelny"
+name_ru = "Разительный"
+type = "Krivak"
+side = "red"
+group = "sag"
+station = [160.0, 18.0]
+
+# ---- our aircraft flown by the battle AI
+[[group]]
+id = "e2c"
+name = "Hawkeye 600 (VAW-114)"
+callsign = "HAWKEYE"
+side = "blue"
+role = "awacs"
+type = "E-2C"
+n = 1
+base = "cvn70"
+entry = { x = -450.0, y = -480.0, alt_m = 8500.0 }
+station = { x = -450.0, y = -480.0, alt_m = 8500.0, r_km = 22.0 }
+radar = "AN/APS-125"
+link = "D_navy"
+t_min = 0.0
+
+[[group]]
+id = "awacs"
+name = "DARKSTAR (E-3A)"
+callsign = "DARKSTAR"
+side = "blue"
+role = "awacs"
+type = "E-3A"
+n = 1
+base = "elmendorf"
+entry = { x = -230.0, y = -260.0, alt_m = 9000.0 }
+station = { x = -230.0, y = -260.0, alt_m = 9000.0, r_km = 30.0 }
+radar = "AN/APY-1"
+link = "D_awacs"
+t_min = 0.0
+
+[[group]]
+id = "alpha"
+name = "Alpha strike (VA-52 Intruders)"
+callsign = "KNIGHT"
+side = "blue"
+role = "strike"
+type = "A-6E"
+n = 6
+base = "cvn70"
+target = "sag"
+launch_km = 104.0
+abort_frac = 0.67
+trigger = "decision"
+
+[[group]]
+id = "prowler"
+name = "Prowler (VAQ-134)"
+callsign = "GARUDA"
+side = "blue"
+role = "ew"
+type = "EA-6B"
+n = 1
+base = "cvn70"
+station = { x = -505.0, y = -240.0, alt_m = 8000.0, r_km = 18.0 }
+trigger = "decision"
+
+[[group]]
+id = "alpha_escort"
+name = "Strike escort (VF-111)"
+callsign = "SUNDOWN 2"
+side = "blue"
+role = "escort"
+type = "F-14A"
+n = 4
+base = "cvn70"
+target = "alpha"
+commit_km = 80.0
+trigger = "decision"
+
+# ---- the enemy
+[[group]]
+id = "bear1"
+name = "BEAR D (304th ODRAP)"
+callsign = "BEAR 1"
+side = "red"
+role = "recon"
+type = "Tu-95RT"
+n = 1
+entry = { x = -740.0, y = -615.0, alt_m = 10000.0 }
+exit = { x = -740.0, y = -615.0 }
+route = [{ x = -600.0, y = -610.0 }]
+target = "tf77"
+trigger = "phase"
+
+[[group]]
+id = "bear2"
+name = "BEAR D (304th ODRAP)"
+callsign = "BEAR 2"
+side = "red"
+role = "recon"
+type = "Tu-95RT"
+n = 1
+entry = { x = -740.0, y = -250.0, alt_m = 10500.0 }
+exit = { x = -740.0, y = -250.0 }
+route = [{ x = -620.0, y = -330.0 }]
+target = "tf77"
+trigger = "phase"
+
+[[group]]
+id = "ew_south"
+name = "BADGER J jammers (south)"
+callsign = "BADGER J1"
+side = "red"
+role = "ew"
+type = "Tu-16P"
+n = 1
+entry = { x = -740.0, y = -560.0, alt_m = 9000.0 }
+exit = { x = -740.0, y = -560.0 }
+station = { x = -690.0, y = -560.0, alt_m = 9000.0, r_km = 18.0 }
+trigger = "phase"
+
+[[group]]
+id = "ew_north"
+name = "BADGER J jammers (north)"
+callsign = "BADGER J2"
+side = "red"
+role = "ew"
+type = "Tu-16P"
+n = 1
+entry = { x = -740.0, y = -380.0, alt_m = 9000.0 }
+exit = { x = -740.0, y = -380.0 }
+station = { x = -690.0, y = -390.0, alt_m = 9000.0, r_km = 18.0 }
+trigger = "phase"
+
+[[group]]
+id = "foxhound"
+name = "FOXHOUND sweep (865th IAP)"
+callsign = "FOXHOUND 1"
+side = "red"
+role = "sweep"
+type = "MiG-31"
+n = 2
+entry = { x = -740.0, y = -440.0, alt_m = 12000.0 }
+exit = { x = -740.0, y = -440.0 }
+route = [{ x = -600.0, y = -470.0, alt_m = 12000.0 }]
+station = { x = -560.0, y = -460.0, alt_m = 12000.0, r_km = 30.0 }
+commit_km = 140.0
+trigger = "phase"
+
+[[group]]
+id = "backfire_a"
+name = "BACKFIRE squadron A (568th MRAP)"
+callsign = "BACKFIRE A"
+side = "red"
+role = "strike"
+type = "Tu-22M3"
+n = 6
+entry = { x = -740.0, y = -330.0, alt_m = 11000.0 }
+exit = { x = -740.0, y = -330.0 }
+route = [{ x = -690.0, y = -380.0 }]
+target = "tf77"
+launch_km = 270.0
+abort_frac = 0.5
+trigger = "phase"
+
+[[group]]
+id = "escort_a"
+name = "FOXHOUND escort (865th IAP)"
+callsign = "FOXHOUND 2"
+side = "red"
+role = "escort"
+type = "MiG-31"
+n = 2
+entry = { x = -740.0, y = -320.0, alt_m = 12000.0 }
+exit = { x = -740.0, y = -320.0 }
+target = "backfire_a"
+commit_km = 110.0
+trigger = "phase"
+
+[[group]]
+id = "backfire_b"
+name = "BACKFIRE squadron B (568th MRAP)"
+callsign = "BACKFIRE B"
+side = "red"
+role = "strike"
+type = "Tu-22M3"
+n = 6
+entry = { x = -740.0, y = -600.0, alt_m = 11000.0 }
+exit = { x = -740.0, y = -600.0 }
+route = [{ x = -680.0, y = -590.0 }]
+target = "tf77"
+launch_km = 270.0
+abort_frac = 0.5
+trigger = "phase"
+
+[[group]]
+id = "badger_g"
+name = "BADGER G missile carriers"
+callsign = "BADGER G"
+side = "red"
+role = "strike"
+type = "Tu-16K"
+n = 4
+entry = { x = -740.0, y = -470.0, alt_m = 10000.0 }
+exit = { x = -740.0, y = -470.0 }
+target = "tf77"
+abort_frac = 0.5
+trigger = "phase"
+
+[[group]]
+id = "sag_cover"
+name = "FOXHOUND alert pair (Anadyr)"
+callsign = "FOXHOUND 3"
+side = "red"
+role = "intercept"
+type = "MiG-31"
+n = 2
+entry = { x = -740.0, y = -120.0, alt_m = 11000.0 }
+exit = { x = -740.0, y = -120.0 }
+station = { x = -640.0, y = -200.0, alt_m = 11000.0, r_km = 30.0 }
+commit_km = 150.0
+trigger = "threat"
+
+# ====================================================================== objectives
+
+[[objective]]
+id = "carrier"
+text = "Carl Vinson survives"
+kind = "ship_survives"
+params = { ship = "cvn70" }
+points = 35
+
+[[objective]]
+id = "group"
+text = "Lose no more than one ship"
+kind = "ships_survive"
+params = { max = 1 }
+points = 15
+
+[[objective]]
+id = "archers"
+text = "Destroy half the BACKFIRE regiment"
+kind = "kill_fraction"
+params = { groups = ["backfire_a", "backfire_b"], frac = 0.5 }
+points = 20
+
+[[objective]]
+id = "hawkeye"
+text = "Keep the Hawkeye flying"
+kind = "protect_group"
+params = { group = "e2c" }
+points = 10
+
+[[objective]]
+id = "frunze"
+text = "Put a ship of the Frunze group out of action"
+kind = "sink"
+params = { ships = ["frunze", "chapayev", "boyevoy", "razitelny"], n = 1 }
+points = 15
+
+[[objective]]
+id = "deny"
+text = "Deny the shadowers a fix for ten minutes"
+kind = "deny_location"
+params = { before_min = 10.0 }
+points = 5

@@ -5,7 +5,7 @@ summary = "They come out of the west on the jet stream: hundreds of American bal
 faction = "USSR"
 kind = "scenario"
 photo = ["GENETRIX", "MiG-17PF"]
-photo_caption = "Разведывательный аэростат над Уралом · reconnaissance balloon over the Urals"
+photo_caption = "Reconnaissance balloon over the Urals"
 era = "1950s"
 difficulty = 2
 order = 5
@@ -58,7 +58,7 @@ night = true
 sea_state = 0.0
 
 [hq]
-name = "ЦКП ПВО (MOSCOW)"
+name = "PVO CENTRAL CP (MOSCOW)"
 readiness = "FULL"
 alert = ""
 weapons_status = "TIGHT"
@@ -258,7 +258,7 @@ transponder = { system = "none" }
 id = "open"
 cond = { type = "time", t = 5.0 }
 actions = [
-  { do = "message", channel = "tty", sender = "ЦКП ПВО", ack = true, kind = "order", text = "BALLOONS CROSSING THE VOLGA EASTBOUND AT 11-12 KM. ALL BALLOONS ARE VIOLATORS. DESTROY BEFORE DAWN. REPORT EVERY BALLOON TRACKED." },
+  { do = "message", channel = "tty", sender = "PVO CENTRAL CP", ack = true, kind = "order", text = "BALLOONS CROSSING THE VOLGA EASTBOUND AT 11-12 KM. ALL BALLOONS ARE VIOLATORS. DESTROY BEFORE DAWN. REPORT EVERY BALLOON TRACKED." },
 ]
 
 [[trigger]]
@@ -328,10 +328,10 @@ points = 10
 
 [[headline]]
 cond = { type = "var", name = "civil_losses", op = ">=", value = 1.0 }
-text = "ГИБЕЛЬ САМОЛЁТА АЭРОФЛОТА"
+text = "AEROFLOT AIRCRAFT LOST"
 sub = "An Aeroflot mail plane was lost in the night. The investigation is classified."
 
 [[headline]]
 cond = { type = "time", t = 0.0 }
-text = "АМЕРИКАНСКИЕ ШАРЫ-ШПИОНЫ НАД УРАЛОМ"
+text = "AMERICAN SPY BALLOONS OVER THE URALS"
 sub = "American spy balloons over the Urals: gondolas recovered and displayed to the press in Moscow."

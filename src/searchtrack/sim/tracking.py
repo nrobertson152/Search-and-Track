@@ -35,17 +35,27 @@ def route_reports(world: "World", site, reports: list[Report]) -> None:
         manual_company(world, site, reports, link_up)
 
 
-def grid_label(world: "World", x: float, y: float) -> str:
+# the same letters transliterated, for consoles and reports (the board itself is lettered in Cyrillic)
+LAT = ["A", "B", "V", "G", "D", "E", "ZH", "I", "K", "L", "M", "N", "P", "R", "S", "T", "U", "F", "KH", "TS", "CH",
+       "SH", "EH", "YU", "YA"]
+
+
+def grid_letter(world: "World", x: float, y: float, cyrillic: bool = False) -> str:
+    """Letter of the 100 km square of the PVO grid that contains (x, y)."""
+    big = world.faction_def.grid_km * 10.0
+    i = (math.floor((x + 1000.0) / big) + 3 * math.floor((y + 1000.0) / big)) % len(CYR)
+    return CYR[i] if cyrillic else LAT[i]
+
+
+def grid_label(world: "World", x: float, y: float, cyrillic: bool = False) -> str:
     g = world.faction_def.grid_km
     big = g * 10.0
-    xi = math.floor((x + 1000.0) / big)
-    yi = math.floor((y + 1000.0) / big)
     sx = int(((x + 1000.0) % big) // g)
     sy = int(((y + 1000.0) % big) // g)
     fx = ((x + 1000.0) % g) / g
     fy = ((y + 1000.0) % g) / g
     snail = 1 + int(fx * 3) + 3 * (2 - int(fy * 3))
-    return f"{CYR[(xi + 3 * yi) % len(CYR)]}{sx}{sy}-{snail}"
+    return f"{grid_letter(world, x, y, cyrillic)}{sx}{sy}-{snail}"
 
 
 def quantize(world: "World", x: float, y: float) -> tuple[float, float]:
@@ -122,6 +132,9 @@ def deliver(world: "World") -> None:
     world.inbox = [r for r in world.inbox if r.t_arrive > t]
     for r in sorted(due, key=lambda r: (r.t_arrive, r.rid)):
         ingest(world, r)
+
+
+MAX_KMS = 1.6          # fastest target the tracker will follow (km/s): Mach 4+ missiles at altitude
 
 
 def predicted(trk: Track, t: float) -> tuple[float, float]:
@@ -220,8 +233,8 @@ def update_track(world: "World", trk: Track, r: Report, manual: bool) -> None:
         trk.vx += dvx
         trk.vy += dvy
     spd = math.hypot(trk.vx, trk.vy)
-    if spd > 1.2:
-        trk.vx, trk.vy = trk.vx / spd * 1.2, trk.vy / spd * 1.2
+    if spd > MAX_KMS:
+        trk.vx, trk.vy = trk.vx / spd * MAX_KMS, trk.vy / spd * MAX_KMS
     if trk.lost:
         trk.lost = False
         world.log_event("track", f"Track {trk.id} reacquired", trk.id)
@@ -300,7 +313,7 @@ def auto_initiate(world: "World", plots: list[Report], tracks: dict, local: str 
                 continue
             last = chain[-1]
             dtq = last.t - q.t
-            if 3.0 < dtq < 45.0 and math.hypot(last.x - q.x, last.y - q.y) <= 1.25 * dtq + 3.5:
+            if 3.0 < dtq < 45.0 and math.hypot(last.x - q.x, last.y - q.y) <= MAX_KMS * dtq + 3.5:
                 chain.append(q)
                 if len(chain) >= min_hits:
                     break

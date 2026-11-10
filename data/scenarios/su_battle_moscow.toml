@@ -1,0 +1,189 @@
+base = "su_battle_baltic"
+id = "su_battle_moscow"
+title = "The Capital"
+subtitle = "Moscow Air Defense District, 23 October 1987 — the ceasefire — hypothetical"
+summary = "The guns fall silent at seven o'clock Moscow time. The Americans want one more blow before they do: B-52s with cruise missiles over the Baltic, Eagles and Wild Weasels ahead of them, the capital's air defence their target. Hold the shield one more hour. Then hold your fire."
+order = 9
+start = "1987-10-23T06:00:00"
+seed = 2387
+duration_min = 100
+photo = ["MiG-31", "B-52G"]
+photo_caption = "B-52G Stratofortress (file photograph)"
+
+briefing = """
+CENTRAL COMMAND POST, AIR DEFENSE FORCES — MOSCOW. 23 OCTOBER 1987, 0600 MOSCOW TIME. THIS SCENARIO IS HYPOTHETICAL.
+
+SITUATION. Four days of war. At four o'clock this morning the General Secretary and the American President agreed a ceasefire on all fronts, effective 0700 Moscow time. The General Staff expects the Americans to use the last hour: B-52 regiments from England have been tracked over the North Sea with cruise missiles, and their target is the air defence of the capital — the airfields at Khotilovo and Andreapol, the radar field, the missile rings around Moscow.
+
+YOUR ORDERS. Defend the capital and the north-west direction until 0700 with everything you have. At 0700 all units cease fire. After that, only missiles already in flight may be engaged. No aircraft is to be fired upon after 0700 without an order — and the order is yours to give.
+
+YOUR FORCES. The 6th Army's regiments as the war has left them — Tapa, Gromovo, Andreapol — and the Moscow District's MiG-31s at Khotilovo. The radar companies still on the air, the S-300 at Leningrad and Zelenograd, the S-25 rings.
+
+THE LAST HOUR. A B-52 that is shot down at 0659 is a victory. One that is shot down at 0701 is a crime — or a war that starts again.
+"""
+
+assumed_oob = { squadrons = { gromovo_iap = { lost = 3 }, tapa_iap = { lost = 2 } }, sites = ["rlr_kohtla"] }
+
+squadron_add = [
+  { id = "khotilovo_iap", name = "790th IAP, Khotilovo", base = "khotilovo", type = "MiG-31", callsign = "790", ready = { "3" = 4, "7" = 4, "20" = 4 }, pilots = 14, turnaround_min = 30.0, iff_codes = { period = "WAR" } },
+]
+
+sam_add = [
+  { site = "s300_moscow", type = "S-300PT", link = "T_sam", missiles = 12, reloads = 12, auto = true },
+  { site = "s25_n", type = "S-25", link = "T_sam", missiles = 6, reloads = 6, auto = true },
+  { site = "s25_nw1", type = "S-25", link = "T_sam", missiles = 6, reloads = 6, auto = true },
+]
+
+group_drop = ["f111_a", "f111_b", "f111_c"]
+group_patch = [
+  { id = "escort", name = "F-15C escort (B-52s)", target = "b52_a", commit_km = 100.0 },
+  { id = "weasels", target = "b52_b", route = [{ lat = 57.6, lon = 26.0, alt_m = 7000.0 }], station = { lat = 57.5, lon = 28.2, alt_m = 7000.0, r_km = 20.0 } },
+]
+group_add = [
+  { id = "b52_a", name = "B-52G cruise missile carriers (north)", callsign = "DOOM", side = "red", role = "strike", type = "B-52G", n = 3, weapons = { "AGM-86C" = 6 }, entry = { lat = 59.6, lon = 23.2, alt_m = 10500.0 }, exit = { lat = 59.6, lon = 23.2 }, route = [{ lat = 59.25, lon = 26.6, alt_m = 10500.0 }], target = "khotilovo", launch_km = 430.0, abort_frac = 0.67, trigger = "phase" },
+  { id = "b52_b", name = "B-52G cruise missile carriers (south)", callsign = "SLAM", side = "red", role = "strike", type = "B-52G", n = 3, weapons = { "AGM-86C" = 6 }, entry = { lat = 57.4, lon = 23.2, alt_m = 10000.0 }, exit = { lat = 57.4, lon = 23.2 }, route = [{ lat = 57.35, lon = 26.4, alt_m = 10000.0 }], target = "andreapol", launch_km = 400.0, abort_frac = 0.67, trigger = "phase" },
+  { id = "stray", name = "B-52G straggler", callsign = "DOOM 3", side = "red", role = "stray", type = "B-52G", n = 1, weapons = {}, entry = { lat = 58.55, lon = 26.4, alt_m = 4500.0 }, exit = { lat = 58.35, lon = 23.2 }, route = [{ lat = 58.45, lon = 24.8, alt_m = 3500.0 }], trigger = "phase" },
+]
+
+objective_drop = ["strikers", "shield", "runways", "radars", "weasels", "ravens", "losses"]
+objective_add = [
+  { id = "bombers", text = "Shoot down half the B-52s before 0700", kind = "kill_fraction", params = { groups = ["b52_a", "b52_b"], frac = 0.5 }, points = 20 },
+  { id = "missiles", text = "Shoot down one cruise missile in five", kind = "missiles_stopped", params = { types = ["AGM-86C"], frac = 0.2, planned = 36 }, points = 15 },
+  { id = "capital", text = "The missile rings of the capital stay intact", kind = "radars_survive", params = { sites = ["s300_moscow", "s25_n", "s25_nw1"], max_destroyed = 0 }, points = 10 },
+  { id = "runways", text = "Never more than one fighter airfield closed at once", kind = "runways", params = { bases = ["tapa", "gromovo", "andreapol", "khotilovo"], max_closed = 1 }, points = 15 },
+  { id = "radars", text = "No more than four radars destroyed in the whole war", kind = "radars_survive", params = { max_destroyed = 4 }, points = 10 },
+  { id = "holdfire", text = "After 0700, not one shot at an aircraft", kind = "hold_fire", params = { after = "ceasefire" }, points = 20 },
+  { id = "losses", text = "Lose no more than eight interceptors", kind = "lose_at_most", params = { n = 8 }, points = 10 },
+]
+
+[[radar]]
+site = "rlr_kohtla"
+type = "5N84"
+link = "A_net"
+[[radar]]
+site = "rlr_kingisepp"
+type = "5N84"
+hf = ["PRV-13"]
+link = "A_net"
+[[radar]]
+site = "rlr_pskov"
+type = "ST-68U"
+link = "A_net"
+[[radar]]
+site = "rlr_dno"
+type = "P-18"
+link = "A_net"
+[[radar]]
+site = "rlr_staraya"
+type = "ST-68U"
+link = "A_net"
+[[radar]]
+site = "rlr_ostashkov"
+type = "P-37"
+hf = ["PRV-13"]
+link = "A_net"
+[[radar]]
+site = "rlr_torzhok"
+type = "ST-68U"
+link = "A_net"
+[[radar]]
+site = "rlr_rzhev"
+type = "5N84"
+link = "A_net"
+[[radar]]
+site = "rlr_klin"
+type = "ST-68U"
+link = "A_net"
+[[radar]]
+site = "gp_tapa"
+type = "P-37"
+hf = ["PRV-13"]
+gci = true
+link = "T_gp"
+[[radar]]
+site = "gp_andreapol"
+type = "P-37"
+gci = true
+link = "T_gp"
+[[radar]]
+site = "gp_khotilovo"
+type = "ST-68U"
+gci = true
+link = "T_gp"
+
+[[airbase]]
+site = "tapa"
+link = "T_airfields"
+[[airbase]]
+site = "gromovo"
+link = "T_airfields"
+[[airbase]]
+site = "andreapol"
+link = "T_airfields"
+[[airbase]]
+site = "khotilovo"
+link = "T_airfields"
+
+[weather]
+k_factor = 1.333
+wind_from = 250.0
+wind_kmh = 35.0
+ceiling_m = 1500.0
+visibility_km = 12.0
+night = true
+sea_state = 3.0
+
+[battle]
+post = "AIR DEFENSE FORCES — CENTRAL COMMAND POST"
+post_sub = "MOSCOW · NORTH-WEST DIRECTION"
+defended = ["tapa", "gromovo", "andreapol", "khotilovo"]
+view = { lat = 58.2, lon = 29.5, km = 820.0 }
+reinforcement = []
+
+[[battle.phase]]
+id = "hour"
+name = "PHASE I — THE LAST HOUR"
+earliest_min = 0.0
+text = "Sixty minutes to the ceasefire. Jamming in the west again, and Eagles over the Baltic. Long-range radar holds large targets far out over the sea: bombers."
+actions = [
+  { do = "launch", groups = ["raven_n", "raven_s"] },
+  { do = "launch", groups = ["sweep"], delay_s = 90.0 },
+  { do = "say", kind = "story", after_s = 60.0, text = "The Commander-in-Chief on the line: One hour, comrades. Not one missile reaches Moscow. And at seven o'clock — not one shot.", level = 2 },
+]
+
+[[battle.phase]]
+id = "bombers"
+name = "PHASE II — THE B-52s"
+earliest_min = 6.0
+latest_min = 10.0
+when = { type = "quiet", s = 120.0 }
+text = "Six B-52s coming east in two groups: over the Gulf of Finland and over Latvia. Eagles and Wild Weasels with them. They will launch their cruise missiles from 400 km — from over Estonia."
+actions = [
+  { do = "launch", groups = ["b52_a", "escort"] },
+  { do = "launch", groups = ["b52_b", "weasels"], delay_s = 60.0 },
+  { do = "decision", kind = "allocation", title = "THE FOXHOUNDS — FORWARD?", text = "The MiG-31s at Khotilovo can go west now, 400 km, to meet the B-52s over Lake Peipus before they launch — into the Eagles. Or they can stay over the radar field and hunt the cruise missiles as they come.", options = ["SEND THEM WEST", "HOLD THEM BACK"], default = "SEND THEM WEST", timeout_s = 50.0, effects = { "SEND THEM WEST" = [{ do = "ready", squadron = "khotilovo_iap", move = { "7" = "3" } }, { do = "surge", squadrons = ["khotilovo_iap"], lat = 58.4, lon = 28.6, alt_m = 11000.0, max_flights = 3 }], "HOLD THEM BACK" = [{ do = "surge", squadrons = ["khotilovo_iap"], lat = 57.4, lon = 32.5, alt_m = 6000.0, max_flights = 2 }] } },
+]
+
+[[battle.phase]]
+id = "missiles"
+name = "PHASE III — THE MISSILES"
+earliest_min = 26.0
+latest_min = 34.0
+when = { type = "released", groups = ["b52_a", "b52_b"] }
+text = "Missile launches over Estonia: cruise missiles, thirty or more, coming east low over the forests toward Khotilovo and Andreapol. Every interceptor that can still fly, every battalion: shoot."
+actions = [
+  { do = "standing", sam = "FREE" },
+  { do = "ready", squadron = "khotilovo_iap", move = { "20" = "3" } },
+]
+
+[[battle.phase]]
+id = "ceasefire"
+name = "PHASE IV — SEVEN O'CLOCK"
+earliest_min = 60.0
+text = "From the Central Command Post: 0700. Ceasefire in effect. All units cease fire. Engage only missiles already in flight. Confirm."
+actions = [
+  { do = "ceasefire", text = "0700 — CEASEFIRE. All units cease fire. The American aircraft are turning west; missiles already in the air are still coming." },
+  { do = "launch", groups = ["stray"], delay_s = 90.0 },
+  { do = "say", kind = "story", after_s = 150.0, text = "Pskov company: a single large target, low and slow, heading west over the lake, trailing smoke. On the distress frequency, in Russian with an accent: 'Damaged... three engines... we are leaving... please.'", level = 3 },
+  { do = "decision", after_s = 180.0, kind = "mercy", title = "THE AMERICAN BOMBER — AFTER SEVEN", text = "Three minutes after the ceasefire a crippled B-52 is crossing Estonia westward at 4,000 metres, inside our airspace, at 400 km/h. An hour ago it was one of the aircraft firing at Khotilovo. The regiment at Tapa has a pair airborne two minutes away and asks permission to finish it. The ceasefire says hold fire.", options = ["ESCORT IT OUT", "SHOOT IT DOWN"], default = "ESCORT IT OUT", timeout_s = 50.0, effects = { "ESCORT IT OUT" = [{ do = "spare", groups = ["stray"], text = "Hold fire. The bomber is escorted to the border." }], "SHOOT IT DOWN" = [{ do = "engage", groups = ["stray"], text = "Permission granted. Destroy the bomber." }] } },
+]

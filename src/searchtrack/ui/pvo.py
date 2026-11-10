@@ -239,7 +239,8 @@ def cabinet(gui, scene) -> None:
     pygame.draw.rect(s, (0, 0, 0), plate.move(1, 2), border_radius=3)
     pygame.draw.rect(s, RED_PLATE, plate, border_radius=3)
     pygame.draw.rect(s, (70, 14, 10), plate, 1, border_radius=3)
-    gui.label((plate.centerx, plate.y + 3), th.subtitle.upper(), 13, CREAM, "eng", "center")
+    head = (w.hq.name if w.battle.active and w.hq.name else th.subtitle).upper()
+    gui.label((plate.centerx, plate.y + 3), head, 13, CREAM, "eng", "center")
     title = w.title.upper()
     while TEXT.width(title, 11, "eng_r") > plate.w - 12 and len(title) > 8:
         title = title[:-2]

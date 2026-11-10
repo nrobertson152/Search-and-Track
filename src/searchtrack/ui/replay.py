@@ -71,9 +71,9 @@ class ReplayScene:
             self.ev_i += 1
             if e[4] is None or self.t - e[0] > 20.0:
                 continue
-            if e[1] in ("kill", "ship_hit", "sunk", "vampire_kill"):
+            if e[1] in ("kill", "ship_hit", "sunk", "vampire_kill", "ground_hit"):
                 self.fx.append(dict(kind=e[1], x=e[4], y=e[5], t0=e[0], side=e[6], text=e[2]))
-                if e[1] in ("kill", "ship_hit") and self.playing:
+                if e[1] in ("kill", "ship_hit", "ground_hit") and self.playing:
                     self.app.audio.play("boom", 0.4)
         self.fx = [f for f in self.fx if 0 <= self.t - f["t0"] < 12.0]
 
@@ -180,14 +180,15 @@ class ReplayScene:
             for e in self.fx:
                 age = (self.t - e["t0"]) / 12.0
                 sx, sy = mv.w2s(e["x"], e["y"])
-                big = e["kind"] in ("ship_hit", "sunk")
+                big = e["kind"] in ("ship_hit", "sunk", "ground_hit")
                 r = int((10 if not big else 18) + (30 if big else 18) * min(1.0, age * 3))
                 col = (255, 200, 120) if e["side"] != own else (255, 110, 90)
                 pygame.draw.circle(screen, _fade(col, 1.0 - age), (sx, sy), r, 2 if big else 1)
                 if age < 0.15:
                     pygame.draw.circle(screen, _fade((255, 250, 220), 1.0 - age * 6), (sx, sy), max(2, r // 3))
-                if e["kind"] in ("kill", "ship_hit", "sunk") and age < 0.6:
-                    lab = "SUNK" if e["kind"] == "sunk" else "HIT" if e["kind"] == "ship_hit" else "SPLASH"
+                if e["kind"] in ("kill", "ship_hit", "sunk", "ground_hit") and age < 0.6:
+                    lab = "SUNK" if e["kind"] == "sunk" else "HIT" if e["kind"] in ("ship_hit", "ground_hit") else \
+                        ("SPLASH" if self.world.faction == "US" else "DOWN")
                     img = TEXT.render(lab, 11, _fade(col, 1.0 - age * 1.5), "eng")
                     screen.blit(img, (sx - img.get_width() // 2, sy - r - 14))
         screen.set_clip(None)

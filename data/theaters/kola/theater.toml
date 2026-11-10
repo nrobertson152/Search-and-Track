@@ -134,6 +134,24 @@ elev_m = 160.0
 kind = "military"
 
 [[airbase]]
+id = "olenya"
+name = "Olenya"
+name_ru = "Оленья"
+lat = 68.15
+lon = 33.46
+elev_m = 200.0
+kind = "military"
+
+[[airbase]]
+id = "severomorsk3"
+name = "Severomorsk-3"
+name_ru = "Североморск-3"
+lat = 68.87
+lon = 33.72
+elev_m = 170.0
+kind = "military"
+
+[[airbase]]
 id = "murmashi"
 name = "Murmansk (Murmashi)"
 name_ru = "Мурманск"

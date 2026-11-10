@@ -84,6 +84,7 @@ class Aircraft:
     launcher: str = ""                   # anti-ship missile: who fired it
     evade_t: float = -1.0                # defensive manoeuvre against a missile until
     t_max: float = -1.0                  # anti-ship missile: self-destruct time
+    route: list[list[float]] = field(default_factory=list)   # cruise missile: waypoints before the aim point
 
 
 @dataclass

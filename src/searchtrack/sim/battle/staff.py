@@ -26,7 +26,8 @@ if TYPE_CHECKING:
     from ..world import World
 
 THREAT_WEIGHT = {"strike": 3.0, "bomber": 3.0, "recon": 2.6, "ew": 2.2, "awacs": 1.8, "interceptor": 1.2,
-                 "fighter": 1.2, "patrol": 1.5, "tanker": 1.0, "unknown": 1.5}
+                 "fighter": 1.2, "patrol": 1.5, "tanker": 1.0, "unknown": 1.5, "cruise": 2.4}
+CRUISE_MPS = 330.0                  # a missile track slower than this is a cruise missile: fighters can hunt it
 REACH_KM = {"aggressive": 950.0, "balanced": 600.0, "defensive": 320.0}
 
 
@@ -40,8 +41,8 @@ def classify(w: "World", trk) -> str:
         return "debris"                      # falling, slowing: the 3-D radars see it come down
     if a is not None and a.aim:
         return "missile" if (spd > 300.0 or w.t - trk.t_init > 15.0) else "unknown"
-    if spd > 1050.0:
-        return "missile"
+    if spd > 1050.0 and a is not None and not trk.jammer and w.t - trk.t_init > 20.0:
+        return "missile"                     # jamming and clutter make wild speeds on false tracks: ignore those
     if a is not None and w.t - trk.t_init > 25.0:
         at = w.catalog.aircraft.get(a.type_id)
         if at is not None:
@@ -123,6 +124,7 @@ def _identify(w: "World") -> None:
     from ..ident import iff_assessment, recommend
     b = w.battle
     hx = b.red_plan.get("hostile_x")
+    hy = b.red_plan.get("hostile_y")
     vamp = []
     own = _controlled(w)
     for trk in w.tracks.values():
@@ -146,7 +148,7 @@ def _identify(w: "World") -> None:
                 why = "fast mover, no IFF"
             elif trk.jammer:
                 why = "jamming"
-            elif hx is not None and trk.x < hx and age > 40.0:
+            elif ((hx is not None and trk.x < hx) or (hy is not None and trk.y > hy)) and age > 40.0:
                 why = "no IFF, inbound from enemy territory"
             elif rec in ("suspect", "hostile"):
                 why = basis
@@ -170,8 +172,9 @@ def _identify(w: "World") -> None:
         w.vars["vamp_alert_t"] = w.t
         b.red_plan["vamp_new"] = []
         n = sum(1 for t in w.tracks.values() if not t.lost and w.vars.get(f"vamp_{t.id}"))
-        txt = f"VAMPIRE VAMPIRE — {len(new)} new missile{'s' if len(new) > 1 else ''} bearing {brg:03.0f}, " \
-              f"{d:.0f} km — {n} in the air"
+        many = 's' if len(new) > 1 else ''
+        head = "VAMPIRE VAMPIRE" if w.faction == "US" else "MISSILE ATTACK"
+        txt = f"{head} — {len(new)} new missile{many} bearing {brg:03.0f}, {d:.0f} km — {n} in the air"
         event(w, "vampire", txt, trk.id, px, py, w.own_side, 3 if first else 2)
 
 
@@ -232,16 +235,23 @@ def _commit(w: "World") -> None:
         if trk.lost or trk.identity not in ("hostile", "suspect"):
             continue
         cls = classify(w, trk)
+        if cls == "missile" and math.hypot(trk.vx, trk.vy) * 1000.0 < CRUISE_MPS and w.t - trk.t_init > 20.0:
+            cls = "cruise"                   # subsonic and low: an interceptor with look-down radar can catch it
         if cls in ("missile", "debris"):
             continue
         px, py = predicted(trk, w.t)
         d = min(math.hypot(px - x, py - y) for x, y in pts)
+        if cls == "cruise" and d > 260.0 and trk.id not in b.priority:
+            continue
         prio = trk.id in b.priority or trk.id in hvaa
         if d > reach and not prio:
             continue
+        if cls in ("interceptor", "fighter") and not prio and \
+                d > (reach if b.standing.get("posture") == "aggressive" else 230.0):
+            continue                         # a fighter sweep far out is bait: keep the interceptors for bombers
         if sam_danger(w, px, py) and trk.id not in b.priority:
             continue                         # not into the S-300F: let them come out
-        need = 2 if cls in ("strike", "recon", "ew", "awacs", "unknown") else 2
+        need = 1 if cls == "cruise" else 2
         have = _assigned_strength(w, trk.id)
         if have >= need:
             continue
@@ -393,7 +403,7 @@ def _self_defense(w: "World") -> None:
 def _sams(w: "World") -> None:
     b = w.battle
     tight = b.standing.get("sam", "FREE") == "TIGHT"
-    ships = [(s.x, s.y) for s in w.ships.values() if s.side == w.own_side and s.state != "sunk"]
+    ships = defended_points(w)
     load: dict[str, int] = {}
     for s in w.sams.values():
         if s.side == w.own_side and s.assigned:
@@ -421,11 +431,14 @@ def _sams(w: "World") -> None:
         st = w.catalog.sams[site.type_id]
         if st.homing_km > 0:
             continue                                 # BOMARC needs the key
+        silent = bool(site.carrier and site.carrier in w.ships and w.ships[site.carrier].emcon)
         best, bscore = None, 0.0
         for trk, cls, px, py, near_ship in live:
             d = math.hypot(px - site.x, py - site.y)
             if d > min(st.fc_range_km, st.range_max_km * 2.0):
                 continue
+            if silent and not (cls == "missile" and d < 30.0):
+                continue                             # emission control: only a missile closing on the ship
             if trk.alt is not None and not (st.alt_min_m * 0.5 <= trk.alt <= st.alt_max_m * 1.1):
                 continue
             cap = 3 if cls == "missile" else 2

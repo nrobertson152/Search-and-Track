@@ -71,8 +71,10 @@ def setup(w: "World", sc: dict) -> None:
     b.defended = list(bd.get("defended", []))
     b.red_plan = {"target": bd.get("red_target", ""), "located": False, "t_located": -1.0}
     if "hostile_west_of_lon" in bd:
-        lat = bd.get("hostile_line_lat", w.theater.cfg.get("lat0", 60.0))
+        lat = bd.get("hostile_line_lat", w.theater.proj.lat0)
         b.red_plan["hostile_x"] = w.theater.xy(lat, bd["hostile_west_of_lon"])[0]
+    if "hostile_north_of_lat" in bd:
+        b.red_plan["hostile_y"] = w.theater.xy(bd["hostile_north_of_lat"], w.theater.proj.lon0)[1]
     if "brief_target" in bd:
         b.red_plan["brief"] = list(spec_xy(w, bd["brief_target"]))
     b.red_plan["vital"] = list(bd.get("vital", []))
@@ -151,15 +153,18 @@ def pre_step(w: "World", dt: float) -> None:
 
 def mid_step(w: "World", dt: float) -> None:
     """After the fighter controllers have given their orders, before aircraft move."""
-    from . import combat, naval
+    from . import combat, land, naval
     combat.evasion_step(w)
     naval.asm_guidance(w, dt)
+    land.guidance(w, dt)
 
 
 def post_step(w: "World", dt: float) -> None:
     """After everything moved and the radars swept."""
-    from . import naval, sense
+    from . import land, naval, sense
     naval.asm_impacts(w)
+    land.impacts(w)
+    land.step(w)
     naval.ship_defense(w)
     if w.tick % 4 == 0:
         sense.update(w)

@@ -32,6 +32,20 @@ IDC_PVO = {"friend": (255, 95, 80), "hostile": (110, 180, 255), "suspect": (150,
 CLASS_LABEL = {"strike": "BOMBER", "bomber": "BOMBER", "interceptor": "FIGHTER", "fighter": "FIGHTER",
                "recon": "RECON", "ew": "JAMMER", "awacs": "AEW", "missile": "VAMPIRE", "tanker": "TANKER",
                "unknown": "", "debris": "DEBRIS", "patrol": "PATROL", "airliner": "CIVIL", "transport": "CIVIL"}
+PVO_WORDS = {"VAMPIRE": "MISSILE", "VAMPIRES": "MISSILES", "SPLASH": "TARGET DOWN", "JUDY": "LOCK-ON",
+             "AEW": "AEW", "BARCAP": "PATROL"}
+
+
+def word(w, us: str) -> str:
+    """The same thing as the PVO command post would say it (English, Soviet usage)."""
+    return us if w.faction == "US" else PVO_WORDS.get(us, us)
+
+
+def state_word(w, state: str) -> str:
+    s = {"judy": "JUDY"}.get(state, state.upper())
+    return word(w, s)
+
+
 CLASS_LETTER = {"strike": "B", "bomber": "B", "interceptor": "F", "fighter": "F", "recon": "R", "ew": "J",
                 "awacs": "W", "tanker": "K", "patrol": "P", "missile": "", "unknown": "", "debris": ""}
 
@@ -211,7 +225,7 @@ class BattleFX:
             return
         if kind == "kill":
             self.fx.append(dict(kind="boom", x=x, y=y, t0=self.clock, dur=2.2, big=False, own=own,
-                                label="SPLASH" if not own else text.split(" (")[0].replace("SPLASH — ", "")))
+                                label=word(w, "SPLASH") if not own else text.split(" (")[0].split(" — ")[-1]))
             audio.play("boom", 0.5 if not own else 0.7)
         elif kind == "vampire_kill":
             self.fx.append(dict(kind="pop", x=x, y=y, t0=self.clock, dur=1.0))
@@ -233,6 +247,19 @@ class BattleFX:
                 audio.play("launch", 0.35)
         elif kind == "damaged":
             self.fx.append(dict(kind="pop", x=x, y=y, t0=self.clock, dur=1.2))
+        elif kind == "ground_hit":
+            low = text.lower()
+            lbl = "RUNWAY" if "runway" in low else "RADAR" if "radar" in low and "fire-control" not in low else \
+                "SAM SITE" if ("battalion" in low or "fire-control" in low) else "HIT"
+            self.fx.append(dict(kind="boom", x=x, y=y, t0=self.clock, dur=3.4, big=True, own=own, label=lbl))
+            self.fx.append(dict(kind="crater", x=x, y=y, t0=self.clock, dur=9.0, seed=int(t * 11) % 83))
+            self.flash = max(self.flash, 0.6 if own and level >= 3 else 0.0)
+            audio.play("boom", 0.9 if level >= 3 else 0.5)
+        elif kind == "impact":
+            self.fx.append(dict(kind="pop", x=x, y=y, t0=self.clock, dur=1.4))
+            audio.play("pop", 0.4)
+        elif kind == "arm_launch" and (own or self.umpire):
+            self.fx.append(dict(kind="flash", x=x, y=y, t0=self.clock, dur=0.6))
 
     def _auto_slow(self) -> None:
         sc = self.scene
@@ -334,6 +361,7 @@ class BattleFX:
             ship_glyph(screen, px, py, sh.hdg, col, 5)
             lab = (st.nato_name or st.name) + (" ?" if c.passive else "") + ("" if age < 120 else f" {age / 60:.0f}m")
             screen.blit(TEXT.render(lab, 11, col, font), (px + 13, py - 7))
+        self._installations(screen, mv, font)
         # ---- ships (ours always; theirs in the umpire view)
         for sh in w.ships.values():
             if sh.side != w.own_side and not self.umpire:
@@ -467,7 +495,7 @@ class BattleFX:
                     pygame.draw.line(screen, _fade(col, 0.2 + 0.5 * i / len(pts)), pts[i], pts[i + 1], 2)
             vampire_glyph(screen, sx, sy, tk.vx, tk.vy, col, self.clock)
             if mv.scale > 0.45 or selected:
-                screen.blit(TEXT.render("VAMPIRE", 10, col, font), (sx + 10, sy - 14))
+                screen.blit(TEXT.render(word(w, "VAMPIRE"), 10, col, font), (sx + 10, sy - 14))
         else:
             air_frame(screen, sx, sy, ident, col, 9, 2)
             letter = CLASS_LETTER.get(cls, "")
@@ -478,7 +506,7 @@ class BattleFX:
                 for k in range(3):
                     pygame.draw.line(screen, col, (sx - 4 + k * 4, sy - 7), (sx - 6 + k * 4, sy - 1), 1)
             lab = tk.id + (f" ×{n}" if n > 1 else (f" ×{tk.size}" if tk.size > 1 else ""))
-            sub = CLASS_LABEL.get(cls, "")
+            sub = word(w, CLASS_LABEL.get(cls, ""))
             if ident == "friend" and not sub:
                 sub = "FRIEND"
             show = selected or prio or n > 1 or mv.scale > 0.5 or cls in ("strike", "recon", "ew", "awacs")
@@ -524,8 +552,8 @@ class BattleFX:
             _dash_circle(screen, _fade(col, 0.35), (cx, cy), int(20 * mv.scale), 32)
         if mv.scale > 0.3 or selected:
             fuel = a.fuel / max(w.catalog.aircraft[a.type_id].fuel_kg, 1) * 100
-            tag = {"vector": "VEC", "contact": "CON", "judy": "JUDY", "attack": "ATK", "rtb": "RTB", "hold": "HOLD",
-                   "cap": "CAP", "airborne": "AIR"}.get(fl.state, fl.state.upper())
+            tag = {"vector": "VEC", "contact": "CON", "judy": word(w, "JUDY"), "attack": "ATK", "rtb": "RTB",
+                   "hold": "HOLD", "cap": "CAP", "airborne": "AIR"}.get(fl.state, fl.state.upper())
             n = sum(1 for m in fl.members if m in w.aircraft and w.aircraft[m].state == "airborne")
             screen.blit(TEXT.render(f"{fl.callsign}{' ×' + str(n) if n > 1 else ''}", 11, col, font), (sx + 10, sy - 15))
             screen.blit(TEXT.render(f"{tag} F{fuel:.0f}%", 9, _fade(col, 0.8), font), (sx + 10, sy - 2))
@@ -618,6 +646,46 @@ class BattleFX:
                                   _fade((200, 210, 215), 1.0 - age))
             elif k == "flash":
                 pygame.draw.circle(screen, _fade((255, 250, 210), 1.0 - age), (sx, sy), int(3 + 5 * age), 1)
+            elif k == "crater":                                           # smoke drifting from a hit on the ground
+                for i in range(7):
+                    a = (f["seed"] * 0.53 + i * 0.9) % (2 * math.pi)
+                    d = 3 + 22 * age * (0.4 + (i % 4) / 4.0)
+                    pygame.draw.circle(screen, _fade((150, 140, 130), 0.7 * (1.0 - age)),
+                                       (int(sx + math.cos(a) * d + age * 14), int(sy + math.sin(a) * d - age * 10)),
+                                       int(2 + 4 * age), 1)
+
+    def _installations(self, screen, mv, font) -> None:
+        """What the war has done to the ground: marks on wrecked radars, silent battalions, cratered runways."""
+        w = self.world
+        red = (255, 80, 60) if not self.pvo else (40, 40, 40)
+        amber = (255, 190, 80) if not self.pvo else (150, 90, 20)
+        blink = int(self.clock * 2) % 2
+        marks = []
+        for r in w.radars.values():
+            if r.carrier or r.status != "down":
+                continue
+            dead = bool(w.vars.get(f"dead_{r.id}"))
+            if dead or r.repair_t > 0:
+                marks.append((r.x, r.y, dead, "DESTROYED" if dead else f"OFF AIR {max(0, r.repair_t - w.t) / 60:.0f}m"))
+        for sm in w.sams.values():
+            if sm.carrier or sm.side != w.own_side or sm.status == "ok":
+                continue
+            dead = bool(w.vars.get(f"dead_{sm.id}"))
+            shut = f"shut_{sm.id}" in w.vars
+            marks.append((sm.x, sm.y, dead, "DESTROYED" if dead else "RADAR OFF" if shut else "DOWN"))
+        for ab in w.airbases.values():
+            if ab.carrier or ab.runway_ok or ab.side != w.own_side:
+                continue
+            left = max(0.0, w.vars.get(f"runway_{ab.id}", w.t) - w.t) / 60.0
+            marks.append((ab.x, ab.y, False, f"RUNWAY CLOSED {left:.0f}m"))
+        for x, y, dead, lab in marks:
+            sx, sy = mv.w2s(x, y)
+            col = red if dead else amber
+            k = 7
+            pygame.draw.line(screen, col, (sx - k, sy - k), (sx + k, sy + k), 2)
+            pygame.draw.line(screen, col, (sx - k, sy + k), (sx + k, sy - k), 2)
+            if mv.scale > 0.35 or blink:
+                screen.blit(TEXT.render(lab, 9, col, font), (sx + 9, sy + 4))
 
     # ------------------------------------------------------------ overlays on the display
     def draw_overlay(self, gui, scene, r: Rect) -> None:
@@ -643,7 +711,8 @@ class BattleFX:
                   f"{' · ' + str(int(cnt.get(f'ships_sunk_{enemy}', 0))) + ' ships sunk' if cnt.get(f'ships_sunk_{enemy}') else ''}",
                   IDC["hostile"] if not self.pvo else IDC_PVO["hostile"])]
         if vamp:
-            lines.append((f"VAMPIRES: {vamp} inbound", (255, 90, 70) if int(self.clock * 3) % 2 else (255, 200, 160)))
+            lines.append((f"{word(w, 'VAMPIRES')}: {vamp} inbound",
+                          (255, 90, 70) if int(self.clock * 3) % 2 else (255, 200, 160)))
         if b.spectator:
             lines.append(("SPECTATING — the staff commands" + (" · UMPIRE VIEW" if self.umpire else ""),
                           (200, 220, 230)))
@@ -806,7 +875,7 @@ class BattleFX:
             fl = w.flights[uid]
             at = w.catalog.aircraft[fl.type_id]
             ms = [w.aircraft[m] for m in fl.members if m in w.aircraft and w.aircraft[m].state == "airborne"]
-            title, sub = fl.callsign, f"{len(ms)}× {at.name} · {fl.task.upper()} · {fl.state.upper()}" + \
+            title, sub = fl.callsign, f"{len(ms)}× {at.name} · {fl.task.upper()} · {state_word(w, fl.state)}" + \
                 (f" on {fl.target}" if fl.target else "")
             if ms:
                 fuel = ms[0].fuel / at.fuel_kg * 100
@@ -961,7 +1030,7 @@ class BattleConsole:
         cls_n: dict[str, int] = {}
         for t in w.tracks.values():
             if not t.lost and t.identity in ("hostile", "suspect"):
-                c = CLASS_LABEL.get(bstaff.classify(w, t), "") or "UNK"
+                c = word(w, CLASS_LABEL.get(bstaff.classify(w, t), "")) or "UNK"
                 cls_n[c] = cls_n.get(c, 0) + 1
         known = " · ".join(f"{n} {c}" for c, n in sorted(cls_n.items(), key=lambda kv: -kv[1])) or "nothing"
         gui.label((x0, y), f"Hostile tracks: {known}", 11, (255, 140, 120), "eng_r")

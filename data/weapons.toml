@@ -328,3 +328,35 @@ max_km = 110.0
 salvo = 2
 missile = "AGM-84A"
 provenance = "approximate"
+
+# ---- land attack and defence suppression (battle missions)
+
+[[weapon]]
+id = "TLAM-C"
+name = "BGM-109C Tomahawk"
+kind = "lam"
+min_km = 20.0
+max_km = 1300.0
+missile = "TLAM-C"
+provenance = "approximate"
+notes = "[H] Conventional land-attack Tomahawk, 450 kg warhead."
+
+[[weapon]]
+id = "AGM-88A"
+name = "AGM-88A HARM"
+kind = "arm"
+min_km = 5.0
+max_km = 80.0
+missile = "AGM-88A"
+provenance = "approximate"
+notes = "[H] Fired at a radar that is radiating; range depends on launch altitude."
+
+[[weapon]]
+id = "WALLEYE"
+name = "AGM-62 Walleye II ER/DL"
+kind = "lam"
+min_km = 3.0
+max_km = 30.0
+missile = "WALLEYE"
+provenance = "approximate"
+notes = "[H] Released from low level after a pop-up; guided onto the aim point by the crew over the data link."

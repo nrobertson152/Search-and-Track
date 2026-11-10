@@ -14,6 +14,8 @@ from ..geo import angle_diff, bearing_deg, heading_vec
 from ..state import Aircraft, Missile, RadarSite, SamSite, Ship, Transponder
 from .core import KN, counter, event, spec_xy
 
+GROUND_PROFILES = ("terrain", "arm", "glide")          # land.py flies these
+
 if TYPE_CHECKING:
     from ..world import World
 
@@ -193,6 +195,8 @@ def asm_guidance(w: "World", dt: float) -> None:
         if m.state != "airborne" or not m.aim:
             continue
         mt = cat.aircraft[m.type_id]
+        if mt.profile in GROUND_PROFILES:
+            continue
         if w.t > m.t_max > 0:
             m.state = "gone"
             event(w, "asm_miss", f"{m.callsign}: fuel exhausted, fell into the sea", m.id, m.x, m.y, m.side, 0)
@@ -236,6 +240,8 @@ def asm_impacts(w: "World") -> None:
     for m in list(w.aircraft.values()):
         if m.state != "airborne" or not m.aim:
             continue
+        if w.catalog.aircraft[m.type_id].profile in GROUND_PROFILES:
+            continue
         sh = w.ships.get(m.homing) if m.homing else None
         step_km = m.spd / 1000.0 * 1.2
         if sh is not None:
@@ -274,7 +280,7 @@ def ship_defense(w: "World") -> None:
         return
     threats: dict[str, float] = {}
     for m in w.aircraft.values():
-        if m.state != "airborne" or not m.aim:
+        if m.state != "airborne" or not m.aim or w.catalog.aircraft[m.type_id].profile in ("terrain", "glide"):
             continue
         for sh in w.ships.values():
             if sh.side == m.side or sh.state == "sunk":

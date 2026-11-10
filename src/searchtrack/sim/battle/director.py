@@ -54,7 +54,7 @@ def start_phase(w: "World", i: int) -> None:
 # ------------------------------------------------------------------ actions
 
 ACTIONS = {"launch", "group", "decision", "standing", "reinforcement", "reinforce", "aew_withdraw", "fleet", "ready",
-           "located", "end_battle", "surge", "cap_station"}
+           "located", "end_battle", "surge", "cap_station", "salvo"}
 
 
 def act(w: "World", a: dict) -> None:
@@ -110,7 +110,8 @@ def act(w: "World", a: dict) -> None:
             f = min(1.0, float(a.get("km", 110.0)) / max(d, 1.0))
             w.vars[f"aew_station_{g.id}"] = 1.0
             g.station = [sx + (hx - sx) * f, sy + (hy - sy) * f, g.station[2], g.station[3]]
-            event(w, "aew", f"{g.name} falls back {a.get('km', 110):.0f} km toward the fleet", g.id, level=1)
+            home = "the fleet" if g.base in w.airbases and w.airbases[g.base].carrier else "its base"
+            event(w, "aew", f"{g.name} falls back {a.get('km', 110):.0f} km toward {home}", g.id, level=1)
     elif k == "fleet":
         for sh in w.ships.values():
             if sh.group == a["group"] and sh.guide:
@@ -145,6 +146,9 @@ def act(w: "World", a: dict) -> None:
     elif k == "located":
         b.red_plan["located"] = True
         b.red_plan["t_located"] = w.t
+    elif k == "salvo":
+        from . import land
+        land.salvo(w, a)
     elif k == "end_battle":
         b.end_t = w.t + float(a.get("delay_s", 30.0))
     else:
@@ -235,6 +239,9 @@ def cond(w: "World", c: dict) -> Optional[bool]:
         return w.t - b.t_last_event >= float(c.get("s", 120.0))
     if t == "standing":
         return b.standing.get(c["key"]) in c["is"]
+    if t == "installation":
+        from . import land
+        return land.is_destroyed(w, c["id"]) if c.get("is", "out") == "destroyed" else land.is_out(w, c["id"])
     return None
 
 
@@ -287,4 +294,31 @@ def objective(w: "World", o: "Objective", final: bool) -> Optional[str]:
         if b.counters.get(f"aircraft_lost_{w.own_side}", 0.0) > float(p.get("n", 6)):
             return "failed"
         return "done" if final else None
+    if k == "hold_area":                     # a ship stays on its patrol line until a given time
+        sh = w.ships.get(p["ship"])
+        x, y = spec_xy(w, p)
+        if sh is None or sh.state in ("sunk", "crippled") or \
+                math.hypot(sh.x - x, sh.y - y) > float(p.get("r_km", 60.0)):
+            return "failed"
+        return "done" if final or w.t >= float(p.get("until_min", 45.0)) * 60.0 else None
+    if k == "runways":                       # never more than max_closed of these airfields shut at once
+        closed = sum(1 for bid in p["bases"] if bid in w.airbases and not w.airbases[bid].runway_ok)
+        if closed > int(p.get("max_closed", 1)):
+            return "failed"
+        return "done" if final else None
+    if k == "radars_survive":
+        from . import land
+        sites = p.get("sites") or [r.id for r in w.radars.values() if not r.carrier]
+        if sum(1 for r in sites if land.is_destroyed(w, r)) > int(p.get("max_destroyed", 0)):
+            return "failed"
+        return "done" if final else None
+    if k == "missiles_stopped":              # shot down before they reached their targets
+        fired = sum(b.counters.get(f"fired_{m}", 0.0) for m in p["types"])
+        killed = sum(b.counters.get(f"killed_{m}", 0.0) for m in p["types"])
+        planned = float(p.get("planned", 0.0))
+        if planned and killed >= planned * float(p.get("frac", 0.5)):
+            return "done"
+        if final:
+            return "done" if fired and killed / fired >= float(p.get("frac", 0.5)) else "failed"
+        return None
     return None

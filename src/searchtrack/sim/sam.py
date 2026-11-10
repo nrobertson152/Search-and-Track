@@ -273,8 +273,8 @@ def missile_step(world: "World", m: Missile, dt: float) -> None:
             else:
                 m.result = "hit"
                 if world.battle.active:
-                    from .battle.combat import hit
-                    hit(world, tgt, f"{m.type_id} from {m.owner}", m.owner)
+                    from .battle.combat import hit, unit_name
+                    hit(world, tgt, f"{m.type_id} from {unit_name(world, m.owner)}", m.owner)
                 else:
                     world.destroy(tgt.id, f"{m.type_id} from {m.owner}", shooter=m.owner)
             return

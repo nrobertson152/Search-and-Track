@@ -1336,6 +1336,13 @@ def headlines(world, rep) -> list[tuple[str, str]]:
         if hits and oc != "DEFEAT":
             out.append(("MISSILES STRIKE THE TASK FORCE" if us else "ENEMY MISSILES GET THROUGH",
                         f"{hits} hits; damage control teams fought fires into the night."))
+        ground = int(cnt.get(f"ground_hits_{world.own_side}", 0))
+        if ground >= 3:
+            cuts = int(cnt.get(f"runway_cuts_{world.own_side}", 0))
+            dead = int(cnt.get(f"radars_destroyed_{world.own_side}", 0) + cnt.get(f"sams_destroyed_{world.own_side}", 0))
+            out.append(("BASES UNDER FIRE" if us else "CRUISE MISSILES ON THE AIRFIELDS",
+                        f"{cuts} runway{'s' if cuts != 1 else ''} cratered, {dead} radar"
+                        f"{'s' if dead != 1 else ''} and battalions destroyed. Repair crews worked through the night."))
     if not out:
         if c["civil_losses"]:
             out.append(("AIRLINER DOWN — AIR DEFENSE UNDER FIRE" if world.faction == "US" else

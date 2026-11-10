@@ -16,7 +16,7 @@ from ..flight import cruise_speed, fuel_flow
 from ..geo import bearing_deg, heading_vec
 from ..state import AirGroup, Aircraft, RadarSite, Transponder
 from ..tracking import predicted, truth_of
-from . import combat, naval
+from . import combat, land, naval
 from .core import alt_of, counter, event, spec_xy
 
 if TYPE_CHECKING:
@@ -95,7 +95,9 @@ def launch(w: "World", g: AirGroup) -> None:
         (g.aim[0], g.aim[1]) if g.aim else (x + 1.0, y)
     hdg = bearing_deg(tx - x, ty - y)
     loadout = w.battle.red_plan.get("loadouts", {}).get(g.id, at.weapons)
-    if g.side == w.own_side:
+    if g.side == w.own_side and w.faction == "USSR":
+        tr = Transponder("kremniy", True, False, {"period": w.hq.policy.get("iff_period", "WAR")})
+    elif g.side == w.own_side:
         valid = w.hq.policy.get("mode1_valid", ["00"])
         codes = {"1": valid[0], "2": "4100", "3": f"{4600 + w.next_id('m3') % 100:04d}"}
         tr = Transponder("sif", True, False, codes)
@@ -188,6 +190,7 @@ def group_step(w: "World", g: AirGroup, dt: float) -> None:
         _radio(w, g, "winchester, RTB" if w.faction == "US" else "Weapons expended, returning.")
     if g.state in ("egress", "rtb"):
         _egress(w, g, ms, lead)
+        _low_level(w, g, lead)
         _formation(w, g, ms, lead)
         return
     r = g.role
@@ -196,14 +199,24 @@ def group_step(w: "World", g: AirGroup, dt: float) -> None:
         _strike(w, g, ms, lead, at)
     elif r == "escort":
         free = _escort(w, g, ms, lead)
+    elif r == "sead":
+        free = _sead(w, g, ms, lead)
     elif r in ("sweep", "cap", "intercept"):
         free = _fighter(w, g, ms, lead)
     elif r == "recon":
         _recon(w, g, ms, lead, at)
     else:
         _orbit(w, g, ms, lead)
+    _low_level(w, g, lead)
     if not free:
         _formation(w, g, ms, lead)
+
+
+def _low_level(w: "World", g: AirGroup, lead: Aircraft) -> None:
+    """Groups briefed to fly low hug the terrain under the radar horizon."""
+    if g.alt < 1000.0 and lead.cmd_alt is not None and lead.cmd_alt <= g.alt + 1.0:
+        from ..flight import terrain_follow_alt
+        lead.cmd_alt = terrain_follow_alt(w, lead, g.alt)
 
 
 def _armed(ms: list[Aircraft], w: "World") -> bool:
@@ -353,10 +366,15 @@ def _engage(w: "World", g: AirGroup, ms: list[Aircraft], item: tuple) -> None:
 # ------------------------------------------------------------------ roles
 
 def _strike(w: "World", g: AirGroup, ms: list[Aircraft], lead: Aircraft, at) -> None:
-    aim, have_fix, ship = _strike_aim(w, g, lead, at)
+    fixed = land.installation(w, g.target) if g.target else None
+    if fixed is not None:                                 # an airfield, a radar, a missile battalion
+        aim, have_fix, ship, kinds = (fixed[1], fixed[2]), "fix", "", land.LAND_KINDS
+    else:
+        aim, have_fix, ship = _strike_aim(w, g, lead, at)
+        kinds = ("asm",)
     if aim is not None:
         g.aim = [aim[0], aim[1]]
-    wid = next((k for k, n in lead.weapons.items() if n > 0 and w.catalog.weapons[k].kind == "asm"), None)
+    wid = next((k for k, n in lead.weapons.items() if n > 0 and w.catalog.weapons[k].kind in kinds), None)
     if wid is None:
         g.state = "egress"
         return
@@ -377,14 +395,14 @@ def _strike(w: "World", g: AirGroup, ms: list[Aircraft], lead: Aircraft, at) -> 
     if g.wp >= len(g.route):
         dash = at.ff_ab > 0 and d < reach + 60.0
         _fly(lead, g.aim[0], g.aim[1], g.alt, "ab" if dash else "mil" if d < reach + 300.0 else "cruise")
-    if d <= reach and have_fix and not g.released:
-        _release(w, g, ms, wid, ship)
-    elif d < reach * 0.4 and not g.released:
-        _release(w, g, ms, wid, ship)            # pressed in this far: fire at the best estimate
+    if not g.released and d <= reach * {"fix": 1.0, "stale": 0.85}.get(have_fix, 0.4):
+        _release(w, g, ms, wid, ship)            # a fresh fix: from max range; an old one: a little closer;
+                                                 # only the briefing's guess: press in and fire at that
 
 
-def _strike_aim(w: "World", g: AirGroup, lead: Aircraft, at) -> tuple[Optional[tuple], bool, str]:
-    """Where the raid believes its target is, and whether that fix is good enough to fire on."""
+def _strike_aim(w: "World", g: AirGroup, lead: Aircraft, at) -> tuple[Optional[tuple], str, str]:
+    """Where the raid believes its target is, and how good that is: "fix" (fresh), "stale" (an old
+    contact, dead-reckoned) or "brief" (nothing but the briefing's estimate)."""
     pic = w.battle.surface.get(g.side, {})
     best, bscore = None, -1.0
     for sid, c in pic.items():
@@ -400,29 +418,37 @@ def _strike_aim(w: "World", g: AirGroup, lead: Aircraft, at) -> tuple[Optional[t
     if best is None:
         aim = tuple(g.aim) if g.aim else (tuple(w.battle.red_plan.get("brief", [])) or None
                                           if g.side != w.own_side else None)
-        return aim, False, ""
+        return aim, "brief", ""
     sid, c = best
     age = w.t - c.t
     x, y = c.x + c.vx * age, c.y + c.vy * age
-    return (x, y), (age < 150.0 and c.err_km < 30.0), sid
+    return (x, y), ("fix" if age < 150.0 and c.err_km < 30.0 else "stale"), sid
 
 
 def _release(w: "World", g: AirGroup, ms: list[Aircraft], wid: str, ship: str) -> None:
     wt = w.catalog.weapons[wid]
     n = 0
+    fixed = wt.kind in land.LAND_KINDS
     for a in ms:
         cnt = a.weapons.get(wid, 0)
         for k in range(cnt):
-            jitter = w.rng.gauss(0.0, 2.5)
-            hx, hy = heading_vec(bearing_deg(g.aim[0] - a.x, g.aim[1] - a.y) + 90.0)
-            naval.launch_asm(w, a, wid, (g.aim[0] + hx * jitter * (k + 1), g.aim[1] + hy * jitter * (k + 1)), g.id)
+            if fixed:
+                jitter = w.rng.gauss(0.0, 0.15)
+                land.launch(w, a, wid, (g.aim[0] + jitter, g.aim[1] - jitter), g.id, g.side)
+            else:
+                jitter = w.rng.gauss(0.0, 2.5)
+                hx, hy = heading_vec(bearing_deg(g.aim[0] - a.x, g.aim[1] - a.y) + 90.0)
+                naval.launch_asm(w, a, wid, (g.aim[0] + hx * jitter * (k + 1), g.aim[1] + hy * jitter * (k + 1)),
+                                 g.id)
             n += 1
         a.weapons[wid] = 0
     g.released = True
     g.state, g.t_state = "egress", w.t
     counter(w, f"raids_released_{g.side}")
+    what = (land.installation(w, g.target) or ("", 0, 0, "target"))[3] if fixed else \
+        (ship and w.ships[ship].name or "target")
     if g.side == w.own_side:
-        event(w, "asm_launch", f"{g.name}: {n} {wt.name.split(' (')[0]} away at the {ship and w.ships[ship].name or 'target'}",
+        event(w, "asm_launch", f"{g.name}: {n} {wt.name.split(' (')[0]} away at the {what}",
               g.id, ms[0].x, ms[0].y, g.side, 2)
         _radio(w, g, f"{n} {wt.id} away, egressing" if w.faction == "US" else f"{n} missiles launched.", 1)
     else:
@@ -455,6 +481,76 @@ def _escort(w: "World", g: AirGroup, ms: list[Aircraft], lead: Aircraft) -> bool
     if esc.state == "egress" and behind < 30.0:
         g.state = "egress"
     return False
+
+
+def _sead(w: "World", g: AirGroup, ms: list[Aircraft], lead: Aircraft) -> bool:
+    """Defence suppression: fly ahead of the strike and put anti-radiation missiles into every
+    radar that comes on the air -- missile battalions first, they are the ones about to shoot."""
+    harms = sum(n for a in ms for k, n in a.weapons.items() if n > 0 and w.catalog.weapons[k].kind == "arm")
+    if harms and w.tick % 3 == 0:
+        _sead_shots(w, g, ms)
+    near = pick_air_target(w, g, lead.x, lead.y, min(g.commit_km, 45.0), fighters_first=True)
+    if near is not None and combat.role_of(w, near[0]) in ("interceptor", "fighter"):
+        _engage(w, g, ms, near)
+        return True
+    esc = w.battle.groups.get(g.target)
+    eld = members(w, esc)[0] if esc is not None and esc.state not in ("done", "pending") and members(w, esc) \
+        else None
+    if eld is None or esc.state in ("egress", "done"):
+        if g.wp < len(g.route) and harms:
+            x, y, alt = g.route[g.wp]
+            if math.hypot(x - lead.x, y - lead.y) < 15.0:
+                g.wp += 1
+            _fly(lead, x, y, alt)
+        elif g.station and harms:
+            _orbit_at(lead, g.station[0], g.station[1], g.station[2], g.station[3])
+        elif esc is None or esc.state in ("egress", "done") or not harms:
+            g.state, g.t_state = "egress", w.t
+        return False
+    hx, hy = heading_vec(eld.hdg)
+    tx, ty = eld.x + hx * 25.0, eld.y + hy * 25.0
+    _fly(lead, tx, ty, max(eld.alt, g.alt), "mil")
+    return False
+
+
+def _sead_shots(w: "World", g: AirGroup, ms: list[Aircraft]) -> None:
+    enemy = "red" if g.side == "blue" else "blue"
+    em = land.emitters(w, enemy)
+    if not em:
+        return
+    in_air: dict[str, int] = {}
+    for m in w.aircraft.values():
+        if m.state == "airborne" and m.aim and m.homing[:2] in ("R:", "S:", "H:"):
+            in_air[m.homing] = in_air.get(m.homing, 0) + 1
+    esc = w.battle.groups.get(g.target)
+    ax, ay = (esc.aim[0], esc.aim[1]) if esc is not None and esc.aim else (None, None)
+    for a in ms:
+        wid = next((k for k, n in a.weapons.items() if n > 0 and w.catalog.weapons[k].kind == "arm"), None)
+        if wid is None or w.t - w.vars.get(f"armshot_{a.id}", -1e9) < 12.0:
+            continue
+        wt = w.catalog.weapons[wid]
+        best, bscore = None, 0.0
+        for ref, x, y, prio, label in em:
+            d = math.hypot(x - a.x, y - a.y)
+            if d > wt.max_km or d < wt.min_km or in_air.get(ref, 0) >= (2 if prio >= 3.0 else 1):
+                continue
+            score = prio * (1.0 + 30.0 / (d + 30.0))
+            if ax is not None and math.hypot(x - ax, y - ay) < 70.0:
+                score *= 1.6                              # the radars guarding the target
+            if score > bscore:
+                best, bscore = (ref, x, y, label), score
+        if best is None:
+            continue
+        ref, x, y, label = best
+        land.launch(w, a, wid, (x, y), g.id, g.side, homing=ref)
+        a.weapons[wid] -= 1
+        in_air[ref] = in_air.get(ref, 0) + 1
+        w.vars[f"armshot_{a.id}"] = w.t
+        if g.side == w.own_side:
+            event(w, "arm_launch", f"{g.callsign}: {wt.name} away at {label}", g.id, a.x, a.y, g.side, 1)
+            _radio(w, g, f"magnum, {label}" if w.faction == "US" else "Anti-radiation missile launched.", 1)
+        else:
+            event(w, "arm_launch", f"[enemy] {a.callsign} fired {wt.id} at {label}", g.id, a.x, a.y, g.side, -1)
 
 
 def _fighter(w: "World", g: AirGroup, ms: list[Aircraft], lead: Aircraft) -> bool:
@@ -534,9 +630,9 @@ def _orbit(w: "World", g: AirGroup, ms: list[Aircraft], lead: Aircraft) -> None:
         g.state = "egress"
         return
     sx, sy, alt, r = g.station
-    if g.role in ("ew", "awacs"):
+    if g.role in ("ew", "awacs", "elint"):
         threat = _threatened(w, g, lead.x, lead.y, 75.0 if g.role == "ew" else 110.0)
-        if threat is not None and (g.side != w.own_side or g.role == "ew"):
+        if threat is not None:
             hx, hy = _home(w, g)
             _fly(lead, hx, hy, alt, "mil")             # fall back toward home while fighters are close
             return

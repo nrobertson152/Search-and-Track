@@ -175,7 +175,7 @@ def evade_factor(w: "World", tgt: Aircraft, m: Missile) -> float:
                 f *= 0.85
     if m.kind != "aam" and tgt.spd > 500.0:                         # SAMs against supersonic missiles
         f *= max(0.5, min(1.0, 1.3 - tgt.spd / 1600.0))
-    if m.kind != "aam" and tgt.alt < 60.0:                          # sea-skimmers: clutter and multipath
+    if m.kind != "aam" and tgt.alt - w.ground_height(tgt.x, tgt.y) < 80.0:   # skimmers: clutter and multipath
         f *= 0.6
     return f
 
@@ -233,13 +233,15 @@ def on_destroyed(w: "World", ac: Aircraft, cause: str, shooter: str) -> None:
     by = unit_name(w, shooter) if shooter else cause
     if role == "missile":
         counter(w, f"asm_killed_{ac.side}")
+        counter(w, f"killed_{ac.type_id}")
         event(w, "vampire_kill", f"{at.id if at else 'missile'} shot down by {by}", ac.id, ac.x, ac.y, ac.side, 1)
         return
     counter(w, f"aircraft_lost_{ac.side}")
     counter(w, f"lost_{ac.side}_{role}")
     name = at.name.split(" (")[0] if at else ac.type_id
     lvl = 2 if (ac.side == w.own_side or role in BIG_ROLES) else 1
-    event(w, "kill", f"SPLASH — {ac.callsign} ({name}) shot down by {by}", ac.id, ac.x, ac.y, ac.side, lvl)
+    head = "SPLASH" if w.faction == "US" else "TARGET DESTROYED"
+    event(w, "kill", f"{head} — {ac.callsign} ({name}) shot down by {by}", ac.id, ac.x, ac.y, ac.side, lvl)
     fl = w.flights.get(shooter)
     if fl is not None and w.faction_def.id == "US":
         w.radio(fl, f"splash one {name.split()[0]}", 1)

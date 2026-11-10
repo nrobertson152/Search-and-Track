@@ -86,16 +86,21 @@ class MapView:
 
     # ------------------------------------------------------------ input
     def handle(self, gui, events) -> Optional[tuple]:
-        """Returns ('pick', world_xy, screen_xy) on a left click inside the map."""
+        """Returns ('pick', world_xy, screen_xy) on a left click inside the map and ('menu', ...) on a
+        right click that did not drag the map."""
         r = self.rect
         m = gui.mouse
         inside = r.collidepoint(m)
         if inside:
             self.hover_world = self.s2w(*m)
+        menu = None
         for e in events:
             if e.type == pygame.MOUSEBUTTONDOWN and e.button in (2, 3) and r.collidepoint(e.pos):
                 self.drag = (e.pos, self.cx, self.cy)
             elif e.type == pygame.MOUSEBUTTONUP and e.button in (2, 3):
+                if e.button == 3 and self.drag and math.hypot(e.pos[0] - self.drag[0][0],
+                                                              e.pos[1] - self.drag[0][1]) < 6:
+                    menu = ("menu", self.s2w(*e.pos), e.pos)
                 self.drag = None
             elif e.type == pygame.MOUSEMOTION and self.drag:
                 (px, py), cx, cy = self.drag
@@ -104,6 +109,8 @@ class MapView:
         if inside and gui.wheel:
             self.zoom(1.25 ** gui.wheel, m)
             gui.wheel = 0
+        if menu:
+            return menu
         if inside and gui.released and not gui.consumed and r.collidepoint(gui.press_pos) \
                 and math.hypot(m[0] - gui.press_pos[0], m[1] - gui.press_pos[1]) < 6:
             gui.consumed = True

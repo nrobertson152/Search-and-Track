@@ -8,7 +8,7 @@ import math
 from dataclasses import dataclass, field
 from typing import Any, Callable
 
-from . import doctrine, gci, sam, tracking
+from . import doctrine, gci, orders, sam, tracking
 from .world import World
 
 Result = tuple[bool, str]
@@ -328,6 +328,38 @@ def _readiness(w: World, squadron: str, bucket: float, n: int = 1) -> Result:
         prep = max(120.0, (min(float(k) for k, v in sq.ready.items() if float(k) > bucket and v > 0) - bucket) * 45.0)
         sq.upgrading.append([w.t + prep + i * 60.0, float(bucket)])
     return True, f"{sq.name}: {n} aircraft to {bucket:g}-minute readiness"
+
+
+@handler("quick")
+def _quick(w: World, track: str, order: str, n: int = 2) -> Result:
+    """One-click order: the duty officer picks the unit (see sim/orders.py)."""
+    if track not in w.tracks or w.tracks[track].lost:
+        return False, "no such track"
+    if order in orders.TASKS:
+        pick, why = orders.interceptor(w, track)
+        if pick is None:
+            return False, f"No interceptor available — {why}"
+        geometry = "lead" if order == "intercept" else "stern"
+        if pick.kind == "flight" and w.flights[pick.id].target == track:
+            fl = w.flights[pick.id]
+            if fl.task == order:
+                return False, f"{fl.callsign} is already on {track} ({order.upper()})"
+            fl.geometry = geometry
+            ok, msg = _task(w, flight=pick.id, task=order)
+        elif pick.kind == "flight":
+            ok, msg = _assign(w, flight=pick.id, track=track, task=order, geometry=geometry)
+        else:
+            ok, msg = _scramble(w, squadron=pick.id, n=n, task=order, track=track, geometry=geometry)
+        return ok, msg
+    if order == "missiles":
+        pick, why = orders.missile_unit(w, track)
+        if pick is None:
+            return False, f"No missile unit available — {why}"
+        s = w.sams[pick.id]
+        if w.t < s.t_ready and s.t_ready > w.t + s.readiness_min * 60.0:
+            _sam_alert(w, site=s.id)
+        return _sam_assign(w, site=pick.id, track=track)
+    return False, f"unknown order {order}"
 
 
 # ------------------------------------------------------------------ missiles

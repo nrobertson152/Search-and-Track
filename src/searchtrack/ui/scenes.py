@@ -5,7 +5,7 @@ import math
 
 import pygame
 
-from ..sim import aar, commands, doctrine, scenario, tracking
+from ..sim import aar, commands, doctrine, gci, ident, scenario, tracking
 from ..sim.world import DT
 from . import pvo
 from .lesson import CONSOLE_TABS, LessonCard
@@ -489,6 +489,7 @@ class CommandScene(Scene):
         self.advancing = False            # running fast until something needs the player
         self.render_t = world.t
         self._wake = ()
+        self.ctx: dict | None = None              # right-click order menu
         self.toasts: list[tuple[float, str, tuple]] = []
         self.auto_slow = True
         self.menu = False
@@ -576,7 +577,9 @@ class CommandScene(Scene):
                 if k == pygame.K_ESCAPE:
                     self.menu = False
                 continue
-            if k == pygame.K_ESCAPE:
+            if k == pygame.K_ESCAPE and self.ctx:
+                self.ctx = None
+            elif k == pygame.K_ESCAPE:
                 self.menu = True
             elif k == pygame.K_SPACE:
                 self.set_speed(0 if (self.speed_i and not self.advancing) else 1)
@@ -622,6 +625,15 @@ class CommandScene(Scene):
                 self.scope.cycle_range(1)
         if self.menu:
             return
+        if self.ctx:
+            inside = self.ctx["rect"].collidepoint(gui.mouse)
+            if (gui.released or gui.rpressed) and not inside:
+                self.ctx = None                   # a click elsewhere closes the order menu
+                if gui.released:
+                    gui.consumed = True
+                    return
+            elif inside:
+                return                            # its keys are pressed when it is drawn
         self.lesson.handle(gui)
         if self.pip is not None and gui.released and not gui.consumed and self.pip.rect.collidepoint(gui.mouse) \
                 and self.pip.rect.collidepoint(gui.press_pos):
@@ -646,7 +658,10 @@ class CommandScene(Scene):
                     self.audio.play("click")
         elif self.mode == "map":
             res = self.map.handle(gui, events)
-            if res:
+            if res and res[0] == "menu":
+                _, _, (sx, sy) = res
+                self.open_menu(self.map.pick(sx, sy), (sx, sy))
+            elif res:
                 _, (wx, wy), (sx, sy) = res
                 hit = self.map.pick(sx, sy)
                 if hit:
@@ -657,6 +672,15 @@ class CommandScene(Scene):
                     self.map.light_gun = (wx, wy)
                     self.audio.play("click")
         else:
+            if gui.rpressed and self.scope.rect.collidepoint(gui.mouse):
+                pos = self.scope.to_world(*gui.mouse)
+                if pos is not None:
+                    hit = None
+                    for t in w.tracks.values():
+                        px, py = tracking.predicted(t, w.t)
+                        if not t.lost and math.hypot(px - pos[0], py - pos[1]) < self.scope.range_km * 0.03 + 3:
+                            hit = ("track", t.id)
+                    self.open_menu(hit, gui.mouse)
             if gui.released and not gui.consumed and self.scope.rect.collidepoint(gui.mouse) \
                     and self.scope.rect.collidepoint(gui.press_pos):
                 pos = self.scope.to_world(*gui.mouse)
@@ -805,8 +829,106 @@ class CommandScene(Scene):
         self._toasts(gui)
         self.lesson.draw(gui, self, mr)
         screen.blit(self.room, (0, 0))
+        self._order_menu(gui)
         if self.menu:
             self._menu(gui)
+
+    # ------------------------------------------------------------ one-click orders
+    def open_menu(self, hit, pos) -> None:
+        """Right-click on a track or a flight: the orders that make sense for it. The duty officer
+        picks the squadron or the missile unit (sim/orders.py)."""
+        w = self.world
+        th = self.theme
+        self.ctx = None
+        if not hit or hit[0] not in ("track", "flight"):
+            return
+        kind, oid = hit
+        items = []
+        if kind == "track":
+            trk = w.tracks.get(oid)
+            if trk is None or trk.lost:
+                return
+            rec, basis = ident.recommend(w, trk)
+            can, why = doctrine.can_engage_track(w, trk)
+            title = f"{oid}  {doctrine.id_label(w, trk.identity)}"
+            kmh = math.hypot(trk.vx, trk.vy) * 3600.0
+            spd = f"{kmh / 1.852:.0f} kt" if th.units == "imperial" else f"{kmh:.0f} km/h"
+            sub = f"{fmt_alt(th, trk.alt, False)} · {spd}"
+
+            def q(order):
+                return lambda: self.cmd("quick", track=oid, order=order)
+            items += [("INTERCEPT", q("intercept"), True, None,
+                       "Send the interceptor that can reach it first: a free flight in the air, or the quickest "
+                       "squadron. Weapons still need clearance."),
+                      ("ID PASS", q("id"), True, None, "Send an interceptor to identify it visually (stern approach)."),
+                      ("SHADOW", q("shadow"), True, None, "Send an interceptor to identify and follow it.")]
+            if w.sams:
+                items.append(("MISSILES", q("missiles"), trk.identity != "friend", th.lamp_red,
+                              "Designate it to the ready missile unit with it in range."))
+            if w.hfs:
+                items.append(("HEIGHT", lambda: self.cmd("height", track=oid), True, None,
+                              "Queue it on the nearest free height finder."))
+            if rec not in (trk.identity, "pending"):
+                items.append((f"MARK {doctrine.id_label(w, rec)}",
+                              lambda: self.cmd("identity", track=oid, ident=rec), True, None, f"Recommended: {basis}"))
+            if not can and trk.identity in ("unknown", "suspect", "hostile"):
+                items.append(("REQUEST ENGAGE", lambda: self.cmd("request", kind="engage", track=oid), True, None,
+                              why))
+            items.append(("CENTER", lambda: self.map.center_on(*tracking.predicted(trk, w.t)), True, None,
+                          "Center the board on it."))
+        else:
+            fl = w.flights.get(oid)
+            lead = gci.lead_of(w, fl) if fl else None
+            if fl is None or lead is None:
+                return
+            title = f"{fl.callsign}  {fl.type_id}"
+            fuel = lead.fuel / max(1.0, w.catalog.aircraft[fl.type_id].fuel_kg) * 100.0
+            sub = f"{fl.state.upper()} · {fl.task.upper()}{' ' + fl.target if fl.target else ''} · fuel {fuel:.0f}%"
+            wi = next((i for i, c in enumerate(self.consoles) if c.name == "WEAPONS"), 1)
+            items += [("WEAPONS FREE" if not fl.weapons_free else "WEAPONS HOLD",
+                       lambda: self.cmd("weapons_free", flight=oid, on=not fl.weapons_free), True,
+                       th.lamp_red if not fl.weapons_free else None, "Clear the flight to fire (if the rules allow)."),
+                      ("CAP HERE", lambda: self.cmd("cap", flight=oid, x=lead.x, y=lead.y), True, None,
+                       "Orbit where it is now."),
+                      ("RTB", lambda: self.cmd("rtb", flight=oid), True, None, "Return to base."),
+                      ("MANUAL VECTORS" if fl.auto else "COMPUTER VECTORS",
+                       lambda: self.cmd("auto", flight=oid, on=not fl.auto), True, None,
+                       "Switch between computed and manual vectors."),
+                      ("CONSOLE", lambda: setattr(self, "ci", wi), True, None, "Open the weapons console.")]
+        self.select(kind, oid)
+        width = 200
+        h = 46 + len(items) * 29
+        x = max(4, min(pos[0] + 10, W - width - 4))
+        y = max(4, min(pos[1] + 6, H - h - 4))
+        self.ctx = dict(title=title, sub=sub, items=items, rect=R(x, y, width, h))
+        self.audio.play("click")
+
+    def _order_menu(self, gui) -> None:
+        c = self.ctx
+        if not c:
+            return
+        th = self.theme
+        s = gui.screen
+        r = c["rect"]
+        shade = pygame.Surface((r.w + 10, r.h + 12), pygame.SRCALPHA)
+        pygame.draw.rect(shade, (0, 0, 0, 120), shade.get_rect(), border_radius=8)
+        s.blit(shade, (r.x - 2, r.y + 2))
+        gui.panel(r, screws=False)
+        gui.label((r.x + 12, r.y + 7), c["title"], 15, th.engraving, "eng")
+        gui.label((r.x + 12, r.y + 25), c["sub"], 10, th.engraving_dim, "eng_r")
+        y = r.y + 42
+        for lab, act, enabled, col, tip in c["items"]:
+            key = R(r.x + 8, y, r.w - 16, 26)
+            if tip and key.collidepoint(gui.mouse):          # beside the menu, not over its other keys
+                lines = TEXT.wrap(tip, 360, 12, "ui")
+                tw = max(TEXT.width(ln, 12) for ln in lines) + 18
+                tx = r.right + 8 if r.right + 8 + tw < W else r.x - 8 - tw
+                gui.tooltip = (tip, (tx - 16, y - 18))
+            if gui.button(key, lab, enabled=enabled, color=col, size=11, key="ORDER " + lab):
+                self.ctx = None
+                act()
+                return
+            y += 29
 
     def _console_tabs(self, gui) -> None:
         th = self.theme

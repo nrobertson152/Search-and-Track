@@ -77,3 +77,48 @@ def test_soviet_title_and_board(app):
     assert isinstance(sc, CommandScene) and sc.theme.map_style == "board"
     for _ in range(3):
         app.frame([], mouse=(0, 0))
+    # the PVO command post is its own room: board keys under the board, the cabinet on the right
+    for label in ("BOARD", "RADAR SCOPE", "NETWORK", "ADVANCE", "8×", "<", ">", "RANGE", "MENU"):
+        assert label in app.gui.drawn, label
+    assert app.gui.drawn["ADVANCE"].x > sc.L.display.right       # in the cabinet, not over the board
+    assert sc.L.console.right < sc.L.display.x                    # the operator's desk is on the left
+
+
+def right_click(app, pos):
+    app.frame([pygame.event.Event(pygame.MOUSEBUTTONDOWN, button=3, pos=pos)], mouse=pos)
+    app.frame([pygame.event.Event(pygame.MOUSEBUTTONUP, button=3, pos=pos)], mouse=pos)
+
+
+def test_right_click_orders_send_the_nearest_interceptor(app):
+    from searchtrack.ui.scenes import CommandScene
+    press(app, "SELECT PVO")
+    press(app, "SCENARIOS")
+    app.scene.sel_id = "su_may_day"
+    press(app, "BRIEFING")
+    press(app, "TAKE THE WATCH")
+    sc = app.scene
+    assert isinstance(sc, CommandScene)
+    w = sc.world
+    while not any(t.identity in ("unknown", "suspect", "hostile") and not t.lost for t in w.tracks.values()):
+        w.step()
+    sc.render_t = w.t
+    trk = next(t for t in w.tracks.values() if t.identity in ("unknown", "suspect", "hostile") and not t.lost)
+    sc.map.center_on(trk.x, trk.y)
+    app.frame([], mouse=(0, 0))
+    before = len(w.flights)
+    right_click(app, sc.map.w2s(trk.x, trk.y))
+    assert sc.ctx and sc.sel.get("track") == trk.id
+    assert "ORDER ID PASS" in app.gui.drawn and "ID PASS" not in sc.ctx["title"]
+    click(app, app.gui.drawn["ORDER ID PASS"].center)
+    assert sc.ctx is None
+    assert len(w.flights) == before + 1 or any(f.target == trk.id for f in w.flights.values())
+    fl = next(f for f in w.flights.values() if f.target == trk.id)
+    assert fl.task == "id" and fl.geometry == "stern"
+    # a second order on the same track re-tasks the flight that is already on it
+    right_click(app, sc.map.w2s(trk.x, trk.y))
+    click(app, app.gui.drawn["ORDER INTERCEPT"].center)
+    assert fl.task == "intercept" and sum(1 for f in w.flights.values() if f.target == trk.id) == 1
+    # a click elsewhere closes the menu without acting
+    right_click(app, sc.map.w2s(trk.x, trk.y))
+    click(app, (sc.L.display.x + 5, sc.L.display.bottom - 5))
+    assert sc.ctx is None

@@ -14,14 +14,14 @@ nato_name = "CVN"
 rcs_m2 = 60000.0
 max_kn = 31.0
 cruise_kn = 18.0
-hp = 320.0
+hp = 600.0
 radars = [{ type = "AN/SPS-49", mast_m = 40.0 }, { type = "AN/SPS-48E", mast_m = 45.0 }]
 sams = [{ type = "SEA-SPARROW", missiles = 8 }, { type = "SEA-SPARROW", missiles = 8 }]
 ciws = 3
 chaff = 8
 esm_km = 400.0
 provenance = "approximate"
-notes = "[H] 90-aircraft air wing; NATO Sea Sparrow and Phalanx for self-defence."
+notes = "[H] 90-aircraft air wing; NATO Sea Sparrow and Phalanx for self-defence. [A] Hull: about five heavy missile hits put her out of action, seven sink her; Soviet planners counted on needing many hits on a carrier."
 
 [[ship]]
 id = "CG-Ticonderoga"

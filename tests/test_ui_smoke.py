@@ -129,11 +129,16 @@ def test_war_room_to_a_battle_and_back(app):
     from searchtrack.sim import scenario
     from searchtrack.ui.scenes import BriefingScene, CommandScene, DebriefScene
     from searchtrack.ui.war import WarScene, load_war
+    from searchtrack.ui.interlude import InterludeScene
     press(app, "SELECT PVO")
     press(app, "THE WAR")
+    app.frame([], mouse=(0, 0))
+    assert isinstance(app.scene, InterludeScene)                 # the war opens with its papers
+    press(app, "NEXT")
+    press(app, "SKIP ALL")
     assert isinstance(app.scene, WarScene) and app.scene.cid == "northern_war_su"
     press(app, "BRIEFING")
-    assert isinstance(app.scene, BriefingScene) and app.scene.world.scenario_id == "su_battle_kola"
+    assert isinstance(app.scene, BriefingScene) and app.scene.world.scenario_id == "su_battle_prologue"
     press(app, "SPECTATE")
     sc = app.scene
     assert isinstance(sc, CommandScene) and sc.world.battle.spectator
@@ -148,7 +153,11 @@ def test_war_room_to_a_battle_and_back(app):
     st = load_war(app, "northern_war_su")
     assert st["mission"] == 1 and st["oob"]["groups"]["a6_land"]["lost"] == 2
     press(app, "CONTINUE")
+    app.frame([], mouse=(0, 0))
+    assert isinstance(app.scene, InterludeScene)                 # what the night meant, and what comes next
+    assert app.scene.pages and app.scene.pages[-1]["kind"] == "report"   # the next night's intelligence
+    press(app, "SKIP ALL")
     assert isinstance(app.scene, WarScene)
     press(app, "BRIEFING")
-    assert app.scene.world.scenario_id == "su_battle_kola_2"
+    assert app.scene.world.scenario_id == "su_battle_kola"
     assert app.scene.world.battle.groups["a6_land"].n == 4

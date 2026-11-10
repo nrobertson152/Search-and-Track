@@ -151,6 +151,7 @@ def credit(w: "World", shooter: str, victim) -> Optional[Pilot]:
     if p is None:
         return None
     p.kills += 1
+    w.vars[f"pk_{p.id}"] = w.vars.get(f"pk_{p.id}", 0.0) + 1.0      # this battle's
     if p.kills == 5:
         us = w.faction == "US"
         event(w, "ace", f"{'ACE' if us else 'FIVE VICTORIES'}: {p.name} ({fl.callsign}) has five kills",
@@ -180,3 +181,33 @@ def shot_down(w: "World", a) -> str:
 def top(w_or_pilots, n: int = 3) -> list[Pilot]:
     pilots = w_or_pilots.battle.pilots.values() if hasattr(w_or_pilots, "battle") else w_or_pilots
     return sorted((p for p in pilots if p.kills > 0), key=lambda p: (-p.kills, p.id))[:n]
+
+
+def night(w: "World") -> list[str]:
+    """For the debrief: the pilot of the night, and what happened to the ones who were shot down."""
+    b = w.battle
+    if not b.pilots:
+        return []
+    out = []
+    scores = [(int(w.vars.get(f"pk_{p.id}", 0.0)), p) for p in b.pilots.values()]
+    n, best = max(scores, key=lambda s: (s[0], s[1].kills, s[1].id), default=(0, None))
+    if best is not None and n > 0:
+        sq = w.squadrons.get(best.squadron)
+        tail = f", {best.kills} in all" if best.kills > n else ""
+        out.append(f"Pilot of the night: {best.name}{' (' + sq.name + ')' if sq else ''} — {n} kill"
+                   f"{'s' if n != 1 else ''}{tail}")
+    down = [p for p in b.pilots.values() if p.note and p.status in ("kia", "missing", "rescued")]
+    if down:
+        k = [short(p) for p in down if p.status == "kia"]
+        m = [short(p) for p in down if p.status == "missing"]
+        r = [short(p) for p in down if p.status == "rescued"]
+        parts = []
+        if k:
+            parts.append("killed: " + ", ".join(k))
+        if m:
+            parts.append("missing: " + ", ".join(m))
+        if r:
+            parts.append("recovered: " + ", ".join(r))
+        out.append("Aircrew shot down — " + "; ".join(parts))
+    return out
+

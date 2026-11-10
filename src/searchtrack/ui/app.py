@@ -221,6 +221,28 @@ def screenshot(path: str, sid: str | None, seconds: float, console: int, mode: s
         app.scene.scroll = seconds if seconds < 5000 else 0
         for _ in range(2):
             app.frame([])
+    elif scene == "story":
+        from ..sim import story, war
+        from .interlude import InterludeScene
+        from .theme import theme_for
+        f = faction or "US"
+        c = war.campaigns(f)[0]
+        ctx = story.context(war.new_state(c["id"]), c, None, {})
+        ctx.update(date="20 October 1987", kills=11, lost=3, ships_lost="none", outcome="VICTORY",
+                   best="LT Vic Navarro" if f == "US" else "Captain Oleg Belov", best_kills=3,
+                   ace="CDR Ron 'Hoss' Coleman" if f == "US" else "Major Igor Melnik", ace_kills=6,
+                   ace_unit="VF-51" if f == "US" else "177th IAP")
+        pages = story.every_page(c, ctx)
+        if c.get("lost"):                        # the pages of the night the carrier is lost name her
+            k = len(c.get("intro", [])) + sum(len(m.get("page", [])) for m in c.get("mission", []))
+            pages[k:k + len(c["lost"])] = story.pages(c["lost"], {**ctx, "ships_lost": "USS Carl Vinson"},
+                                                      check=False)
+        app.gui.set_theme(theme_for(f))
+        sc = InterludeScene(app, f, pages, start=console, title=c["title"].upper())
+        sc.shown = 1e9
+        app.push(sc)
+        for _ in range(2):
+            app.frame([])
     elif scene in ("campaign", "alert", "operations", "war"):
         from .campaign import AlertDutyScene, CampaignScene
         from .scenes import OperationsScene

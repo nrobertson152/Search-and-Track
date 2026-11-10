@@ -189,7 +189,9 @@ def test_second_night_on_its_own_starts_from_assumed_losses():
 def test_war_carries_losses_from_one_battle_to_the_next():
     from searchtrack.sim import war
     st = war.new_state("northern_war_us")
+    st["mission"] = 1                                             # the first night (after the prologue)
     w = war.build_world(st, seed=5)
+    assert w.scenario_id == "us_battle_bering"
     assert w.battle.groups["backfire_a"].n == 6                   # the war applies its own order of battle
     w.battle.groups["backfire_a"].losses = 4
     w.ships["ddg996"].state, w.ships["ddg996"].hp = "sunk", -5.0
@@ -198,8 +200,9 @@ def test_war_carries_losses_from_one_battle_to_the_next():
     w.battle.counters["sq_lost_vf111"] = 3.0
     w.battle.outcome = "DRAW"
     war.advance(st, w)
-    assert st["mission"] == 1 and st["results"][0]["outcome"] == "DRAW"
+    assert st["mission"] == 2 and st["results"][0]["outcome"] == "DRAW"
     w2 = war.build_world(st, seed=6)
+    assert w2.scenario_id == "us_battle_bering_2"
     assert w2.battle.groups["backfire_a"].n == 2
     assert "ddg996" not in w2.ships and "frunze" not in w2.ships
     assert all(s.carrier != "frunze" for s in w2.sams.values())
@@ -210,14 +213,72 @@ def test_war_carries_losses_from_one_battle_to_the_next():
     assert any("lost" in line for line in war.summary(st, "US"))
 
 
-def test_war_ends_when_the_carrier_is_lost():
+def test_war_goes_on_without_the_carrier():
+    """Losing the carrier ends the battle group's war, not the war: the battles that need her are passed
+    over, Alaska is still fought, and the war ends after it."""
     from searchtrack.sim import war
     st = war.new_state("northern_war_us")
     w = war.build_world(st, seed=5)
     w.ships["cvn70"].state = "sunk"
     w.battle.outcome = "DEFEAT"
     war.advance(st, w)
-    assert st["over"] and war.current(st) is None and st["outcome"] == "DEFEAT"
+    assert not st["over"] and st["skipped"] == [1, 2] and st["note"]
+    assert war.current(st)["scenario"] == "us_battle_alaska"
+    texts = [p["text"] for p in st["inbox"]]
+    assert any("ABANDON SHIP ORDERED" in t for t in texts)         # the night she is lost has its own pages
+    assert any("goes ashore" in t for t in texts)
+    assert not any("REMAINS ON STATION" in t for t in texts)      # not the battle's, which assume she survived
+    assert any(p["kind"] == "teletype" and "LOSS OF CARL VINSON" in p["text"] for p in st["inbox"])
+    st["inbox"] = []
+    w2 = war.build_world(st, seed=6)
+    w2.battle.outcome = "DRAW"
+    war.advance(st, w2)
+    assert st["over"] and war.current(st) is None and st["skipped"] == [1, 2, 4]
+    assert [r["mission"] for r in st["results"]] == [0, 3]            # the diary puts each result in its row
+    assert war.result_for(st, 3)["scenario"] == "us_battle_alaska" and war.result_for(st, 1) is None
+    assert st["outcome"] in ("DRAW", "DEFEAT")                         # without her, a draw at best
+    assert war.war_outcome({"results": [{"score": 90, "total": 100}], "note": "lost"}) == "DRAW"
+    assert war.war_outcome({"results": [{"score": 90, "total": 100}]}) == "VICTORY"
+    texts = [p["text"] for p in st["inbox"]]
+    assert any("CARL VINSON LOST" in t for t in texts) and any("I'm alive" in t for t in texts)
+    assert not any("RETURNING TO BATTLE GROUP" in t or "caught the wire" in t for t in texts)
+
+
+def test_reinforcements_join_and_stay_with_the_battle_group():
+    """Ships the war sends before a battle fight in it and in every later battle of their group, unless lost."""
+    from searchtrack.sim import war
+    st = war.new_state("northern_war_us")
+    st["mission"] = 2
+    w = war.build_world(st, seed=3)
+    assert {"cg53", "ddg994"} <= set(w.ships)                             # Mobile Bay and Callaghan join
+    assert any(s.carrier == "cg53" for s in w.sams.values())              # with their missiles
+    w.ships["cg53"].state, w.battle.outcome = "sunk", "DRAW"
+    war.advance(st, w)
+    assert war.build_world(st, seed=4).scenario_id == "us_battle_alaska"
+    assert not war.build_world(st, seed=4).ships                         # no battle group in Alaska
+    w2 = war.build_world(st, seed=4)
+    w2.battle.outcome = "DRAW"
+    war.advance(st, w2)
+    w3 = war.build_world(st, seed=5)
+    assert w3.scenario_id == "us_battle_finale"
+    assert "ddg994" in w3.ships and "cg53" not in w3.ships                # the survivor stays; the lost one is gone
+
+
+def test_carrier_lost_on_the_last_night():
+    """She can still be lost in the finale: the war is not cut short, but its ending knows she is gone."""
+    from searchtrack.sim import war
+    st = war.new_state("northern_war_us")
+    st["mission"], st["inbox"] = 4, []
+    w = war.build_world(st, seed=5)
+    assert w.scenario_id == "us_battle_finale"
+    w.ships["cvn70"].state = "crippled"
+    w.battle.outcome = "DRAW"
+    war.advance(st, w)
+    assert st["over"] and not st.get("skipped")
+    texts = [p["text"] for p in st["inbox"]]
+    assert any("ABANDON SHIP ORDERED" in t for t in texts) and any("The war is over" in t for t in texts)
+    assert any("CARL VINSON LOST ON THE LAST NIGHT" in t for t in texts)
+    assert not any("HOMEWARD BOUND" in p["title"] or "caught the wire" in p["text"] for p in st["inbox"])
 
 
 def test_granit_salvo_needs_a_fresh_fix():

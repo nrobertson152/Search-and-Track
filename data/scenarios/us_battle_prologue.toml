@@ -26,7 +26,7 @@ group_patch = [
   { id = "foxhound", role = "escort", target = "bear1", commit_km = 90.0 },
   { id = "escort_a", target = "badger_g" },
   { id = "badger_g", n = 6, entry = { x = -740.0, y = -360.0, alt_m = 9500.0 }, exit = { x = -740.0, y = -360.0 }, route = [{ x = -640.0, y = -420.0 }] },
-  { id = "backfire_b", n = 4, name = "BACKFIRE flight (568th MRAP)" },
+  { id = "backfire_b", n = 2, name = "BACKFIRE pair (568th MRAP)" },
 ]
 trigger = []
 
@@ -76,4 +76,4 @@ earliest_min = 24.0
 latest_min = 30.0
 when = { type = "quiet", s = 120.0 }
 text = "Raid warning: six BADGERs with KSR-5 missiles from the west, MiG-31s with them. The first raid of the war is coming for the Carl Vinson."
-actions = [{ do = "launch", groups = ["badger_g", "escort_a"] }, { do = "standing", emcon = false }, { do = "launch", groups = ["backfire_b"], delay_s = 420.0 }, { do = "say", kind = "intel", after_s = 240.0, text = "Intelligence: a BACKFIRE regiment at Alekseyevka has launched. Expect it behind the BADGERs.", level = 2 }]
+actions = [{ do = "launch", groups = ["badger_g", "escort_a"] }, { do = "standing", emcon = false }, { do = "launch", groups = ["backfire_b"], delay_s = 420.0 }, { do = "say", kind = "intel", after_s = 240.0, text = "Intelligence: BACKFIREs airborne from Alekseyevka. Expect them behind the BADGERs.", level = 2 }]

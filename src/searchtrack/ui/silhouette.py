@@ -20,6 +20,8 @@ SPECS: dict[str, dict] = {
                  tail=dict(span=0.50, pos=0.86, root=0.11, sweep=40)),
     "F-15A": dict(L=19.4, S=13.0, sweep=45, wing_pos=0.40, root=0.32, taper=0.25, fw=0.14,
                   tail=dict(span=0.66, pos=0.83, root=0.13, sweep=45), fins=2),
+    "F-14A": dict(L=19.1, S=14.5, sweep=52, wing_pos=0.36, root=0.36, taper=0.25, fw=0.17,
+                  tail=dict(span=0.54, pos=0.84, root=0.13, sweep=45), fins=2),
     "F-15C": dict(L=19.4, S=13.0, sweep=45, wing_pos=0.40, root=0.32, taper=0.25, fw=0.14,
                   tail=dict(span=0.66, pos=0.83, root=0.13, sweep=45), fins=2),
     "F-4G": dict(L=19.2, S=11.7, sweep=45, wing_pos=0.40, root=0.30, taper=0.30, fw=0.10,

@@ -259,7 +259,7 @@ def launch(w: "World", shooter: Optional[Aircraft], wid: str, aim: tuple[float, 
     wt = w.catalog.weapons[wid]
     mt = w.catalog.aircraft[wt.missile]
     n = w.next_id("asm")
-    x, y, alt = (shooter.x, shooter.y, shooter.alt) if shooter is not None else start
+    x, y, alt = start if start is not None else (shooter.x, shooter.y, shooter.alt)
     first = route[0] if route else aim
     hdg = bearing_deg(first[0] - x, first[1] - y) if hdg is None else hdg
     v = mt.cruise_kmh / 3600.0

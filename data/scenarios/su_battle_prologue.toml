@@ -1,0 +1,84 @@
+base = "su_battle_kola"
+id = "su_battle_prologue"
+title = "Shadows on the Border"
+subtitle = "Kola Peninsula, 19 October 1987, the last hours of peace — hypothetical"
+summary = "Combat readiness FULL. The Americans' spy planes come to the border as they do every week — the RC-135 off Vardø, an Orion looking for the fleet, a Blackbird at three times the speed of sound. Escort them, hold fire, give them no excuse. Then the war comes."
+order = 5
+start = "1987-10-19T17:50:00"
+seed = 1917
+duration_min = 60
+photo = ["MiG-31", "RC-135V"]
+photo_caption = "MiG-31 alongside an RC-135 over the Barents Sea (file photograph)"
+
+briefing = """
+COMMAND POST, NORTHERN AIR DEFENSE — KOLA PENINSULA. 19 OCTOBER 1987, 1750 MOSCOW TIME. THIS SCENARIO IS HYPOTHETICAL.
+
+SITUATION. Nine days of crisis. NATO has mobilised, the Northern Fleet has gone to sea and the KIROV group is in the Barents covering the submarine bastion. The Air Defence Forces are at full combat readiness. We are not at war. The Americans will send their reconnaissance to the border tonight as they always do — but tonight what they hear and photograph will be used.
+
+YOUR ORDERS. Every foreign aircraft that approaches the border or the fleet is met by a pair of interceptors and escorted for as long as it stays. Weapons are on safe: nobody fires, whatever the provocation. The duty staff sends the escorts; you decide the rest.
+
+WARNING. The General Staff expects a decision within hours. If the war begins, the aircraft our pilots are sitting beside become targets. So do our airfields: the Tomahawks will come first.
+"""
+
+# ---- forces: the shadowers come first, cruise missiles and a carrier strike in the first hour of the war
+group_drop = ["ew_ship", "ew_land", "sweep", "a6_ship", "sead_ship", "esc_ship", "b52"]
+group_patch = [
+  { id = "rc135", trigger = "phase" },
+  { id = "a6_land", n = 4 },
+  { id = "sead_land", n = 2 },
+]
+trigger = []
+
+objective_drop = ["kirov", "ships", "strikers", "runways", "radars", "tomahawks", "bastion", "hidden"]
+objective_add = [
+  { id = "intercept", text = "Escort the RC-135 and the Orion before they come within 120 km of the fleet or an airfield", kind = "intercept_groups", params = { groups = ["rc135", "p3c"], before_km = 120.0 }, points = 20 },
+  { id = "holdfire", text = "Not one missile from our side before the war", kind = "hold_fire", params = {}, points = 15 },
+  { id = "shadowers", text = "When the war comes, the spy planes do not go home", kind = "kill_fraction", params = { groups = ["rc135", "p3c"], frac = 1.0 }, points = 15 },
+  { id = "tomahawks", text = "Shoot down half the cruise missiles", kind = "missiles_stopped", params = { types = ["TLAM-C"], frac = 0.5, planned = 12 }, points = 15 },
+  { id = "strikers", text = "Shoot down half the Intruders", kind = "kill_fraction", params = { groups = ["a6_land"], frac = 0.5 }, points = 15 },
+  { id = "runways", text = "Never more than one fighter airfield closed at once", kind = "runways", params = { bases = ["kilpyavr", "monchegorsk", "afrikanda", "severomorsk3"], max_closed = 1 }, points = 10 },
+  { id = "radars", text = "Lose no more than one radar destroyed", kind = "radars_survive", params = { max_destroyed = 1 }, points = 10 },
+]
+
+[weather]
+k_factor = 1.333
+wind_from = 250.0
+wind_kmh = 45.0
+ceiling_m = 1500.0
+visibility_km = 15.0
+night = false
+sea_state = 4.0
+
+[battle]
+war = false
+reinforcement = []
+
+[[battle.phase]]
+id = "watch"
+name = "PHASE I — THE WATCH ON THE BORDER"
+earliest_min = 0.0
+text = "The RC-135 is airborne from Mildenhall's detachment and heading for its orbit off Vardø; an Orion from Andøya will come looking for the fleet. Meet them, escort them, weapons on safe."
+actions = [{ do = "launch", groups = ["rc135"], delay_s = 30.0 }, { do = "launch", groups = ["p3c"], delay_s = 150.0 }, { do = "launch", groups = ["sr71"], delay_s = 720.0 }, { do = "say", kind = "intel", text = "Intelligence: a Blackbird is expected along the coast within the hour. Our MiG-31s cannot catch it — they can be waiting where it will be.", level = 2 }]
+
+[[battle.phase]]
+id = "flash"
+name = "PHASE II — WAR"
+earliest_min = 15.0
+latest_min = 19.0
+when = { type = "intercepted", groups = ["rc135", "p3c"] }
+text = "Combat alert. From the Air Defence Forces command post: the Americans and their allies have begun military operations against the Warsaw Pact. Weapons free."
+actions = [{ do = "decision", kind = "war", title = "WAR — THE SPY PLANES?", text = "It is war. Our pilots are flying beside the RC-135 and the Orion, as they have so many times before. For an hour those aircraft have recorded every radar on the Kola and searched for the KIROV. They will take it home tonight — or they will not go home. Their crews are doing what our crews do.", options = ["ATTACK", "LET THEM GO"], default = "ATTACK", timeout_s = 45.0, effects = { "ATTACK" = [{ do = "war", text = "WAR. Weapons free. The escorts attack the spy planes." }], "LET THEM GO" = [{ do = "war", spare = ["rc135", "p3c", "sr71"], text = "WAR. Weapons free — the reconnaissance aircraft are allowed to leave." }] } }]
+
+[[battle.phase]]
+id = "first"
+name = "PHASE III — THE FIRST STRIKE"
+earliest_min = 23.0
+latest_min = 28.0
+when = { type = "quiet", s = 120.0 }
+text = "The fleet's command post reports missile launches in the Norwegian Sea: Tomahawks, a dozen, low over Finnmark toward our airfields and radars. Radio intercept: a carrier strike is forming behind them."
+actions = [
+  { do = "salvo", weapon = "TLAM-C", n = 6, from = { lat = 69.25, lon = 29.5 }, route = [{ lat = 69.12, lon = 30.7 }], targets = ["monchegorsk", "severomorsk3", "gp_monchegorsk"], stream_km = 7.0 },
+  { do = "salvo", weapon = "TLAM-C", n = 6, from = { lat = 70.5, lon = 29.0 }, route = [{ lat = 70.2, lon = 30.9 }], targets = ["rlr_rybachy", "zrdn_severomorsk", "rlr_teriberka"], stream_km = 7.0 },
+  { do = "launch", groups = ["a6_land", "sead_land"], delay_s = 300.0 },
+  { do = "standing", emcon = false },
+]

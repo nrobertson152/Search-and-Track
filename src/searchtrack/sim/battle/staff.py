@@ -108,14 +108,14 @@ def _escorts(w: "World") -> None:
     pts = defended_points(w)
     if not pts:
         return
-    reach = 420.0
+    reach = 380.0
     done = 0
     own = _controlled(w)
     for trk in sorted(w.tracks.values(), key=lambda t: t.id):
         if done >= 2:
             break
-        if trk.lost or trk.identity in ("friend", "assumed_friend") or own_correlation(w, trk, own):
-            continue
+        if trk.lost or trk.identity not in ("hostile", "suspect") or own_correlation(w, trk, own):
+            continue                              # only strangers the battle rules have marked
         if classify(w, trk) in ("missile", "debris"):
             continue
         px, py = predicted(trk, w.t)
@@ -126,9 +126,12 @@ def _escorts(w: "World") -> None:
             continue
         if _company(w, trk, px, py, own):
             continue                              # a second track on a stranger who already has company
+        if w.t - w.vars.get(f"esc_{trk.id}", -1e9) < 150.0:
+            continue                              # sent someone a moment ago: give them time to find him
         ok, msg = commands.run(w, "quick", track=trk.id, order="shadow", n=2)
         if not ok:
             continue
+        w.vars[f"esc_{trk.id}"] = w.t
         done += 1
         callsign = "fighters"
         for fl in w.flights.values():
@@ -142,13 +145,14 @@ def _escorts(w: "World") -> None:
 def _company(w: "World", trk, px: float, py: float, own: list) -> bool:
     """Already escorted: another track with an escort on it within a few km, or one of our
     fighters on a target sitting right there."""
+    near = 12.0 + math.hypot(trk.vx, trk.vy) * 25.0   # a fast mover's tracks lag and split further apart
     for fl in w.flights.values():
         if not fl.target or fl.target == trk.id or fl.state in ("landed", "lost", "rtb"):
             continue
         o = w.tracks.get(fl.target)
         if o is not None and not o.lost:
             ox, oy = predicted(o, w.t)
-            if math.hypot(ox - px, oy - py) < 12.0:
+            if math.hypot(ox - px, oy - py) < near:
                 return True
         lead = gci.lead_of(w, fl)
         if lead is not None and fl.contact and math.hypot(lead.x - px, lead.y - py) < 8.0:
@@ -188,6 +192,8 @@ def _nick(name: str) -> str:
 def _intercepts(w: "World") -> None:
     """Which of the enemy's groups have had one of our fighters alongside (for the peacetime objectives)."""
     b = w.battle
+    if b.standing.get("roe", "war") != "peace":
+        return                                    # in a war, being alongside is not an intercept
     own = [a for a in w.aircraft.values() if a.side == w.own_side and a.state == "airborne" and a.kind == "aircraft"
            and not a.aim and a.flight_id]
     if not own:
@@ -203,8 +209,6 @@ def _intercepts(w: "World") -> None:
             if not near:
                 continue
             w.vars[f"intercepted_{g.id}"] = w.t
-            if w.battle.standing.get("roe", "war") != "peace":
-                break                             # in a war, being alongside is not news
             fl = w.flights.get(near[0].flight_id)
             at = w.catalog.aircraft.get(g.type_id)
             role = at.role if at is not None else "unknown"
@@ -372,7 +376,7 @@ def _hvaa_threats(w: "World") -> dict[str, float]:
 
 def _commit(w: "World") -> None:
     b = w.battle
-    pts = defended_points(w)
+    pts = defended_points(w, aew=False)          # reach is measured from what we defend, not from the radar aircraft
     reach = REACH_KM.get(b.standing.get("posture", "balanced"), 600.0)
     hvaa = _hvaa_threats(w)
     cand = []
@@ -391,6 +395,9 @@ def _commit(w: "World") -> None:
         prio = trk.id in b.priority or trk.id in hvaa
         if d > reach and not prio:
             continue
+        if d > 250.0 and not prio and cls in ("strike", "bomber", "recon", "ew", "patrol") and \
+                _opening(trk, px, py, pts):
+            continue                         # a raider going home far out is not worth the fuel
         if cls in ("interceptor", "fighter") and not prio and \
                 d > (reach if b.standing.get("posture") == "aggressive" else 230.0):
             continue                         # a fighter sweep far out is bait: keep the interceptors for bombers
@@ -430,6 +437,12 @@ def _commit(w: "World") -> None:
               w.own_side, 1)
 
 
+def _opening(trk, px: float, py: float, pts: list) -> bool:
+    """The track is moving away from the nearest point we defend."""
+    cx, cy = min(pts, key=lambda p: math.hypot(p[0] - px, p[1] - py))
+    return (px - cx) * trk.vx + (py - cy) * trk.vy > 0.0 and math.hypot(trk.vx, trk.vy) > 0.05
+
+
 def _cap(w: "World") -> None:
     b = w.battle
     for fl in w.flights.values():                  # surge and recalled flights orbit their patrol point
@@ -442,9 +455,15 @@ def _cap(w: "World") -> None:
         alive = fl is not None and fl.state not in ("landed", "lost", "rtb")
         if alive and fl.task != "cap":
             tgt = w.tracks.get(fl.target) if fl.target else None
+            key = f"caplost_{fl.id}"
             if tgt is None or tgt.lost or fl.state == "hold":
-                fl.task, fl.target, fl.contact = "cap", "", ""     # job done: back to the station
-                w.radio(fl, f"returning to {st['name']}" if w.faction == "US" else "Returning to patrol.")
+                w.vars.setdefault(key, w.t)
+                if tgt is None or w.t - w.vars[key] >= 45.0:     # a flickering track is not a lost one
+                    w.vars.pop(key, None)
+                    fl.task, fl.target, fl.contact = "cap", "", ""     # job done: back to the station
+                    w.radio(fl, f"returning to {st['name']}" if w.faction == "US" else "Returning to patrol.")
+            else:
+                w.vars.pop(key, None)
         if alive and fl.task == "cap" and not fl.target and fl.state in ("airborne", "vector", "hold"):
             fl.state = "cap"
         if alive and fl.task == "cap":
@@ -618,6 +637,19 @@ def _aew(w: "World") -> None:
         if a is None or a.state != "airborne":
             continue
         near = [t for t in fighters if math.hypot(t.x - a.x, t.y - a.y) < 230.0]
+        home = b.red_plan.get("aew_home", {}).get(g.id)
+        if home is not None and g.station and not any(math.hypot(t.x - home[0], t.y - home[1]) < 320.0
+                                                      for t in fighters):
+            key = f"aew_clear_{g.id}"             # the threat has gone: back to the station it left
+            w.vars.setdefault(key, w.t)
+            if w.t - w.vars[key] >= 240.0:
+                g.station = list(home)
+                del b.red_plan["aew_home"][g.id]
+                w.vars.pop(key, None)
+                event(w, "aew", f"{g.name} back on its station — the fighters that drove it off are gone", g.id,
+                      level=1)
+        elif home is not None:
+            w.vars.pop(f"aew_clear_{g.id}", None)
         if not near:
             continue
         if any(d.kind == "aew" and d.ref == g.id and (not d.chosen or w.t - d.t_chosen < 360.0)

@@ -207,6 +207,9 @@ def bomarc_launch(world: "World", site: SamSite, track_id: str) -> tuple[bool, s
 
 # ------------------------------------------------------------------ missile flight
 
+ENDGAME_STEPS = 8                    # sub-steps of the last two seconds of a missile's flight
+
+
 def missile_step(world: "World", m: Missile, dt: float) -> None:
     if m.state != "flying" or world.t < m.t_launch:
         return
@@ -252,37 +255,47 @@ def missile_step(world: "World", m: Missile, dt: float) -> None:
         return
     from .flight import ground_velocity
     vx, vy = ground_velocity(world, tgt)
-    t_go = collision_time(tgt.x, tgt.y, vx, vy, m.x, m.y, speed / 1000.0) or \
-        math.hypot(tgt.x - m.x, tgt.y - m.y) / max(speed / 1000.0, 0.1)
-    ax, ay = tgt.x + vx * t_go, tgt.y + vy * t_go
-    p0 = (m.x, m.y, m.alt / 1000.0)
-    q0 = (tgt.x, tgt.y, tgt.alt / 1000.0)
-    _steer(m, ax, ay, tgt.alt + tgt.vs * t_go, speed, turn, dt)
-    p1 = (m.x, m.y, m.alt / 1000.0)
-    q1 = (tgt.x + vx * dt, tgt.y + vy * dt, (tgt.alt + tgt.vs * dt) / 1000.0)
-    dmin = _closest(p0, p1, q0, q1) * 1000.0
-    closing = math.sqrt((m.vx - vx * 1000.0) ** 2 + (m.vy - vy * 1000.0) ** 2 + (m.vz - tgt.vs) ** 2)
-    lethal *= max(1.0, closing / 600.0)      # the proximity fuze's window grows with the closing speed
-    if dmin < lethal * 3.0:
-        p = pk * max(0.0, 1.0 - (dmin / (lethal * 3.0)) ** 2) * (1.3 if m.kind == "sam" else 1.0)
-        if world.battle.active:
-            from .battle.combat import evade_factor
-            p *= evade_factor(world, tgt, m)
-        if world.rng.random() < min(0.95, p):
-            m.state = "done"
-            if tgt.kind == "debris":
-                m.result = "detonated on debris"
-                world.log_event("weapon", f"Missile {m.id} detonated on debris", m.owner)
-            else:
-                m.result = "hit"
-                if world.battle.active:
-                    from .battle.combat import hit, unit_name
-                    hit(world, tgt, f"{m.type_id} from {unit_name(world, m.owner)}", m.owner)
+    # one second is the better part of a kilometre of missile flight: the endgame is flown in small steps,
+    # and the warhead gets one chance per pass, at the point of closest approach
+    near = math.hypot((tgt.x - m.x) * 1000.0, (tgt.y - m.y) * 1000.0) < speed * dt * 2.0 + 300.0
+    n = ENDGAME_STEPS if near else 1
+    h = dt / n
+    for i in range(n):
+        tx, ty, talt = tgt.x + vx * h * i, tgt.y + vy * h * i, tgt.alt + tgt.vs * h * i
+        t_go = collision_time(tx, ty, vx, vy, m.x, m.y, speed / 1000.0) or \
+            math.hypot(tx - m.x, ty - m.y) / max(speed / 1000.0, 0.1)
+        ax, ay = tx + vx * t_go, ty + vy * t_go
+        p0 = (m.x, m.y, m.alt / 1000.0)
+        q0 = (tx, ty, talt / 1000.0)
+        _steer(m, ax, ay, talt + tgt.vs * t_go, speed, turn, h)
+        p1 = (m.x, m.y, m.alt / 1000.0)
+        q1 = (tx + vx * h, ty + vy * h, (talt + tgt.vs * h) / 1000.0)
+        dmin, s_at = _closest(p0, p1, q0, q1, with_s=True)
+        dmin *= 1000.0
+        closing = math.sqrt((m.vx - vx * 1000.0) ** 2 + (m.vy - vy * 1000.0) ** 2 + (m.vz - tgt.vs) ** 2)
+        reach = lethal * max(1.0, closing / 600.0)     # the proximity fuze's window grows with the closing speed
+        if dmin < reach * 3.0 and m.result != "fuzed" and (n == 1 or s_at < 0.999):
+            p = pk * max(0.0, 1.0 - (dmin / (reach * 3.0)) ** 2) * (1.3 if m.kind == "sam" else 1.0)
+            if world.battle.active:
+                from .battle.combat import evade_factor
+                p *= evade_factor(world, tgt, m)
+            if world.rng.random() < min(0.95, p):
+                m.state = "done"
+                if tgt.kind == "debris":
+                    m.result = "detonated on debris"
+                    world.log_event("weapon", f"Missile {m.id} detonated on debris", m.owner)
                 else:
-                    world.destroy(tgt.id, f"{m.type_id} from {m.owner}", shooter=m.owner)
+                    m.result = "hit"
+                    if world.battle.active:
+                        from .battle.combat import hit, unit_name
+                        hit(world, tgt, f"{m.type_id} from {unit_name(world, m.owner)}", m.owner)
+                    else:
+                        world.destroy(tgt.id, f"{m.type_id} from {m.owner}", shooter=m.owner)
+                return
+            m.result = "fuzed"                          # the fuze fired and missed: no second try on this pass
+        if age > 3.0 and _opening(p1, q1, m, vx, vy, tgt):
+            m.state, m.result = "done", f"miss ({dmin:.0f} m)"
             return
-    if age > 3.0 and _opening(p1, q1, m, vx, vy, tgt):
-        m.state, m.result = "done", f"miss ({dmin:.0f} m)"
 
 
 def _steer(m: Missile, ax: float, ay: float, aalt: float, speed: float, turn_dps: float, dt: float) -> None:
@@ -307,12 +320,13 @@ def _steer(m: Missile, ax: float, ay: float, aalt: float, speed: float, turn_dps
     m.alt = max(0.0, m.alt + m.vz * dt)
 
 
-def _closest(p0, p1, q0, q1) -> float:
+def _closest(p0, p1, q0, q1, with_s: bool = False):
     d0 = [q - p for p, q in zip(p0, q0)]
     dv = [(q1[i] - q0[i]) - (p1[i] - p0[i]) for i in range(3)]
     vv = sum(v * v for v in dv)
     s = 0.0 if vv < 1e-12 else max(0.0, min(1.0, -sum(a * b for a, b in zip(d0, dv)) / vv))
-    return math.sqrt(sum((d0[i] + dv[i] * s) ** 2 for i in range(3)))
+    d = math.sqrt(sum((d0[i] + dv[i] * s) ** 2 for i in range(3)))
+    return (d, s) if with_s else d
 
 
 def _opening(p, q, m: Missile, vx: float, vy: float, tgt) -> bool:

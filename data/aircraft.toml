@@ -1427,9 +1427,11 @@ fuel_kg = 1200.0
 ff_cruise = 9.0
 ff_mil = 10.0
 ff_ab = 0.0
+profile = "terrain"
+warhead_kg = 410.0
 transponder = "none"
 provenance = "approximate"
-notes = "[A] Launched from Bear H; flies at 50-100 m following the terrain."
+notes = "[A] Launched from Bear H; flies at 50-100 m following the terrain. In the battles it carries a conventional 410 kg warhead (the nuclear one is not modelled)."
 
 [[aircraft]]
 id = "GENETRIX"
@@ -1973,3 +1975,171 @@ warhead_kg = 900.0
 transponder = "none"
 provenance = "approximate"
 notes = "[H] The ALCM with a 900 kg blast warhead instead of its nuclear one; developed in secret in the mid-1980s. Launched by B-52Gs far outside the defences."
+
+[[aircraft]]
+id = "F-15C"
+name = "F-15C Eagle"
+nation = "US"
+role = "interceptor"
+rcs_nose = 5.0
+rcs_beam = 15.0
+rcs_tail = 7.0
+cruise_kmh = 920.0
+cruise_alt_m = 11000.0
+max_mach = 2.5
+max_kmh_sl = 1480.0
+min_kmh = 220.0
+ceiling_m = 19800.0
+zoom_ceiling_m = 21000.0
+climb_mps = 254.0
+accel_mps2 = 14.0
+turn_dps = 15.0
+fuel_kg = 6100.0
+ff_cruise = 42.0
+ff_mil = 78.0
+ff_ab = 360.0
+ai_radar_km = 120.0
+ai_radar_cone = 60.0
+lookdown = true
+weapons = { "AIM-7M" = 4, "AIM-9L" = 4, "M61" = 6 }
+transponder = "sif"
+provenance = "approximate"
+notes = "[H] More fuel and an improved APG-63 with a programmable signal processor; the USAF's air superiority fighter in Europe from 1980 (Bitburg, Soesterberg)."
+
+[[aircraft]]
+id = "F-111F"
+name = "F-111F Aardvark"
+nation = "US"
+role = "strike"
+rcs_nose = 7.0
+rcs_beam = 25.0
+rcs_tail = 10.0
+cruise_kmh = 950.0
+cruise_alt_m = 150.0
+max_mach = 2.5
+max_kmh_sl = 1470.0
+min_kmh = 260.0
+ceiling_m = 17000.0
+climb_mps = 130.0
+accel_mps2 = 6.0
+turn_dps = 6.0
+fuel_kg = 15000.0
+ff_cruise = 70.0
+ff_mil = 110.0
+ff_ab = 450.0
+surface_radar_km = 120.0
+weapons = { "GBU-15" = 2 }
+transponder = "sif"
+provenance = "approximate"
+notes = "[H] Swing-wing strike aircraft with terrain-following radar and the Pave Tack laser designator; the 48th TFW at Lakenheath flew it at 60 m at night. Carried GBU-15 data-link glide bombs against hardened targets."
+
+[[aircraft]]
+id = "EF-111A"
+name = "EF-111A Raven"
+nation = "US"
+role = "ew"
+rcs_nose = 8.0
+rcs_beam = 26.0
+rcs_tail = 11.0
+cruise_kmh = 900.0
+cruise_alt_m = 9000.0
+max_mach = 2.2
+max_kmh_sl = 1400.0
+min_kmh = 260.0
+ceiling_m = 13700.0
+climb_mps = 100.0
+accel_mps2 = 5.0
+turn_dps = 6.0
+fuel_kg = 14500.0
+ff_cruise = 68.0
+ff_mil = 105.0
+ff_ab = 430.0
+jammer = "ECM-ALQ-99"
+transponder = "sif"
+provenance = "approximate"
+notes = "[H] The ALQ-99E tactical jamming system in an F-111 airframe: fast enough to stay with the strike. 42nd ECS, Upper Heyford."
+
+[[aircraft]]
+id = "F-4G"
+name = "F-4G Wild Weasel"
+nation = "US"
+role = "sead"
+rcs_nose = 6.0
+rcs_beam = 18.0
+rcs_tail = 8.0
+cruise_kmh = 900.0
+cruise_alt_m = 7000.0
+max_mach = 2.2
+max_kmh_sl = 1350.0
+min_kmh = 250.0
+ceiling_m = 18000.0
+climb_mps = 210.0
+accel_mps2 = 10.0
+turn_dps = 11.0
+fuel_kg = 7500.0
+ff_cruise = 55.0
+ff_mil = 90.0
+ff_ab = 380.0
+weapons = { "AGM-88A" = 4 }
+transponder = "sif"
+provenance = "approximate"
+notes = "[H] APR-38 radar homing and warning system finds the missile radars; HARMs kill them. 52nd TFW, Spangdahlem."
+
+[[aircraft]]
+id = "Su-27"
+name = "Su-27 (FLANKER B)"
+name_ru = "Су-27"
+nation = "USSR"
+role = "interceptor"
+rcs_nose = 10.0
+rcs_beam = 25.0
+rcs_tail = 12.0
+cruise_kmh = 950.0
+cruise_alt_m = 10000.0
+max_mach = 2.35
+max_kmh_sl = 1400.0
+min_kmh = 250.0
+ceiling_m = 18500.0
+zoom_ceiling_m = 20000.0
+climb_mps = 300.0
+accel_mps2 = 13.0
+turn_dps = 18.0
+fuel_kg = 9400.0
+ff_cruise = 60.0
+ff_mil = 100.0
+ff_ab = 450.0
+ai_radar_km = 100.0
+ai_radar_cone = 60.0
+lookdown = true
+weapons = { "R-27R" = 6, "R-73" = 4, "GSh-301" = 5 }
+datalink = "lazur"
+transponder = "kremniy"
+provenance = "approximate"
+notes = "[A] N001 radar with look-down, ten missiles, enormous internal fuel. Reached the first Air Defence Forces regiments in the mid-1980s; which regiments of the 6th Army had it by 1987 is approximate."
+
+[[aircraft]]
+id = "GBU-15"
+name = "GBU-15 guided glide bomb"
+nation = "US"
+role = "missile"
+rcs_nose = 0.1
+rcs_beam = 0.3
+rcs_tail = 0.15
+cruise_kmh = 700.0
+cruise_alt_m = 0.0
+max_mach = 0.8
+max_kmh_sl = 900.0
+min_kmh = 400.0
+ceiling_m = 12000.0
+climb_mps = 10.0
+accel_mps2 = 2.0
+turn_dps = 8.0
+fuel_kg = 100.0
+ff_cruise = 1.0
+ff_mil = 1.0
+profile = "glide"
+warhead_kg = 900.0
+transponder = "none"
+provenance = "approximate"
+notes = "[H] A 2000 lb bomb with television or infrared seeker and cruciform wings, steered by the weapon systems officer over the AXQ-14 data link."
+

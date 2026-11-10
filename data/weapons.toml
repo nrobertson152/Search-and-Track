@@ -379,3 +379,75 @@ max_km = 1100.0
 missile = "AGM-86C"
 provenance = "approximate"
 notes = "[H] Conventional ALCM, released by B-52Gs well beyond the reach of the air defence."
+
+[[weapon]]
+id = "AIM-7M"
+name = "AIM-7M Sparrow"
+kind = "aam_radar"
+min_km = 1.5
+max_km = 45.0
+aspect = "all"
+pk = 0.55
+salvo = 2
+lethal_m = 12.0
+provenance = "approximate"
+notes = "[H] Monopulse seeker and better look-down; in service from 1982."
+
+[[weapon]]
+id = "R-27R"
+name = "R-27R (AA-10 ALAMO A)"
+kind = "aam_radar"
+min_km = 1.0
+max_km = 60.0
+aspect = "all"
+pk = 0.5
+salvo = 2
+lethal_m = 15.0
+provenance = "approximate"
+notes = "[A] Semi-active radar missile of the Su-27 and MiG-29; head-on range about 60 km at altitude."
+
+[[weapon]]
+id = "R-73"
+name = "R-73 (AA-11 ARCHER)"
+kind = "aam_ir"
+min_km = 0.3
+max_km = 20.0
+aspect = "all"
+pk = 0.6
+salvo = 2
+lethal_m = 10.0
+provenance = "approximate"
+notes = "[H] All-aspect infrared missile with thrust vectoring, aimed by the pilot's helmet sight. Far ahead of anything in the West in 1987."
+
+[[weapon]]
+id = "GSh-301"
+name = "GSh-30-1 30 mm"
+kind = "gun"
+min_km = 0.15
+max_km = 1.2
+aspect = "rear"
+pk = 0.4
+salvo = 1
+lethal_m = 5.0
+provenance = "approximate"
+
+[[weapon]]
+id = "GBU-15"
+name = "GBU-15 glide bomb"
+kind = "lam"
+min_km = 5.0
+max_km = 25.0
+missile = "GBU-15"
+provenance = "approximate"
+notes = "[H] Released from a pop-up out of low level and flown onto the target by the WSO; range depends on release height."
+
+[[weapon]]
+id = "Kh-55"
+name = "Kh-55 (AS-15 KENT)"
+kind = "lam"
+min_km = 50.0
+max_km = 2500.0
+missile = "AS-15"
+provenance = "approximate"
+notes = "[H] Strategic cruise missile of the Tu-95MS, six on a rotary launcher in the bomb bay. Conventional warhead assumed here."
+

@@ -430,12 +430,18 @@ def _release(w: "World", g: AirGroup, ms: list[Aircraft], wid: str, ship: str) -
     wt = w.catalog.weapons[wid]
     n = 0
     fixed = wt.kind in land.LAND_KINDS
+    cruise = fixed and w.catalog.aircraft[wt.missile].profile == "terrain"
     for a in ms:
         cnt = a.weapons.get(wid, 0)
         for k in range(cnt):
             if fixed:
                 jitter = w.rng.gauss(0.0, 0.15)
-                land.launch(w, a, wid, (g.aim[0] + jitter, g.aim[1] - jitter), g.id, g.side)
+                start = None
+                if cruise:                    # the rotary launcher drops them one after another: a stream, not a clump
+                    hx, hy = heading_vec(bearing_deg(g.aim[0] - a.x, g.aim[1] - a.y))
+                    back, side = k * 2.8, (k % 2 - 0.5) * 1.6
+                    start = (a.x - hx * back + hy * side, a.y - hy * back - hx * side, a.alt)
+                land.launch(w, a, wid, (g.aim[0] + jitter, g.aim[1] - jitter), g.id, g.side, start=start)
             else:
                 jitter = w.rng.gauss(0.0, 2.5)
                 hx, hy = heading_vec(bearing_deg(g.aim[0] - a.x, g.aim[1] - a.y) + 90.0)

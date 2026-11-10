@@ -22,6 +22,7 @@ if TYPE_CHECKING:
 
 def step(w: "World") -> None:
     b = w.battle
+    _later(w)
     if w.tick % 2 or b.phase + 1 >= len(b.phases):
         return
     nxt = b.phases[b.phase + 1]
@@ -51,10 +52,22 @@ def start_phase(w: "World", i: int) -> None:
         act(w, a)
 
 
+def _later(w: "World") -> None:
+    """Actions a phase or a decision scheduled with after_s come due."""
+    q = w.battle.red_plan.get("later")
+    if not q:
+        return
+    due = [x for x in q if x[0] <= w.t]
+    if due:
+        w.battle.red_plan["later"] = [x for x in q if x[0] > w.t]
+        for _, a in due:
+            act(w, a)
+
+
 # ------------------------------------------------------------------ actions
 
 ACTIONS = {"launch", "group", "decision", "standing", "reinforcement", "reinforce", "aew_withdraw", "fleet", "ready",
-           "located", "end_battle", "surge", "cap_station", "salvo", "ship_salvo", "war", "ceasefire", "say"}
+           "located", "end_battle", "surge", "cap_station", "salvo", "ship_salvo", "war", "ceasefire", "say", "spare"}
 
 
 def act(w: "World", a: dict) -> None:
@@ -62,6 +75,10 @@ def act(w: "World", a: dict) -> None:
     from ..scenario import act as scenario_act
     b = w.battle
     k = a["do"]
+    if float(a.get("after_s", 0.0)) > 0.0:          # any action can wait: the ceasefire at the hour, a radio call
+        rest = {key: v for key, v in a.items() if key != "after_s"}
+        b.red_plan.setdefault("later", []).append([w.t + float(a["after_s"]), rest])
+        return
     if k == "launch":
         for gid in a.get("groups", [a.get("group")]):
             g = b.groups.get(gid)
@@ -109,6 +126,7 @@ def act(w: "World", a: dict) -> None:
             d = math.hypot(hx - sx, hy - sy)
             f = min(1.0, float(a.get("km", 110.0)) / max(d, 1.0))
             w.vars[f"aew_station_{g.id}"] = 1.0
+            b.red_plan.setdefault("aew_home", {}).setdefault(g.id, list(g.station))   # where it came from
             g.station = [sx + (hx - sx) * f, sy + (hy - sy) * f, g.station[2], g.station[3]]
             home = "the fleet" if g.base in w.airbases and w.airbases[g.base].carrier else "its base"
             event(w, "aew", f"{g.name} falls back {a.get('km', 110):.0f} km toward {home}", g.id, level=1)
@@ -419,8 +437,8 @@ def objective(w: "World", o: "Objective", final: bool) -> Optional[str]:
                 if m is not None and m.state == "airborne" and pts and \
                         min(math.hypot(m.x - x, m.y - y) for x, y in pts) < float(p.get("before_km", 150.0)):
                     return "failed"
-            if g.state == "done" or final:
-                return "failed"
+            if g.state == "done" or final or w.vars.get("war"):
+                return "failed"                  # the war came before our fighters did
             return None
         return "done"
     if k == "prevent_salvo":                 # the enemy ship is put out of action before it can fire

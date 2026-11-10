@@ -1,7 +1,7 @@
 base = "us_battle_bering"
 id = "us_battle_prologue"
 title = "The Bear Watch"
-subtitle = "Bering Sea, 19 October 1987, the last afternoon of peace — hypothetical"
+subtitle = "Bering Sea, 19 October 1987, the last hours of peace — hypothetical"
 summary = "DEFCON 2. Soviet BEARs come to look at the Carl Vinson, as they have a hundred times before — only this time the teletype has not stopped all day. Intercept and escort, show them the flag, do not fire. Then the FLASH."
 order = 5
 start = "1987-10-19T15:20:00"
@@ -11,7 +11,7 @@ photo = ["F-14A", "Tu-95RT"]
 photo_caption = "F-14A escorting a Tu-95RT BEAR D over the North Pacific (file photograph)"
 
 briefing = """
-TASK FORCE 77.4 — CARL VINSON BATTLE GROUP, BERING SEA. 19 OCTOBER 1987, 1520 LOCAL. THIS SCENARIO IS HYPOTHETICAL.
+TASK FORCE 77.4 — CARL VINSON BATTLE GROUP, BERING SEA. 19 OCTOBER 1987, 1520Z. THIS SCENARIO IS HYPOTHETICAL.
 
 SITUATION. Nine days of crisis. The Soviet Pacific Fleet has sortied from Petropavlovsk and Vladivostok, the Long Range Aviation regiments have dispersed, and two hours ago the United States went to DEFCON 2. We are still at peace. The BEAR D reconnaissance aircraft will come to look at us today, as they always do — but this time what they see will be used.
 
@@ -76,4 +76,4 @@ earliest_min = 24.0
 latest_min = 30.0
 when = { type = "quiet", s = 120.0 }
 text = "Raid warning: six BADGERs with KSR-5 missiles from the west, MiG-31s with them. The first raid of the war is coming for the Carl Vinson."
-actions = [{ do = "launch", groups = ["badger_g", "escort_a"] }, { do = "standing", emcon = false }, { do = "launch", groups = ["backfire_b"], delay_s = 420.0 }, { do = "say", kind = "intel", delay_s = 0, text = "Intelligence: a BACKFIRE regiment at Alekseyevka is fuelling. Expect it behind the BADGERs.", level = 2 }]
+actions = [{ do = "launch", groups = ["badger_g", "escort_a"] }, { do = "standing", emcon = false }, { do = "launch", groups = ["backfire_b"], delay_s = 420.0 }, { do = "say", kind = "intel", after_s = 240.0, text = "Intelligence: a BACKFIRE regiment at Alekseyevka has launched. Expect it behind the BADGERs.", level = 2 }]

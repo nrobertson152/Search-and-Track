@@ -16,3 +16,33 @@ erp_dbw_mhz = 14.0
 retune_s = 50.0
 provenance = "approximate"
 notes = "Concentrates power on one radar channel; must re-tune when the radar changes frequency."
+
+# ---- era expansion (1950s-1980s)
+
+[[jammer]]
+id = "ECM-ALQ-99"
+name = "ALQ-99 tactical jamming system (EF-111A)"
+mode = "barrage"
+bands = ["VHF", "UHF", "L", "S", "C"]
+erp_dbw_mhz = 24.0
+retune_s = 20.0
+provenance = "approximate"
+notes = "[H] Dedicated stand-off/escort jammer of the 1980s."
+
+[[jammer]]
+id = "ECM-VHF"
+name = "noise barrage jammer (VHF/UHF)"
+mode = "barrage"
+bands = ["VHF", "UHF"]
+erp_dbw_mhz = 10.0
+retune_s = 60.0
+provenance = "approximate"
+
+[[jammer]]
+id = "ECM-SPS"
+name = "SPS self-protection noise jammer"
+mode = "barrage"
+bands = ["L", "S"]
+erp_dbw_mhz = 11.0
+retune_s = 40.0
+provenance = "approximate"

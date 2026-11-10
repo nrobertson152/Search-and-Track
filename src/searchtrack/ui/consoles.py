@@ -366,13 +366,20 @@ class WeaponsConsole(Console):
                           color=th.lamp_red if lab == "WPN HOLD" else None):
                 fn()
         y += 30
+        if gui.button(R(inner.x + 384, y, 92, 24), "FORCE LANDING", lit=fl.task == "force_land", size=10,
+                      tip="Fly alongside the identified target and signal it to follow you and land "
+                          "(wing rocking, lights). Needs steady formation: a jet cannot stay alongside a slow aircraft."):
+            scene.cmd("task", flight=fl.id, task="force_land")
+        if gui.button(R(inner.x + 480, y, 96, 24), "WARNING SHOTS", color=th.lamp_red, size=10,
+                      tip="Fire a burst across the target's path from alongside. At night the crew may not see it."):
+            scene.cmd("warning_shots", flight=fl.id)
         if us and lead is not None and any(w.catalog.weapons[k].special for k, v in lead.weapons.items() if v):
             if gui.button(R(inner.x, y, 200, 24), "SPECIAL WPNS ARM" if not fl.special_release else "SPECIAL SAFE",
                           lit=fl.special_release, color=th.lamp_red,
                           tip="Arm nuclear air-to-air rockets — only after special-weapons release by higher authority."):
                 scene.cmd("special", flight=fl.id, on=not fl.special_release)
         if not us and w.hq.engage_ok and fl.task != "ram":
-            if gui.button(R(inner.x + 210, y, 200, 24), "ORDER RAMMING", color=th.lamp_red,
+            if gui.button(R(inner.x + 210, y, 168, 24), "ORDER RAMMING", color=th.lamp_red,
                           tip="A desperate measure. Needs permission from the command post (COMMS → REQUEST RAM)."):
                 scene.cmd("task", flight=fl.id, task="ram")
 

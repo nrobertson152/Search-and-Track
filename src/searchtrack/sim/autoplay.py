@@ -9,7 +9,7 @@ from . import commands, gci, ident, tracking
 from .world import World
 
 
-def _run(w: World, kind: str, **kw):
+def _run(w: World, kind: str, /, **kw):
     return commands.run(w, kind, **kw)
 
 
@@ -26,6 +26,10 @@ def think(w: World) -> None:
         if trk.lost:
             continue
         rec, basis = ident.recommend(w, trk)
+        if w.exercise and trk.identity in ("pending", "unknown", "suspect") and rec in ("unknown", "pending", "suspect") \
+                and not trk.iff and w.t - trk.t_init > 60:
+            _run(w, "identity", track=trk.id, ident="faker")
+            continue
         if trk.identity == "pending" or (trk.identity == "unknown" and rec != "unknown"):
             _run(w, "identity", track=trk.id, ident=rec if rec in ("friend", "unknown", "suspect") else "unknown")
         if trk.alt is None and not trk.hf_requested and w.hfs:
@@ -43,7 +47,19 @@ def think(w: World) -> None:
         if w.faction == "USSR" and trk.identity == "suspect" and trk.id not in w.hq.engage_ok:
             if not any(r.ref == trk.id and r.kind == "engage" for r in w.hq.requests):
                 _run(w, "request", kind="engage", track=trk.id)
-        if trk.id in w.hq.engage_ok or trk.identity == "hostile":
+        if trk.identity == "faker" and w.exercise and trk.id not in busy:
+            sq = _nearest_squadron(w, trk)
+            if sq is not None:
+                ok, msg = _run(w, "scramble", squadron=sq.id, n=2, task="intercept", track=trk.id)
+                if ok:
+                    busy.add(trk.id)
+        free = w.hq.weapons_status == "FREE" and w.faction == "US" and trk.identity in ("suspect", "hostile") \
+            and not trk.iff
+        if free and trk.id not in busy:
+            sq = _nearest_squadron(w, trk)
+            if sq is not None and _run(w, "scramble", squadron=sq.id, n=2, task="intercept", track=trk.id)[0]:
+                busy.add(trk.id)
+        if trk.id in w.hq.engage_ok or trk.identity == "hostile" or (w.exercise and trk.identity == "faker") or free:
             for s in w.sams.values():
                 st = w.catalog.sams[s.type_id]
                 if st.homing_km > 0 or s.assigned:
@@ -53,6 +69,9 @@ def think(w: World) -> None:
             for f in w.flights.values():
                 if f.target == trk.id and not f.weapons_free and f.state not in ("landed", "lost"):
                     _run(w, "weapons_free", flight=f.id, on=True)
+                if (w.exercise or free) and f.target == trk.id and f.task != "intercept" and \
+                        f.state not in ("landed", "lost"):
+                    _run(w, "task", flight=f.id, task="intercept")
         if not trk.reported and trk.identity in ("suspect", "hostile"):
             _run(w, "report", track=trk.id)
     for f in list(w.flights.values()):

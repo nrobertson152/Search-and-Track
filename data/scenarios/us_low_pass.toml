@@ -1,0 +1,402 @@
+id = "us_low_pass"
+title = "Low Pass"
+subtitle = "Miami Air Defense Sector, Sunday 5 October 1969"
+summary = "A quiet Sunday over the Florida Straits. The President is in Key Biscayne and his aircraft is parked at Homestead. Somewhere south of the Keys, a pilot who has decided never to go home is skimming the waves below your radar horizon."
+faction = "US"
+kind = "scenario"
+photo = ["MiG-17F", "F-102A"]
+photo_caption = "MiG-17 of the type flown by Cuban defectors (file photograph)"
+era = "1960s"
+difficulty = 2
+order = 20
+theater = "south_florida"
+start = "1969-10-05T15:20:00"
+tz = "Z"
+duration_min = 90
+seed = 1969
+reliability = 3.0
+
+briefing = """
+MIAMI AIR DEFENSE SECTOR — SUNDAY DAY SHIFT, 5 OCTOBER 1969
+
+SITUATION. Quiet weekend traffic. The President is at Key Biscayne; AIR FORCE ONE is on the ramp at Homestead AFB. Cuba has been flying more MiG patrols along its north coast this month. Freedom Flights from Varadero arrive at Miami twice a day under filed flight plans.
+
+YOUR SECTOR. Long-range radars at Richmond (with height finder), Key West, MacDill and Patrick, a gap filler at Naples. Interceptors: an F-102A alert detachment and F-4s of the 31st Tactical Fighter Wing at Homestead, Navy Phantoms at Key West, F-4s at MacDill. Army Nike Hercules batteries ring Miami; Hawk batteries cover Key West.
+
+THE PROBLEM. Long-range radars cannot see a low flyer beyond about 40 miles over the sea. The gap filler and the height finders help, but only if someone is watching.
+
+TASKS.
+  • Detect anything approaching from Cuba before it crosses the coast.
+  • Identify it. Peacetime rules: weapons HOLD. A defector is a gift, not a target.
+  • Nothing unidentified reaches Homestead while AIR FORCE ONE is on the ramp.
+"""
+
+[[intel]]
+title = "Cuban activity"
+text = "Cuban MiG-17 and MiG-21 flights patrol the north coast between Havana and Cárdenas. Two Cuban pilots have defected by air in the past decade. Defectors fly low, without transponders, and head for the nearest airfield they recognise."
+
+[[intel]]
+title = "Freedom Flights"
+text = "Douglas DC-7 charters bring Cuban emigrants from Varadero to Miami International on filed flight plans, Mode 3 code 2100."
+
+[automation]
+surveil = true
+ident = true
+height = true
+tech = false
+
+[weather]
+k_factor = 1.333
+wind_from = 110.0
+wind_kmh = 25.0
+ceiling_m = 1200.0
+visibility_km = 25.0
+night = false
+sea_state = 2.0
+cells = [
+  { lat = 26.2, lon = -81.0, r_km = 22.0, intensity = 0.5, move_kmh = 15.0, move_to = 300.0 },
+]
+
+[hq]
+name = "32 NORAD REGION"
+readiness = "DEFCON 5"
+alert = "WHITE"
+weapons_status = "HOLD"
+[hq.policy]
+response_s = [60.0, 180.0]
+declare_hostile = "evidence"
+engage = "deny"
+ram = "deny"
+special_release = "deny"
+weapons_status_TIGHT = "deny"
+weapons_status_FREE = "deny"
+alert_RED = "deny"
+alert_YELLOW = "evidence"
+mode1_valid = ["12", "35"]
+track_start = 301
+
+[[link]]
+id = "D_richmond"
+name = "Richmond data line"
+kind = "data"
+delay_s = 3.0
+[[link]]
+id = "D_keywest"
+name = "Key West data line"
+kind = "data"
+delay_s = 4.0
+[[link]]
+id = "D_macdill"
+name = "MacDill data line"
+kind = "data"
+delay_s = 3.0
+[[link]]
+id = "D_patrick"
+name = "Patrick data line"
+kind = "data"
+delay_s = 3.0
+[[link]]
+id = "V_homestead"
+name = "Homestead alert line"
+kind = "voice"
+delay_s = 6.0
+[[link]]
+id = "V_keywest"
+name = "NAS Key West alert line"
+kind = "voice"
+delay_s = 8.0
+[[link]]
+id = "V_macdill"
+name = "MacDill alert line"
+kind = "voice"
+delay_s = 8.0
+[[link]]
+id = "V_aadcp"
+name = "Miami AADCP"
+kind = "voice"
+delay_s = 6.0
+
+[[radar]]
+site = "richmond"
+type = "AN/FPS-20A"
+hf = ["AN/FPS-26", "AN/FPS-6"]
+link = "D_richmond"
+[[radar]]
+site = "key_west"
+type = "AN/FPS-20A"
+hf = ["AN/FPS-6"]
+link = "D_keywest"
+[[radar]]
+site = "macdill"
+type = "AN/FPS-20A"
+link = "D_macdill"
+[[radar]]
+site = "patrick"
+type = "AN/FPS-27"
+link = "D_patrick"
+[[radar]]
+site = "naples_gf"
+type = "AN/FPS-14"
+link = "D_richmond"
+
+[[airbase]]
+site = "homestead"
+link = "V_homestead"
+[[airbase]]
+site = "key_west_nas"
+link = "V_keywest"
+[[airbase]]
+site = "macdill_ab"
+link = "V_macdill"
+[[airbase]]
+site = "miami_intl"
+[[airbase]]
+site = "fll"
+[[airbase]]
+site = "tampa_intl"
+[[airbase]]
+site = "pbi"
+[[airbase]]
+site = "havana"
+side = "red"
+[[airbase]]
+site = "san_antonio"
+side = "red"
+
+[[squadron]]
+id = "f102_det"
+name = "F-102 alert det."
+base = "homestead"
+type = "F-102A"
+callsign = "PALM"
+ready = { "5" = 2, "15" = 2 }
+pilots = 6
+
+[[squadron]]
+id = "31tfw"
+name = "31st TFW"
+base = "homestead"
+type = "F-4E"
+callsign = "GATOR"
+ready = { "15" = 2, "60" = 4 }
+pilots = 8
+
+[[squadron]]
+id = "vf_keywest"
+name = "Navy F-4 det. Key West"
+base = "key_west_nas"
+type = "F-4E"
+callsign = "BUCCANEER"
+ready = { "5" = 2, "30" = 2 }
+pilots = 6
+
+[[squadron]]
+id = "macdill_f4"
+name = "MacDill F-4 alert"
+base = "macdill_ab"
+type = "F-4E"
+callsign = "TAMPA"
+ready = { "15" = 2 }
+pilots = 4
+
+[[sam]]
+site = "hm03"
+type = "NIKE-H"
+link = "V_aadcp"
+missiles = 8
+reloads = 6
+[[sam]]
+site = "hm12"
+type = "NIKE-H"
+link = "V_aadcp"
+missiles = 8
+reloads = 6
+[[sam]]
+site = "hm40"
+type = "NIKE-H"
+link = "V_aadcp"
+missiles = 8
+reloads = 6
+[[sam]]
+site = "kw10"
+type = "HAWK"
+link = "V_keywest"
+missiles = 9
+reloads = 9
+
+[[traffic]]
+count = 14
+routes = [["Miami", "Tampa"], ["Miami", "Orlando"], ["Miami", "Key West"], ["Miami", "Nassau"],
+          ["Fort Lauderdale", "Freeport"], ["West Palm Beach", "Tampa"], ["Miami", "Fort Myers"]]
+alt_ft = [9000.0, 24000.0]
+t_window = [0.0, 4800.0]
+off_plan = 0.15
+callsigns = ["EASTERN", "NATIONAL", "PAN AM", "DELTA", "NORTHEAST"]
+
+[[flight]]
+id = "freedom"
+type = "DC-7C"
+callsign = "FREEDOM 2"
+side = "civil"
+spawn_t = 600.0
+truth_label = "Douglas DC-7C, Freedom Flight from Varadero"
+markings = "US charter, refugees aboard"
+start = { lat = 23.4, lon = -81.25, alt_m = 3000.0, kmh = 480.0 }
+route = [
+  { lat = 24.6, lon = -80.9, alt_m = 3600.0, kmh = 480.0 },
+  { lat = 25.79, lon = -80.29, alt_m = 600.0, kmh = 360.0, action = "land" },
+]
+transponder = { system = "atc", codes = { "3" = "2100" } }
+flight_plan = { kind = "IFR", mode3 = "2100", note = "Freedom Flight Varadero–Miami" }
+
+[[flight]]
+id = "cuban_cap"
+type = "MiG-17F"
+callsign = "CUBAN PATROL"
+side = "red"
+count = 2
+spawn_t = 300.0
+truth_label = "MiG-17F pair, Cuban Air Force coastal patrol"
+markings = "Cuban roundels"
+nationality = "CUBA"
+start = { lat = 23.2, lon = -82.6, alt_m = 4500.0, kmh = 750.0 }
+route = [
+  { lat = 23.35, lon = -81.4, alt_m = 4500.0, kmh = 750.0 },
+  { lat = 23.25, lon = -80.6, alt_m = 4500.0, kmh = 750.0 },
+  { lat = 23.35, lon = -81.4, alt_m = 4500.0, kmh = 750.0 },
+  { lat = 22.87, lon = -82.51, alt_m = 600.0, kmh = 450.0, action = "land" },
+]
+transponder = { system = "none" }
+
+[[flight]]
+id = "defector"
+type = "MiG-17F"
+callsign = "DEFECTOR"
+side = "neutral"
+spawn_t = 1500.0
+truth_label = "MiG-17F, Cuban Air Force (defecting pilot)"
+markings = "Cuban roundels; pilot waving, wings rocking"
+nationality = "CUBA"
+on_intercept = "comply"
+on_signal = "comply:homestead"
+start = { lat = 22.95, lon = -82.25, alt_m = 300.0, kmh = 650.0 }
+route = [
+  { lat = 23.6, lon = -81.6, alt_m = 120.0, kmh = 720.0 },
+  { lat = 24.75, lon = -80.85, alt_m = 90.0, kmh = 720.0 },
+  { lat = 25.30, lon = -80.45, alt_m = 300.0, kmh = 600.0 },
+  { lat = 25.49, lon = -80.38, alt_m = 150.0, kmh = 320.0, action = "land" },
+]
+transponder = { system = "none" }
+
+[[flight]]
+id = "smuggler"
+type = "C172"
+callsign = "N7733Q"
+side = "civil"
+spawn_t = 2400.0
+truth_label = "Beech-style light twin, no flight plan (smuggler)"
+markings = "civil registration painted over"
+on_intercept = "evade"
+start = { lat = 25.5, lon = -79.2, alt_m = 300.0, kmh = 260.0 }
+route = [
+  { lat = 25.6, lon = -80.0, alt_m = 150.0, kmh = 260.0 },
+  { lat = 25.9, lon = -80.9, alt_m = 150.0, kmh = 240.0 },
+  { lat = 26.4, lon = -81.4, alt_m = 300.0, kmh = 240.0, action = "land" },
+]
+transponder = { system = "none" }
+
+[[flight]]
+id = "neptune"
+type = "P-2H"
+callsign = "NAVY LK 12"
+side = "blue"
+spawn_t = 900.0
+truth_label = "P-2H Neptune, US Navy (returning, off plan)"
+markings = "US Navy"
+start = { lat = 23.9, lon = -83.4, alt_m = 1800.0, kmh = 360.0 }
+route = [
+  { lat = 24.3, lon = -82.6, alt_m = 1800.0, kmh = 360.0 },
+  { lat = 24.575, lon = -81.69, alt_m = 400.0, kmh = 280.0, action = "land" },
+]
+transponder = { system = "sif", codes = { "1" = "12", "3" = "1200" } }
+flight_plan = { kind = "MIL", mode3 = "1200", delay_min = -12.0, note = "Navy patrol, early" }
+
+[[trigger]]
+id = "open"
+cond = { type = "time", t = 5.0 }
+actions = [{ do = "message", channel = "tty", sender = "32 NORAD REGION", ack = true, kind = "order", text = "DEFCON 5. WEAPONS HOLD. VIP AIRCRAFT AT HOMESTEAD — REPORT ANY UNKNOWN APPROACHING SOUTH FLORIDA IMMEDIATELY. CUBAN PATROLS ACTIVE ALONG NORTH COAST." }]
+
+[[trigger]]
+id = "patrol_note"
+cond = { type = "time", t = 900.0 }
+actions = [{ do = "message", channel = "voice", sender = "KEY WEST RADAR", text = "Two fast returns orbiting north of Havana, about twenty thousand. Cuban patrol, as usual." }]
+
+[[trigger]]
+id = "gf_fault"
+cond = { type = "time", t = 1200.0 }
+actions = [{ do = "radar_status", site = "naples_gf", status = "down", minutes = 25.0, text = "NAPLES GAP FILLER: MAGNETRON FAILURE — OFF THE AIR" }]
+
+[[trigger]]
+id = "landed"
+cond = { type = "gone", ac = "defector" }
+actions = [{ do = "message", channel = "voice", sender = "HOMESTEAD TOWER", ack = true, kind = "alert", priority = 2, text = "Homestead tower: a MiG-17 with Cuban markings just landed on runway 05 and taxied up next to the VIP ramp. The pilot is asking for asylum. Who was watching the scopes?" }]
+
+[[objective]]
+id = "detect"
+text = "Track the low-level intruder before it crosses the Florida coast"
+kind = "tracked_before_zone"
+params = { ac = "defector", zone = "florida_coast" }
+points = 20
+
+[[objective]]
+id = "vid"
+text = "Intercept and visually identify the MiG"
+kind = "vid"
+params = { ac = "defector" }
+points = 20
+
+[[objective]]
+id = "vip"
+text = "No unidentified aircraft reaches Homestead while AIR FORCE ONE is on the ramp"
+kind = "keep_out"
+params = { ac = "defector", zone = "homestead_da", unless_vid = true }
+points = 20
+
+[[objective]]
+id = "nofire"
+text = "Do not fire on the defector"
+kind = "not_destroyed"
+params = { ac = "defector" }
+points = 10
+penalty = 40
+
+[[objective]]
+id = "freedom_id"
+text = "Identify the Freedom Flight as FRIEND"
+kind = "identify"
+params = { ac = "freedom", correct = ["friend"], wrong = ["suspect", "hostile"], from = "track" }
+points = 10
+
+[[objective]]
+id = "smuggler"
+text = "Visually identify the low, slow unknown from the Bahamas"
+kind = "vid"
+params = { ac = "smuggler" }
+points = 10
+
+[[objective]]
+id = "civil"
+text = "No civil aircraft losses"
+kind = "no_civil_losses"
+points = 10
+penalty = 30
+
+[[headline]]
+cond = { type = "all", of = [{ type = "gone", ac = "defector" }, { type = "not", c = { type = "vid", ac = "defector" } }] }
+text = "CUBAN MiG LANDS NEXT TO AIR FORCE ONE"
+sub = "Defector flew under the radar to Homestead; Congress asks how a jet fighter went unnoticed."
+
+[[headline]]
+cond = { type = "vid", ac = "defector" }
+text = "CUBAN PILOT ESCORTED TO FREEDOM"
+sub = "Air Force jets intercepted the defecting MiG over the Keys and shepherded it to Homestead."

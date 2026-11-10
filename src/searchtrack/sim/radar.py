@@ -203,12 +203,28 @@ def evaluate(world: "World", site: RadarSite, rt: RadarType, tgt: Aircraft, *,
     # clutter & MTI
     bd.v_radial = (vx * dx + vy * dy) / max(gr, 1e-3)
     cnr = -99.0
-    if mask is not None and not ghost:
+    if site.carrier and not ghost:
+        # airborne radar looking down: the ground (or sea) under the target shares its range cell
+        over_sea = world.theater.terrain.is_sea(tx, ty)
+        s0 = (-40.0 + 2.5 * world.weather.sea_state) if over_sea else rt.clutter_db
+        cell_m2 = gr * 1000.0 * math.radians(rt.az_beam_deg) * 150.0 * rt.pulse_us
+        cnr = integrated_snr_db(rt, max(gr, 0.5), 10.0 ** (s0 / 10.0) * cell_m2, site.rpm) - site.degraded_db
+    elif mask is not None and not ghost:
         s0 = mask.clutter_db(brg, gr)
         if s0 > -900.0:
             cell_m2 = gr * 1000.0 * math.radians(rt.az_beam_deg) * 150.0 * rt.pulse_us
             cnr = integrated_snr_db(rt, max(gr, 0.5), 10.0 ** (s0 / 10.0) * cell_m2, site.rpm) - site.degraded_db
-    mti_active = site.mti and rt.mti and gr <= rt.mti_range_km
+    if rt.pulse_doppler and not ghost:
+        # Doppler filtering: clutter is rejected unless the target's own radial speed puts it in the clutter notch
+        if abs(bd.v_radial) < rt.pd_notch_mps:
+            bd.mti_db = -rt.pd_rejection_db
+            snr -= rt.pd_rejection_db
+        else:
+            if cnr > -98.0:
+                cnr -= rt.pd_rejection_db
+            if rain_db > -98.0:
+                rain_db -= rt.pd_rejection_db * 0.6
+    mti_active = site.mti and rt.mti and gr <= rt.mti_range_km and not rt.pulse_doppler
     if mti_active:
         bd.mti_db = mti_response_db(rt, bd.v_radial)
         snr += bd.mti_db
@@ -239,6 +255,8 @@ def evaluate(world: "World", site: RadarSite, rt: RadarType, tgt: Aircraft, *,
             bd.limit = "jamming"
         elif bd.cnr_db > 3.0 and bd.snr_db > thr:
             bd.limit = "clutter"
+        elif rt.pulse_doppler and bd.mti_db < -8.0:
+            bd.limit = "notch"
         elif mti_active and bd.mti_db < -8.0:
             bd.limit = "notch" if abs(bd.v_radial) < blind_speed(rt) * 0.5 else "blind"
         elif bd.sinr_db < thr - 1.0:
@@ -320,10 +338,10 @@ def sweep(world: "World", site: RadarSite, dt: float) -> tuple[list[Paint], list
         mx, my = site.x + hx * mr, site.y + hy * mr
         alt = None
         alt_sigma = 0.0
-        if rt.height == "vbeam" and tgt.kind != "ghost":
+        if rt.height in ("vbeam", "3d") and tgt.kind != "ghost":
             alt_sigma = rt.height_sigma_m0 + rt.height_sigma_per_km * gr
             alt = max(0.0, tgt.alt + rng.gauss(0.0, alt_sigma))
-        elif rt.height == "vbeam":
+        elif rt.height in ("vbeam", "3d"):
             alt_sigma = rt.height_sigma_m0 + rt.height_sigma_per_km * gr
             alt = max(0.0, rng.uniform(1000.0, 12000.0))
         iff, garbled = interrogate(world, site, rt, tgt, gr, [h[3] for h in g])
@@ -339,7 +357,7 @@ def sweep(world: "World", site: RadarSite, dt: float) -> tuple[list[Paint], list
         tp = t0 + ((a - az0) % 360.0) / deg_per_s
         paints.append(Paint(tp, a, r, thr + rng.uniform(0.0, 3.0), "false"))
         hx, hy = heading_vec(a)
-        alt = rng.uniform(500.0, 12000.0) if rt.height == "vbeam" else None
+        alt = rng.uniform(500.0, 12000.0) if rt.height in ("vbeam", "3d") else None
         reports.append(Report(world.next_id("rep"), tp, tp, site.id, site.x + hx * r, site.y + hy * r,
                               alt, 2000.0 if alt else 0.0, thr, 1, {}, False, ""))
     # weather paints

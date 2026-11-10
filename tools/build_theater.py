@@ -142,6 +142,10 @@ def bilinear(lon: np.ndarray, lat: np.ndarray, z: np.ndarray, qlon: np.ndarray, 
     return (z00 * (1 - di) * (1 - dj) + z01 * (1 - di) * dj + z10 * di * (1 - dj) + z11 * di * dj)
 
 
+def _internal(p: dict, merge: set) -> bool:
+    return bool(merge) and p.get("ADM0_A3_L") in merge and p.get("ADM0_A3_R") in merge
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--ne", required=True, type=Path, help="directory with Natural Earth 10m GeoJSON")
@@ -158,10 +162,12 @@ def main() -> int:
     box = (ext[0] - m, ext[1] + m, ext[2] - m, ext[3] + m)
     tol = b.get("simplify_km", 0.6)
     countries = set(b.get("state_lines_countries", []))
+    merge = set(b.get("merge_countries", []))   # e.g. the Soviet republics in a 1980s theater
 
     layers = {
         "coast": crop_layer(args.ne / "ne_10m_coastline.geojson", proj, box, tol),
-        "borders": crop_layer(args.ne / "ne_10m_admin_0_boundary_lines_land.geojson", proj, box, tol),
+        "borders": crop_layer(args.ne / "ne_10m_admin_0_boundary_lines_land.geojson", proj, box, tol,
+                              lambda p: not _internal(p, merge)),
         "lakes": crop_layer(args.ne / "ne_10m_lakes.geojson", proj, box, tol,
                             lambda p: (p.get("scalerank") or p.get("SCALERANK") or 0) <= b.get("lake_max_rank", 6)),
         "states": crop_layer(args.ne / "ne_10m_admin_1_states_provinces_lines.geojson", proj, box, tol,
@@ -169,6 +175,9 @@ def main() -> int:
         "rivers": crop_layer(args.ne / "ne_10m_rivers_lake_centerlines.geojson", proj, box, tol * 1.5,
                              lambda p: (p.get("scalerank") or p.get("SCALERANK") or 99) <= b.get("river_max_rank", 6)),
     }
+    if merge:   # borders between merged countries are drawn as internal (republic) boundaries
+        layers["states"] += crop_layer(args.ne / "ne_10m_admin_0_boundary_lines_land.geojson", proj, box, tol,
+                                       lambda p: _internal(p, merge))
     out = {"theater": cfg.get("id", args.theater.name), "units": "km", "source": "Natural Earth 1:10m (public domain)"}
     out.update(layers)
     (args.theater / "map.json").write_text(json.dumps(out, separators=(",", ":")))

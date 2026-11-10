@@ -1,0 +1,313 @@
+id = "su_kola_airliner"
+title = "Lost Over Karelia"
+subtitle = "Northern air defense, evening of 20 April 1978"
+summary = "Inspired by the events of April 1978. A large aircraft has crossed the coast of the Kola Peninsula from the Barents Sea, heading south without IFF and without answering. Higher command wants it stopped. What it is, and how it is stopped, is up to you."
+faction = "USSR"
+kind = "scenario"
+photo = ["B707", "Su-15TM"]
+photo_caption = "Су-15ТМ рядом с нарушителем · Su-15TM alongside an intruder (reconstruction)"
+era = "1970s"
+difficulty = 3
+order = 30
+theater = "kola"
+start = "1978-04-20T20:10:00"
+tz = "MSK"
+duration_min = 100
+seed = 1978
+reliability = 3.0
+
+briefing = """
+COMMAND POST, NORTHERN AIR DEFENSE — EVENING, 20 APRIL 1978
+
+SITUATION. Normal duty shift. Radar company Teriberka reports a large target over the Barents Sea approaching the coast from the north-west at about 10,000 m. No flight plan has been passed by civil aviation. The target does not answer the "Kremniy" interrogators. It is getting dark.
+
+FORCES. Su-15TM interceptors at Kilp-Yavr and Afrikanda, Yak-28P at Monchegorsk. Guidance points at Kilp-Yavr, Monchegorsk and Afrikanda with P-35 radars and PRV-11 height finders. Radar companies across the peninsula report through the automated system with one to two minutes' delay. S-75 and S-125 battalions cover Murmansk and the fleet bases.
+
+ORDERS. A violator of the state border must not be allowed to leave. The Instructions require you to identify it, to signal it to follow an interceptor and land, and — if it refuses and higher command orders it — to destroy it.
+
+THINK. A target that flies straight and level at airliner speed, without IFF, from the direction of the Pole, may not be what the command post assumes. Get your interceptor alongside, look, and report what you see. Signals at night: rocking the wings, flashing the navigation lights; warning bursts if it does not react.
+"""
+
+[[intel]]
+title = "Forcing a landing"
+text = "Use the FORCE LANDING task once the target has been visually identified: the interceptor stays alongside and signals. A crew that does not notice the signals may notice a warning burst across its nose (WARNING SHOTS). Suitable landing grounds: Afrikanda, Monchegorsk, Kilp-Yavr — and, in an emergency, the frozen lakes of Karelia."
+
+[[intel]]
+title = "Foreign airspace"
+text = "The state border with Finland and Norway runs a few minutes' flight west of the target's track. Do not let the violator escape across it — and do not follow it across."
+
+[faction_override]
+report_delay_s = [70.0, 140.0]
+report_interval_s = 40.0
+company_capacity = 10
+report_error_rate = 0.02
+
+[automation]
+surveil = true
+ident = true
+height = true
+tech = false
+
+[weather]
+k_factor = 1.333
+wind_from = 240.0
+wind_kmh = 70.0
+ceiling_m = 1500.0
+visibility_km = 15.0
+night = true
+sea_state = 4.0
+
+[hq]
+name = "КП ОБЪЕДИНЕНИЯ ПВО"
+readiness = "CONSTANT"
+alert = ""
+weapons_status = "HOLD"
+[hq.policy]
+response_s = [60.0, 150.0]
+declare_hostile = "after:900"
+engage = "after:1800"
+ram = "deny"
+special_release = "deny"
+iff_period = "APR"
+track_start = 7801
+
+[[link]]
+id = "A_net"
+name = "Automated reporting net"
+kind = "data"
+delay_s = 20.0
+[[link]]
+id = "T_gp"
+name = "Guidance point lines"
+[[link]]
+id = "T_airfields"
+name = "Airfield alert lines"
+[[link]]
+id = "T_sam"
+name = "SAM brigade line"
+
+[[radar]]
+site = "rlr_teriberka"
+type = "P-14"
+link = "A_net"
+[[radar]]
+site = "rlr_rybachy"
+type = "P-12"
+link = "A_net"
+[[radar]]
+site = "rlr_lovozero"
+type = "P-12"
+link = "A_net"
+[[radar]]
+site = "rlr_umba"
+type = "P-12"
+link = "A_net"
+[[radar]]
+site = "rlr_kovdor"
+type = "P-12"
+link = "A_net"
+[[radar]]
+site = "rlr_kem"
+type = "P-14"
+link = "A_net"
+[[radar]]
+site = "gp_kilpyavr"
+type = "P-35"
+hf = ["PRV-11"]
+gci = true
+link = "T_gp"
+[[radar]]
+site = "gp_monchegorsk"
+type = "P-35"
+hf = ["PRV-11"]
+gci = true
+link = "T_gp"
+[[radar]]
+site = "gp_afrikanda"
+type = "P-35"
+hf = ["PRV-11"]
+gci = true
+link = "T_gp"
+
+[[airbase]]
+site = "kilpyavr"
+link = "T_airfields"
+[[airbase]]
+site = "monchegorsk"
+link = "T_airfields"
+[[airbase]]
+site = "afrikanda"
+link = "T_airfields"
+[[airbase]]
+site = "murmashi"
+[[airbase]]
+site = "korpijarvi"
+
+[[squadron]]
+id = "kilp_iap"
+name = "941st IAP (Kilp-Yavr)"
+base = "kilpyavr"
+type = "Su-15TM"
+callsign = "805"
+ready = { "3" = 2, "7" = 2, "20" = 4 }
+pilots = 8
+iff_codes = { period = "APR" }
+
+[[squadron]]
+id = "afrikanda_iap"
+name = "Afrikanda IAP"
+base = "afrikanda"
+type = "Su-15TM"
+callsign = "622"
+ready = { "3" = 2, "7" = 2 }
+pilots = 6
+iff_codes = { period = "APR" }
+
+[[squadron]]
+id = "monch_iap"
+name = "Monchegorsk IAP"
+base = "monchegorsk"
+type = "Yak-28P"
+callsign = "317"
+ready = { "7" = 2, "20" = 2 }
+pilots = 4
+iff_codes = { period = "APR" }
+
+[[sam]]
+site = "zrdn_murmansk"
+type = "S-75"
+link = "T_sam"
+missiles = 6
+reloads = 6
+[[sam]]
+site = "zrdn_polyarny"
+type = "S-125"
+link = "T_sam"
+missiles = 8
+reloads = 8
+[[sam]]
+site = "zrdn_kandalaksha"
+type = "S-75"
+link = "T_sam"
+missiles = 6
+reloads = 6
+
+[[traffic]]
+count = 5
+routes = [["Murmansk", "Kandalaksha"], ["Murmansk", "Apatity"], ["Murmansk", "Kem"]]
+types = ["Tu-134", "Il-18"]
+alt_m = [5400.0, 8400.0]
+t_window = [0.0, 5000.0]
+transponder = "none"
+plans = false
+callsigns = ["AEROFLOT"]
+
+[[flight]]
+id = "airliner"
+type = "B707"
+callsign = "UNKNOWN"
+side = "civil"
+spawn_t = 120.0
+truth_label = "Boeing 707, foreign airline (Paris–Anchorage, navigation error)"
+markings = "civil airliner, foreign airline livery, cabin lights on"
+nationality = "foreign"
+on_intercept = "ignore"
+on_signal = "shots:korpijarvi"
+start = { lat = 71.0, lon = 36.3, alt_m = 10600.0, kmh = 880.0 }
+route = [
+  { lat = 69.4, lon = 35.4, alt_m = 10600.0, kmh = 880.0 },
+  { lat = 67.9, lon = 34.4, alt_m = 10600.0, kmh = 880.0 },
+  { lat = 66.6, lon = 32.6, alt_m = 10000.0, kmh = 860.0 },
+  { lat = 65.6, lon = 30.4, alt_m = 9500.0, kmh = 860.0 },
+  { lat = 64.6, lon = 27.5, alt_m = 9500.0, kmh = 860.0, action = "remove" },
+]
+transponder = { system = "atc", codes = { "3" = "2000" } }
+
+[[trigger]]
+id = "open"
+cond = { type = "time", t = 5.0 }
+actions = [{ do = "message", channel = "tty", sender = "КП ОБЪЕДИНЕНИЯ", ack = true, kind = "order", text = "DUTY SHIFT CONSTANT READINESS. NO FOREIGN FLIGHTS PLANNED IN THE SECTOR TONIGHT. REPORT ALL TARGETS APPROACHING THE STATE BORDER." }]
+
+[[trigger]]
+id = "teriberka"
+cond = { type = "time", t = 300.0 }
+actions = [{ do = "message", channel = "voice", sender = "RLR TERIBERKA", ack = true, kind = "alert", priority = 1, text = "Teriberka: large single target over the sea, north-north-west 200 km, heading south, height about ten thousand. No IFF reply." }]
+
+[[trigger]]
+id = "pressure1"
+cond = { type = "time", t = 1200.0 }
+actions = [{ do = "message", channel = "voice", sender = "КП ОБЪЕДИНЕНИЯ", ack = true, kind = "order", priority = 1, text = "Command post: the violator has been over our territory for ten minutes. What is it? Force it to land. It must not leave." }]
+
+[[trigger]]
+id = "pressure2"
+cond = { type = "time", t = 2100.0 }
+actions = [{ do = "message", channel = "voice", sender = "КП ОБЪЕДИНЕНИЯ", ack = true, kind = "order", priority = 2, text = "Command post: permission to destroy the violator has been given. Report execution. It must not reach the border!" }]
+
+[[objective]]
+id = "report"
+text = "Report the violator to the command post within ten minutes"
+kind = "report"
+params = { ac = "airliner", within_s = 600.0 }
+points = 10
+
+[[objective]]
+id = "vid"
+text = "Visually identify the violator"
+kind = "vid"
+params = { ac = "airliner" }
+points = 15
+
+[[objective]]
+id = "forced"
+text = "Force the violator to land on Soviet territory"
+kind = "forced_down"
+params = { ac = "airliner" }
+points = 40
+
+[[objective]]
+id = "border"
+text = "Do not let the violator leave Soviet airspace"
+kind = "keep_out"
+params = { ac = "airliner", zone = "foreign" }
+points = 15
+
+[[objective]]
+id = "owncross"
+text = "Our interceptors stay out of Finnish and Norwegian airspace"
+kind = "own_keep_out"
+params = { zone = "foreign" }
+points = 5
+
+[[objective]]
+id = "alive"
+text = "Do not destroy a civil airliner"
+kind = "not_destroyed"
+params = { ac = "airliner" }
+points = 10
+penalty = 40
+
+[[objective]]
+id = "fratricide"
+text = "No fratricide"
+kind = "no_fratricide"
+points = 5
+
+[[headline]]
+cond = { type = "destroyed", ac = "airliner" }
+text = "ГИБЕЛЬ ИНОСТРАННОГО АВИАЛАЙНЕРА"
+sub = "A foreign airliner with passengers was shot down over Karelia. International outrage; an inquiry is demanded."
+
+[[headline]]
+cond = { type = "var", name = "forced_airliner", op = ">=", value = 1.0 }
+text = "НАРУШИТЕЛЬ ПРИНУЖДЁН К ПОСАДКЕ"
+sub = "The intruder was forced down by Soviet interceptors; the crew have admitted a navigation error."
+
+[[headline]]
+cond = { type = "in_zone", ac = "airliner", zone = "foreign" }
+text = "НАРУШИТЕЛЬ УШЁЛ ЗА ГРАНИЦУ"
+sub = "The violator left Soviet airspace over Finland. Moscow wants to know why."
+
+[[headline]]
+cond = { type = "time", t = 0.0 }
+text = "ИНЦИДЕНТ НАД КОЛЬСКИМ ПОЛУОСТРОВОМ"
+sub = "A foreign airliner strayed into Soviet airspace. The details remain unclear."

@@ -528,7 +528,7 @@ class CommandScene(Scene):
         if kind == "site" and oid in self.world.radars:
             self.scope.set_site(oid)
 
-    def cmd(self, kind: str, **args):
+    def cmd(self, kind: str, /, **args):
         ok, msg = commands.run(self.world, kind, **args)
         self.toast(msg, ok)
         if not ok:

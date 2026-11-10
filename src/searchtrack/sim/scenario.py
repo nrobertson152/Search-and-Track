@@ -44,15 +44,25 @@ def _spd(d: dict) -> float:
     return float(d.get("kmh", 0.0)) / 3.6
 
 
-def build_world(path_or_id: str, seed: Optional[int] = None) -> World:
+def load_scenario(path_or_id: str) -> dict[str, Any]:
     p = Path(path_or_id)
     if not p.exists():
         p = scenario_dir() / f"{path_or_id}.toml"
-    sc = load_toml(p)
+    return load_toml(p)
+
+
+def build_world(path_or_id: str, seed: Optional[int] = None) -> World:
+    return build_world_from(load_scenario(path_or_id), seed)
+
+
+def build_world_from(sc: dict[str, Any], seed: Optional[int] = None) -> World:
     th = theater(sc["theater"])
     w = World(scenario_id=sc["id"], title=sc["title"], faction=sc["faction"], theater_id=sc["theater"],
               duration=sc.get("duration_min", 120) * 60.0, start_clock=sc.get("start", "1962-10-24T22:00:00"),
               clock_tz=sc.get("tz", "Z"), seed=int(seed if seed is not None else sc.get("seed", 1)))
+    w.faction_override = dict(sc.get("faction_override", {}))
+    w.exercise = bool(sc.get("exercise", False))
+    w.sun_offset_h = float(sc.get("sun_offset_h", 0.0))
     w.attach_static()
     w.briefing = sc.get("briefing", "")
     w.intel = [[i["title"], i["text"]] for i in sc.get("intel", [])]
@@ -94,9 +104,18 @@ def build_world(path_or_id: str, seed: Optional[int] = None) -> World:
                                  ln.get("delay_s", 5.0))
     # radars
     for i, r in enumerate(sc.get("radar", [])):
+        rt = w.catalog.radars[r["type"]]
+        if "carrier" in r:          # airborne radar riding on a scripted aircraft
+            site = RadarSite(id=r["id"], name=r.get("name", r["id"]), type_id=r["type"], x=0.0, y=0.0, elev=0.0,
+                             mast_m=0.0, unit=r.get("unit", ""), status="down", az=w.rng.uniform(0, 360),
+                             rpm=r.get("rpm", rt.rpm), mti=r.get("mti", rt.mti), pfa_exp=r.get("pfa_exp", 6.0),
+                             link=r.get("link", ""), bias_r=0.0, bias_az=0.0, gci=r.get("gci", False),
+                             name_ru=r.get("name_ru", ""), carrier=r["carrier"])
+            site.fail_t = 1e12
+            w.radars[site.id] = site
+            continue
         s = th.site("radar_site", r["site"])
         x, y = th.xy(s["lat"], s["lon"])
-        rt = w.catalog.radars[r["type"]]
         site = RadarSite(id=r["site"], name=s["name"], type_id=r["type"], x=x, y=y, elev=s.get("elev_m", 100.0),
                          mast_m=s.get("mast_m", 20.0), unit=r.get("unit", s.get("unit", "")),
                          status=r.get("status", "ok"), az=w.rng.uniform(0, 360), rpm=r.get("rpm", rt.rpm),
@@ -134,8 +153,9 @@ def build_world(path_or_id: str, seed: Optional[int] = None) -> World:
                                     ready_missiles=m.get("missiles", st.launchers), reloads=m.get("reloads", 6),
                                     salvo_size=m.get("salvo", st.salvo), auto=m.get("auto", False),
                                     link=m.get("link", ""), name_ru=s.get("name_ru", ""))
-    # scripted flights and flight plans
-    for f in sc.get("flight", []):
+    # scripted flights and flight plans (plus generated civil traffic)
+    flights = list(sc.get("flight", [])) + generate_traffic(w, th, sc.get("traffic", []))
+    for f in flights:
         if "flight_plan" in f:
             _make_plan(w, th, f)
         if f.get("spawn", "time") == "trigger":
@@ -151,6 +171,81 @@ def build_world(path_or_id: str, seed: Optional[int] = None) -> World:
     w.log_event("sys", f"Scenario {w.title} started")
     _spawn_due(w)
     return w
+
+
+TRAFFIC_TYPES = {
+    "US": {1950: ["DC-7C", "L-1049", "Viscount", "CV-440"], 1960: ["B707", "DC-7C", "L-1049", "Viscount"],
+           1970: ["B707", "B747", "DC-10"], 1980: ["B747", "DC-10", "B707"]},
+    "USSR": {1950: ["Il-14", "Li-2"], 1960: ["Tu-104", "Il-14", "Il-18"], 1970: ["Tu-134", "Il-18", "Il-62"],
+             1980: ["Tu-134", "Il-62", "Il-18"]},
+}
+
+
+def generate_traffic(w: World, th, specs: list[dict]) -> list[dict]:
+    """Expand [[traffic]] blocks into scripted civil flights with flight plans and transponder codes.
+
+    A block: { count, routes = [[from_city, to_city], ...], types = [...], alt_ft = [lo, hi] or alt_m,
+    t_window = [t0, t1] seconds, off_plan = fraction flying late/early or off course, side, callsigns = [...],
+    transponder = "atc" | "sif" | "none", squawk = "...", plan_kind = "IFR" }"""
+    if not specs:
+        return []
+    import random as _random
+    rng = _random.Random(w.seed * 7919 + 13)
+    cities = {c["name"]: c for c in th.cfg.get("city", [])}
+    for c in th.cfg.get("waypoint", []):
+        cities[c["name"]] = c
+    year = int(w.start_clock[:4])
+    era = 1950 if year < 1960 else 1960 if year < 1970 else 1970 if year < 1980 else 1980
+    out = []
+    n_all = 0
+    for spec in specs:
+        types = spec.get("types") or TRAFFIC_TYPES.get(w.faction, TRAFFIC_TYPES["US"])[era]
+        types = [t for t in types if t in w.catalog.aircraft] or ["B707"]
+        calls = spec.get("callsigns", ["TCA", "AAL", "PAA", "EAL", "NWA", "UAL"] if w.faction == "US" else ["AEROFLOT"])
+        t0, t1 = spec.get("t_window", [0.0, w.duration * 0.8])
+        for i in range(int(spec.get("count", 4))):
+            a, b = rng.choice(spec["routes"])
+            ca, cb = cities[a], cities[b]
+            if rng.random() < 0.5 and spec.get("both_ways", True):
+                ca, cb = cb, ca
+            typ = rng.choice(types)
+            at = w.catalog.aircraft[typ]
+            if "alt_ft" in spec:
+                alt = rng.uniform(*spec["alt_ft"]) * FT
+            else:
+                alt = rng.uniform(*spec.get("alt_m", [at.cruise_alt_m * 0.75, at.cruise_alt_m]))
+            alt = round(alt / 300.0) * 300.0
+            kmh = at.cruise_kmh * rng.uniform(0.93, 1.02)
+            n_all += 1
+            cs_pref = rng.choice(calls)
+            callsign = f"{cs_pref} {rng.randint(100, 989)}" if w.faction == "US" else f"{cs_pref} {rng.randint(1000, 9899)}"
+            fid = f"tr{n_all:02d}"
+            spawn_t = rng.uniform(t0, t1)
+            # fly from just inside the theater edge if the city is outside the play area
+            lat0, lon0 = ca["lat"], ca["lon"]
+            lat1, lon1 = cb["lat"], cb["lon"]
+            mid = (lat0 * 0.85 + lat1 * 0.15, lon0 * 0.85 + lon1 * 0.15)
+            f = {"id": fid, "type": typ, "callsign": callsign, "side": spec.get("side", "civil"), "spawn_t": spawn_t,
+                 "truth_label": f"{at.name}, {callsign}", "markings": spec.get("markings", "civil airliner"),
+                 "start": {"lat": mid[0], "lon": mid[1], "alt_m": alt, "kmh": kmh},
+                 "route": [{"lat": lat1, "lon": lon1, "alt_m": max(600.0, alt * 0.3) if spec.get("land", True)
+                            else alt, "kmh": kmh * 0.8, "action": "land" if spec.get("land", True) else "remove"}]}
+            tx = spec.get("transponder", "atc" if era >= 1960 or w.faction == "US" else "none")
+            if tx != "none":
+                code = spec.get("squawk") or f"{rng.randint(1, 7)}{rng.randint(0, 7)}{rng.randint(0, 7)}{rng.randint(0, 7)}"
+                f["transponder"] = {"system": tx, "codes": {"3": code}}
+            else:
+                f["transponder"] = {"system": "none"}
+            if spec.get("plans", True):
+                fp = {"kind": spec.get("plan_kind", "IFR"), "mode3": f.get("transponder", {}).get("codes", {}).get("3", "")}
+                if rng.random() < spec.get("off_plan", 0.12):
+                    if rng.random() < 0.6:
+                        fp["delay_min"] = rng.choice([-1, 1]) * rng.uniform(6.0, 14.0)
+                    else:
+                        fp["offset_nm"] = rng.choice([-1, 1]) * rng.uniform(14.0, 30.0)
+                f["flight_plan"] = fp
+            out.append(f)
+    return out
 
 
 def _route(th, f: dict) -> list[Waypoint]:
@@ -198,6 +293,11 @@ def spawn_flight(w: World, f: dict) -> list[str]:
         x, y, alt = wps[0].x, wps[0].y, wps[0].alt
         wps = wps[1:] or wps
     spd = _spd(f.get("start", {})) or (wps[0].spd if wps else at.cruise_kmh / 3.6)
+    src = w.aircraft.get(f.get("launch_from", ""))
+    if src is not None:
+        if src.state != "airborne":
+            return []
+        x, y, alt = src.x, src.y, max(src.alt - 300.0, 100.0)
     hdg = bearing_deg(wps[0].x - x, wps[0].y - y) if wps else f.get("hdg", 0.0)
     ids = []
     n = f.get("count", 1)
@@ -217,7 +317,11 @@ def spawn_flight(w: World, f: dict) -> list[str]:
                       mission=Mission(kind=f.get("mission", "route"),
                                       waypoints=[Waypoint(p.x + ox, p.y + oy, p.alt, p.spd, p.action if i == 0 else
                                                           p.action.replace("var:", "noop:")) for p in wps],
-                                      on_intercept=f.get("on_intercept", "comply"), wander=f.get("wander", 0.0)),
+                                      on_intercept=f.get("on_intercept", "comply"), wander=f.get("wander", 0.0),
+                                      alt_day=_alt(f, "alt_day") if ("alt_day_m" in f or "alt_day_ft" in f) else 0.0,
+                                      alt_night=_alt(f, "alt_night") if ("alt_night_m" in f or "alt_night_ft" in f)
+                                      else 0.0,
+                                      agl=float(f.get("agl_m", 0.0)), on_signal=f.get("on_signal", "")),
                       jammer=f.get("jammer", ""), jamming=f.get("jamming", False),
                       flight_plan=f["id"] if "flight_plan" in f else "", kind=f.get("kind", "aircraft"),
                       rcs_scale=f.get("rcs_scale", 1.0), visible_to=list(f.get("visible_to", [])),
@@ -399,7 +503,8 @@ def update(w: World) -> None:
 
 # ---------------------------------------------------------------- objectives
 
-END_PASS = {"not_destroyed", "no_civil_losses", "no_fratricide", "keep_out", "no_alert", "keep_ready",
+END_PASS = {"not_destroyed", "no_civil_losses", "no_fratricide", "keep_out", "no_alert", "keep_ready", "max_in_zone",
+            "own_keep_out",
             "max_missiles"}
 
 
@@ -469,6 +574,47 @@ def evaluate_objectives(w: World, final: bool = False) -> None:
         elif k == "var":
             if cond(w, {"type": "var", **{kk: p[kk] for kk in ("name", "op", "value")}}):
                 _set(w, o, "done")
+        elif k == "forced_down":
+            ids = _truth_ids(w, p["ac"])
+            if any(fd[0] in ids and (not p.get("base") or fd[1] == p["base"]) for fd in w.stats.forced):
+                _set(w, o, "done")
+            elif ids and (cond(w, {"type": "destroyed", "ac": p["ac"]}) or cond(w, {"type": "gone", "ac": p["ac"]})):
+                _set(w, o, "failed")
+        elif k == "tracked_before_zone":
+            ids = _truth_ids(w, p["ac"])
+            if any(a in w.stats.first_track for a in ids):
+                _set(w, o, "done")
+            elif ids and cond(w, {"type": "in_zone", "ac": p["ac"], "zone": p["zone"]}):
+                _set(w, o, "failed")
+        elif k == "own_keep_out":
+            for fl in w.flights.values():
+                for mid in fl.members:
+                    a = w.aircraft.get(mid)
+                    if a is not None and a.state == "airborne" and ident.zone_contains(w, p["zone"], a.x, a.y):
+                        _set(w, o, "failed")
+                        break
+        elif k == "sim_kills":
+            if w.vars.get("sim_kills", 0.0) >= p.get("min", 1):
+                _set(w, o, "done")
+        elif k == "locked":
+            if any(a in w.stats.locks for a in _truth_ids(w, p["ac"])):
+                _set(w, o, "done")
+            elif cond(w, {"type": "gone", "ac": p["ac"]}) and _truth_ids(w, p["ac"]):
+                _set(w, o, "failed")
+        elif k == "destroy_count":
+            ids = [a for pref in p["ac"] for a in _truth_ids(w, pref)]
+            n = sum(1 for a in ids if w.aircraft[a].state == "destroyed" or w.sim_killed(a))
+            if n >= p.get("min", 1):
+                _set(w, o, "done")
+        elif k == "max_in_zone":
+            ids = [a for pref in p["ac"] for a in _truth_ids(w, pref)]
+            inside = sum(1 for a in ids if w.vars.get(f"inzone_{a}", 0.0) > 0)
+            for a in ids:
+                ac = w.aircraft[a]
+                if ac.state == "airborne" and not w.sim_killed(a) and ident.zone_contains(w, p["zone"], ac.x, ac.y):
+                    w.vars[f"inzone_{a}"] = 1.0
+            if inside > p.get("max", 0):
+                _set(w, o, "failed")
         elif k == "max_missiles":
             if w.stats.missiles > p.get("max", 9):
                 _set(w, o, "failed")

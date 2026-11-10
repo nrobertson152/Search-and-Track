@@ -72,3 +72,210 @@ pk = 0.3
 salvo = 1
 lethal_m = 25.0
 provenance = "approximate"
+
+# ---- era expansion (1950s-1980s)
+
+[[weapon]]
+id = "FFAR"
+name = "2.75-in FFAR Mighty Mouse rockets"
+kind = "rocket"
+min_km = 0.5
+max_km = 4.0
+aspect = "all"
+pk = 0.06
+salvo = 12
+lethal_m = 8.0
+provenance = "approximate"
+notes = "Ripple-fired on a collision course; individually inaccurate."
+
+[[weapon]]
+id = "GAR-1D"
+name = "GAR-1D Falcon (radar)"
+kind = "aam_radar"
+min_km = 1.0
+max_km = 8.0
+aspect = "rear"
+pk = 0.4
+salvo = 2
+lethal_m = 12.0
+provenance = "approximate"
+
+[[weapon]]
+id = "AIM-7E"
+name = "AIM-7E Sparrow"
+kind = "aam_radar"
+min_km = 1.5
+max_km = 26.0
+aspect = "all"
+pk = 0.35
+salvo = 2
+lethal_m = 12.0
+provenance = "approximate"
+
+[[weapon]]
+id = "AIM-7F"
+name = "AIM-7F Sparrow"
+kind = "aam_radar"
+min_km = 1.5
+max_km = 40.0
+aspect = "all"
+pk = 0.5
+salvo = 2
+lethal_m = 12.0
+provenance = "approximate"
+
+[[weapon]]
+id = "AIM-9J"
+name = "AIM-9J Sidewinder"
+kind = "aam_ir"
+min_km = 0.9
+max_km = 14.0
+aspect = "rear"
+pk = 0.5
+salvo = 2
+lethal_m = 12.0
+provenance = "approximate"
+
+[[weapon]]
+id = "AIM-9L"
+name = "AIM-9L Sidewinder (all-aspect)"
+kind = "aam_ir"
+min_km = 0.6
+max_km = 16.0
+aspect = "all"
+pk = 0.7
+salvo = 2
+lethal_m = 12.0
+provenance = "approximate"
+
+[[weapon]]
+id = "M61"
+name = "M61A1 Vulcan 20 mm"
+kind = "gun"
+min_km = 0.15
+max_km = 1.2
+aspect = "rear"
+pk = 0.35
+salvo = 1
+lethal_m = 5.0
+provenance = "approximate"
+
+[[weapon]]
+id = "N-37D"
+name = "N-37D 37 mm cannon"
+kind = "gun"
+min_km = 0.1
+max_km = 0.9
+aspect = "rear"
+pk = 0.3
+salvo = 1
+lethal_m = 5.0
+provenance = "approximate"
+
+[[weapon]]
+id = "R-3S"
+name = "R-3S (AA-2 ATOLL) IR missile"
+kind = "aam_ir"
+min_km = 1.0
+max_km = 7.6
+aspect = "rear"
+pk = 0.4
+salvo = 2
+lethal_m = 12.0
+provenance = "approximate"
+
+[[weapon]]
+id = "R-98"
+name = "R-98 (AA-3 ANAB)"
+kind = "aam_radar"
+min_km = 1.5
+max_km = 18.0
+aspect = "all"
+pk = 0.4
+salvo = 2
+lethal_m = 12.0
+provenance = "approximate"
+
+[[weapon]]
+id = "R-23R"
+name = "R-23R (AA-7 APEX)"
+kind = "aam_radar"
+min_km = 1.5
+max_km = 30.0
+aspect = "all"
+pk = 0.4
+salvo = 2
+lethal_m = 12.0
+provenance = "approximate"
+
+[[weapon]]
+id = "R-60"
+name = "R-60 (AA-8 APHID) IR missile"
+kind = "aam_ir"
+min_km = 0.3
+max_km = 7.0
+aspect = "rear"
+pk = 0.5
+salvo = 2
+lethal_m = 12.0
+provenance = "approximate"
+
+[[weapon]]
+id = "R-40"
+name = "R-40 (AA-6 ACRID)"
+kind = "aam_radar"
+min_km = 2.0
+max_km = 50.0
+aspect = "all"
+pk = 0.4
+salvo = 2
+lethal_m = 12.0
+provenance = "approximate"
+
+[[weapon]]
+id = "R-33"
+name = "R-33 (AA-9 AMOS)"
+kind = "aam_radar"
+min_km = 2.5
+max_km = 120.0
+aspect = "all"
+pk = 0.6
+salvo = 2
+lethal_m = 20.0
+provenance = "approximate"
+
+[[weapon]]
+id = "R-4"
+name = "R-4 (AA-5 ASH)"
+kind = "aam_radar"
+min_km = 2.0
+max_km = 25.0
+aspect = "all"
+pk = 0.35
+salvo = 2
+lethal_m = 12.0
+provenance = "approximate"
+
+[[weapon]]
+id = "GSh-23"
+name = "GSh-23 23 mm cannon"
+kind = "gun"
+min_km = 0.15
+max_km = 1.0
+aspect = "rear"
+pk = 0.3
+salvo = 1
+lethal_m = 5.0
+provenance = "approximate"
+
+[[weapon]]
+id = "GSh-6-23"
+name = "GSh-6-23 rotary cannon"
+kind = "gun"
+min_km = 0.15
+max_km = 1.2
+aspect = "rear"
+pk = 0.35
+salvo = 1
+lethal_m = 5.0
+provenance = "approximate"

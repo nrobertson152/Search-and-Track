@@ -1,0 +1,404 @@
+id = "su_red_square"
+title = "Red Square"
+subtitle = "6th Air Defense Army and Moscow District, 28 May 1987"
+summary = "Inspired by the flight of 28 May 1987. Border Guards' Day. A small, slow, low aircraft without IFF has crossed the Estonian coast from the Gulf of Finland. The sky is full of training flights and helicopters, and since 1983 nobody wants to be the officer who shoots down a civilian. It is 700 kilometres to the Kremlin."
+faction = "USSR"
+kind = "scenario"
+photo = ["C172", "MiG-23P"]
+photo_caption = "Лёгкий самолёт-нарушитель · the light aircraft intruder (reconstruction)"
+era = "1980s"
+difficulty = 3
+order = 50
+theater = "baltic_moscow"
+start = "1987-05-28T13:20:00"
+tz = "MSK"
+duration_min = 300
+seed = 1987
+reliability = 4.0
+
+briefing = """
+COMMAND POST, 6th SEPARATE AIR DEFENSE ARMY — 28 MAY 1987
+
+SITUATION. Normal duty. It is Border Guards' Day. Training flights are planned over the Pskov, Novgorod and Kalinin regions: Yak trainers, helicopters, crop-dusters. IFF codes changed this morning and not every unit has the new period loaded. Air traffic control reports a Finnish-registered light aircraft that disappeared from their screens over the Gulf of Finland — possibly crashed.
+
+RULES. Since 1984 the order is explicit: civil light and sport aircraft are NOT to be fired upon. Violators are to be identified, escorted and forced to land.
+
+YOUR FORCES. Radar companies along the coast and across the Pskov–Kalinin corridor; MiG-23 at Tapa, MiG-25PD/MiG-23 at Andreapol and Khotilovo; a helicopter detachment (Mi-8) at Torzhok; S-125 and S-200 in the Baltic, S-25 and S-300 around Moscow.
+
+THINK. A jet fighter cannot fly slowly enough to stay alongside a light aircraft. Something slower can.
+"""
+
+[[intel]]
+title = "Light aircraft"
+text = "Radar cross-section about 1 m², speed 200 km/h, altitude 300-700 m: below most guidance radars' horizon beyond 40-60 km, easily lost among the trainers. Keep the track; hand it over between radar companies by its number."
+
+[[intel]]
+title = "Helicopters"
+text = "The Mi-8 detachment at Torzhok can be scrambled like interceptors. It is slow, unarmed, and can fly formation with a light aircraft long enough for its signals to be seen."
+
+[faction_override]
+report_delay_s = [40.0, 90.0]
+report_interval_s = 25.0
+company_capacity = 14
+report_error_rate = 0.02
+
+[automation]
+surveil = true
+ident = true
+height = true
+tech = false
+
+[weather]
+k_factor = 1.333
+wind_from = 250.0
+wind_kmh = 20.0
+ceiling_m = 3000.0
+visibility_km = 30.0
+night = false
+sea_state = 1.0
+
+[hq]
+name = "КП 6-й ОА ПВО"
+readiness = "CONSTANT"
+alert = ""
+weapons_status = "HOLD"
+[hq.policy]
+response_s = [90.0, 240.0]
+declare_hostile = "deny"
+engage = "deny"
+ram = "deny"
+special_release = "deny"
+iff_period = "MAY"
+track_start = 8701
+
+[[link]]
+id = "A_net"
+name = "Automated reporting net (ASU)"
+kind = "data"
+delay_s = 15.0
+[[link]]
+id = "T_gp"
+name = "Guidance point lines"
+[[link]]
+id = "T_airfields"
+name = "Airfield alert lines"
+[[link]]
+id = "T_sam"
+name = "SAM lines"
+
+[[radar]]
+site = "rlr_kohtla"
+type = "P-18"
+link = "A_net"
+[[radar]]
+site = "rlr_kingisepp"
+type = "5N84"
+link = "A_net"
+[[radar]]
+site = "rlr_pskov"
+type = "P-18"
+link = "A_net"
+[[radar]]
+site = "rlr_dno"
+type = "P-18"
+link = "A_net"
+[[radar]]
+site = "rlr_staraya"
+type = "ST-68U"
+link = "A_net"
+[[radar]]
+site = "rlr_ostashkov"
+type = "P-18"
+link = "A_net"
+[[radar]]
+site = "rlr_torzhok"
+type = "ST-68U"
+link = "A_net"
+[[radar]]
+site = "rlr_rzhev"
+type = "P-18"
+link = "A_net"
+[[radar]]
+site = "rlr_klin"
+type = "ST-68U"
+link = "A_net"
+[[radar]]
+site = "gp_tapa"
+type = "P-37"
+hf = ["PRV-13"]
+gci = true
+link = "T_gp"
+[[radar]]
+site = "gp_andreapol"
+type = "P-37"
+hf = ["PRV-13"]
+gci = true
+link = "T_gp"
+[[radar]]
+site = "gp_khotilovo"
+type = "P-37"
+hf = ["PRV-13"]
+gci = true
+link = "T_gp"
+
+[[airbase]]
+site = "tapa"
+link = "T_airfields"
+[[airbase]]
+site = "andreapol"
+link = "T_airfields"
+[[airbase]]
+site = "khotilovo"
+link = "T_airfields"
+[[airbase]]
+site = "torzhok"
+link = "T_airfields"
+[[airbase]]
+site = "sheremetyevo"
+[[airbase]]
+site = "pulkovo"
+[[airbase]]
+site = "vnukovo"
+[[airbase]]
+site = "red_square"
+[[airbase]]
+site = "helsinki"
+side = "neutral"
+
+[[squadron]]
+id = "tapa_iap"
+name = "656th IAP (Tapa)"
+base = "tapa"
+type = "MiG-23P"
+callsign = "315"
+ready = { "3" = 2, "7" = 2 }
+pilots = 6
+iff_codes = { period = "MAY" }
+
+[[squadron]]
+id = "andreapol_iap"
+name = "Andreapol IAP"
+base = "andreapol"
+type = "MiG-25PD"
+callsign = "540"
+ready = { "3" = 2, "7" = 2 }
+pilots = 6
+iff_codes = { period = "MAY" }
+
+[[squadron]]
+id = "khotilovo_iap"
+name = "Khotilovo IAP"
+base = "khotilovo"
+type = "MiG-23P"
+callsign = "771"
+ready = { "7" = 2, "20" = 2 }
+pilots = 4
+iff_codes = { period = "MAY" }
+
+[[squadron]]
+id = "torzhok_heli"
+name = "Helicopter det. Torzhok"
+base = "torzhok"
+type = "Mi-8"
+callsign = "Вертолёт 12"
+ready = { "7" = 2, "20" = 2 }
+pilots = 4
+iff_codes = { period = "MAY" }
+
+[[sam]]
+site = "s125_tallinn"
+type = "S-125"
+link = "T_sam"
+missiles = 8
+reloads = 8
+[[sam]]
+site = "s200_kingisepp"
+type = "S-200"
+link = "T_sam"
+missiles = 4
+reloads = 4
+[[sam]]
+site = "s25_nw1"
+type = "S-25"
+link = "T_sam"
+missiles = 20
+reloads = 0
+[[sam]]
+site = "s300_moscow"
+type = "S-300PT"
+link = "T_sam"
+missiles = 12
+reloads = 12
+
+[[traffic]]
+count = 10
+routes = [["Leningrad", "Moscow"], ["Tallinn", "Moscow"], ["Leningrad", "Pskov"], ["Leningrad", "Tallinn"],
+          ["Moscow", "Novgorod"], ["Moscow", "Pskov"]]
+types = ["Tu-134", "Il-62", "Il-18"]
+alt_m = [6000.0, 10200.0]
+t_window = [0.0, 16000.0]
+transponder = "none"
+plans = false
+callsigns = ["AEROFLOT"]
+
+[[flight]]
+id = "rust"
+type = "C172"
+callsign = "D-ECJB"
+side = "civil"
+spawn_t = 0.0
+truth_label = "Cessna 172 light aircraft, West German registration"
+markings = "white, red stripe, civil registration D-ECJB"
+nationality = "FRG"
+on_intercept = "ignore"
+on_signal = "comply:torzhok"
+fuel_frac = 3.0
+start = { lat = 60.22, lon = 25.10, alt_m = 600.0, kmh = 200.0 }
+route = [
+  { lat = 59.95, lon = 26.4, alt_m = 600.0, kmh = 200.0, action = "transponder_off" },
+  { lat = 59.42, lon = 27.3, alt_m = 600.0, kmh = 200.0 },
+  { lat = 58.75, lon = 27.8, alt_m = 700.0, kmh = 200.0 },
+  { lat = 57.99, lon = 31.36, alt_m = 600.0, kmh = 200.0 },
+  { lat = 57.04, lon = 34.96, alt_m = 600.0, kmh = 200.0 },
+  { lat = 56.3, lon = 36.5, alt_m = 500.0, kmh = 200.0 },
+  { lat = 55.754, lon = 37.62, alt_m = 150.0, kmh = 150.0, action = "land;var:reached_moscow" },
+]
+transponder = { system = "atc", codes = { "3" = "7000" } }
+
+[[flight]]
+id = "yak_a"
+type = "Yak-18T"
+callsign = "УЧЕБНЫЙ 21"
+side = "blue"
+spawn_t = 3600.0
+truth_label = "Yak-18T trainer (DOSAAF flying club)"
+markings = "DOSAAF, red and white"
+start = { lat = 57.9, lon = 30.9, alt_m = 700.0, kmh = 240.0 }
+route = [
+  { lat = 58.1, lon = 31.6, alt_m = 700.0, kmh = 240.0 },
+  { lat = 57.8, lon = 31.9, alt_m = 600.0, kmh = 240.0 },
+  { lat = 57.6, lon = 31.2, alt_m = 600.0, kmh = 240.0 },
+  { lat = 57.9, lon = 30.9, alt_m = 700.0, kmh = 240.0 },
+  { lat = 58.1, lon = 31.6, alt_m = 700.0, kmh = 240.0 },
+  { lat = 57.8, lon = 31.9, alt_m = 600.0, kmh = 240.0 },
+  { lat = 57.6, lon = 31.2, alt_m = 600.0, kmh = 240.0 },
+  { lat = 57.99, lon = 31.36, alt_m = 200.0, kmh = 180.0, action = "land" },
+]
+transponder = { system = "kremniy", codes = { "period" = "APR" } }
+
+[[flight]]
+id = "yak_b"
+type = "Yak-18T"
+callsign = "УЧЕБНЫЙ 34"
+side = "blue"
+spawn_t = 8400.0
+truth_label = "Yak-18T trainer (DOSAAF flying club)"
+markings = "DOSAAF, red and white"
+start = { lat = 57.1, lon = 34.3, alt_m = 600.0, kmh = 240.0 }
+route = [
+  { lat = 57.3, lon = 35.0, alt_m = 600.0, kmh = 240.0 },
+  { lat = 56.9, lon = 35.4, alt_m = 500.0, kmh = 240.0 },
+  { lat = 56.8, lon = 34.6, alt_m = 500.0, kmh = 240.0 },
+  { lat = 57.1, lon = 34.3, alt_m = 600.0, kmh = 240.0 },
+  { lat = 57.3, lon = 35.0, alt_m = 600.0, kmh = 240.0 },
+  { lat = 56.9, lon = 35.4, alt_m = 500.0, kmh = 240.0 },
+  { lat = 57.04, lon = 34.96, alt_m = 200.0, kmh = 180.0, action = "land" },
+]
+transponder = { system = "kremniy", codes = { "period" = "MAY" } }
+
+[[flight]]
+id = "heli_sar"
+type = "Mi-8"
+callsign = "ПОИСК 7"
+side = "blue"
+spawn_t = 6000.0
+truth_label = "Mi-8 search-and-rescue helicopter"
+markings = "Aeroflot / military SAR"
+start = { lat = 57.6, lon = 32.4, alt_m = 400.0, kmh = 200.0 }
+route = [
+  { lat = 57.8, lon = 33.0, alt_m = 400.0, kmh = 200.0 },
+  { lat = 57.4, lon = 33.3, alt_m = 400.0, kmh = 200.0 },
+  { lat = 57.3, lon = 32.6, alt_m = 400.0, kmh = 200.0 },
+  { lat = 57.6, lon = 32.4, alt_m = 400.0, kmh = 200.0 },
+  { lat = 57.8, lon = 33.0, alt_m = 400.0, kmh = 200.0 },
+  { lat = 57.15, lon = 33.1, alt_m = 150.0, kmh = 150.0, action = "land" },
+]
+transponder = { system = "kremniy", codes = { "period" = "APR" } }
+
+[[trigger]]
+id = "open"
+cond = { type = "time", t = 5.0 }
+actions = [{ do = "message", channel = "tty", sender = "КП 6-й ОА ПВО", ack = true, kind = "order", text = "CONSTANT READINESS. TRAINING FLIGHTS PLANNED PSKOV–NOVGOROD–KALININ 1500-2000. NEW IFF PERIOD IN EFFECT. LIGHT AND SPORT AIRCRAFT ARE NOT TO BE FIRED UPON." }]
+
+[[trigger]]
+id = "atc"
+cond = { type = "time", t = 2400.0 }
+actions = [{ do = "message", channel = "voice", sender = "ATC LENINGRAD", text = "Leningrad control: Helsinki reports a Cessna lost from their radar over the Gulf after departure from Malmi. Oil slick reported; Finnish search under way." }]
+
+[[trigger]]
+id = "handover"
+cond = { type = "in_zone", ac = "rust", zone = "moscow_district" }
+actions = [{ do = "message", channel = "voice", sender = "КП МОСКОВСКОГО ОКРУГА", ack = true, kind = "order", priority = 1, text = "Moscow District: we have your target number. Is it ours? A training aircraft? We need an answer now." }]
+
+[[objective]]
+id = "report"
+text = "Report the intruder to the command post within 15 minutes of tracking it"
+kind = "report"
+params = { ac = "rust", within_s = 900.0 }
+points = 10
+
+[[objective]]
+id = "vid"
+text = "Visually identify the intruder"
+kind = "vid"
+params = { ac = "rust" }
+points = 15
+
+[[objective]]
+id = "forced"
+text = "Force the intruder to land before it reaches Moscow"
+kind = "forced_down"
+params = { ac = "rust" }
+points = 40
+
+[[objective]]
+id = "kremlin"
+text = "The intruder must not reach central Moscow"
+kind = "keep_out"
+params = { ac = "rust", zone = "moscow_center" }
+points = 15
+
+[[objective]]
+id = "alive"
+text = "Do not fire on a light civil aircraft"
+kind = "not_destroyed"
+params = { ac = "rust" }
+points = 10
+penalty = 40
+
+[[objective]]
+id = "fratricide"
+text = "Do not shoot down our own trainers"
+kind = "no_fratricide"
+points = 10
+penalty = 30
+
+[[headline]]
+cond = { type = "var", name = "reached_moscow", op = ">=", value = 1.0 }
+text = "САМОЛЁТ-НАРУШИТЕЛЬ НА КРАСНОЙ ПЛОЩАДИ"
+sub = "A West German light aircraft landed beside the Kremlin. The Minister of Defence and the PVO commander have been dismissed."
+
+[[headline]]
+cond = { type = "var", name = "forced_rust", op = ">=", value = 1.0 }
+text = "НАРУШИТЕЛЬ ПОСАЖЕН"
+sub = "A light aircraft that crossed the border was escorted to a landing by a PVO helicopter."
+
+[[headline]]
+cond = { type = "destroyed", ac = "rust" }
+text = "ГИБЕЛЬ ЛЁГКОГО САМОЛЁТА"
+sub = "A sport aircraft was shot down over the Kalinin region. A young pilot is dead; the world is watching."
+
+[[headline]]
+cond = { type = "time", t = 0.0 }
+text = "ДЕНЬ ПОГРАНИЧНИКА"
+sub = "Border Guards' Day passed quietly over the Baltic and the Moscow region."

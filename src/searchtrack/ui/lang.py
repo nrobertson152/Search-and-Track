@@ -31,7 +31,8 @@ RU: dict[str, str] = {
     "INTCPT": "ПЕРЕХВАТ", "AUTO": "АВТОМАТ", "MANUAL": "РУЧНОЕ", "RTB": "ВОЗВРАТ",
     "HDG −15": "КУРС −15", "HDG +15": "КУРС +15", "ALT −": "ВЫСОТА −", "ALT +": "ВЫСОТА +",
     "BUSTER": "ФОРСАЖ", "GATE OFF": "ФОРСАЖ ВЫКЛ", "WPN FREE": "АТАКА РАЗР.", "WPN HOLD": "АТАКА ЗАПР.",
-    "GUID. PT": "СМЕНА ПН", "ORDER RAMMING": "ТАРАН", "FORCE LANDING": "ПОСАДИТЬ", "LOCK-ON": "ЗАХВАТ",
+    "GUID. PT": "СМЕНА ПН", "ORDER RAMMING": "ТАРАН", "FORCE LANDING": "ПРИНУДИТЬ К ПОСАДКЕ", "LOCK-ON": "ЗАХВАТ",
+    "WARNING SHOTS": "ПРЕДУПР. ОГОНЬ",
     # ---- requests to higher command
     "HOSTILE": "НАРУШИТЕЛЬ", "ENGAGE": "УНИЧТОЖИТЬ", "RAM": "ТАРАН", "WEAPONS TIGHT": "ОГОНЬ ОГРАН.",
     "WEAPONS FREE": "ОГОНЬ РАЗРЕШ.", "WEAPONS HOLD": "ОГОНЬ ЗАПРЕЩ.", "READINESS FULL": "БГ ПОЛНАЯ",

@@ -76,6 +76,8 @@ def can_engage_track(world: "World", trk) -> tuple[bool, str]:
     hq = world.hq
     if trk.id in hq.engage_ok:
         return True, "engagement authorized by HQ"
+    if world.exercise and trk.identity in ("faker", "hostile", "suspect"):
+        return True, "exercise rules: simulated engagement"
     st = hq.weapons_status
     lab = id_label(world, trk.identity)
     if world.faction_def.id == "US":

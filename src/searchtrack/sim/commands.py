@@ -45,7 +45,7 @@ def execute(world: World, cmd: Command) -> Result:
     return ok, msg
 
 
-def run(world: World, kind: str, **args) -> Result:
+def run(world: World, kind: str, /, **args) -> Result:
     return execute(world, Command(kind, args))
 
 
@@ -245,6 +245,26 @@ def _special(w: World, flight: str, on: bool = True) -> Result:
         return False, "Special weapons not released by higher authority"
     fl.special_release = on
     return True, f"{fl.callsign}: special weapons {'ARMED' if on else 'SAFE'}"
+
+
+@handler("warning_shots")
+def _warning_shots(w: World, flight: str) -> Result:
+    fl = _flight(w, flight)
+    c = w.aircraft.get(fl.contact) if fl.contact else None
+    lead = gci.lead_of(w, fl)
+    if c is None or lead is None or not fl.vid_done:
+        return False, f"{fl.callsign}: must be alongside the target (visual contact) to fire a warning burst"
+    if math.hypot(c.x - lead.x, c.y - lead.y) > 2.5:
+        return False, f"{fl.callsign}: too far from the target for a warning burst"
+    guns = [k for k, v in lead.weapons.items() if v and w.catalog.weapons[k].kind == "gun"]
+    w.log_event("weapons", f"{fl.callsign} fired a warning burst near {c.callsign}", c.id)
+    if c.mission is not None:
+        seen = (not w.weather.night) or w.rng.random() < 0.55
+        c.mission.warned = c.mission.warned or seen
+    w.radio(fl, ("warning burst fired, tracers" if guns else "warning: no gun aboard, firing rockets wide")
+            if w.faction_def.id == "US" else ("Fired a warning burst." if guns else "No cannon — fired rockets wide."),
+            priority=1)
+    return True, f"{fl.callsign}: warning burst fired"
 
 
 @handler("rtb")

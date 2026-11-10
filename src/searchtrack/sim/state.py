@@ -31,6 +31,12 @@ class Mission:
     intercepted: bool = False
     orbit_until: float = 0.0
     wander: float = 0.0                  # ghosts: erratic heading changes (deg/s)
+    alt_day: float = 0.0                 # balloons: float altitude by day...
+    alt_night: float = 0.0               # ...and after the gas cools at night
+    agl: float = 0.0                     # terrain following: height above ground (m), 0 = off
+    on_signal: str = ""                  # reaction to "follow me" signals: comply:<base> | ignore | evade | shots:<base>
+    signaled: bool = False
+    warned: bool = False                 # warning shots fired across the nose
 
 
 @dataclass
@@ -189,6 +195,7 @@ class RadarSite:
     company_no: int = 0
     company_tracks: dict[str, "CompanyTrack"] = field(default_factory=dict)
     name_ru: str = ""
+    carrier: str = ""                    # airborne radar: id of the aircraft carrying it
 
     @property
     def h_ant(self) -> float:
@@ -480,3 +487,6 @@ class Stats:
     fuel_emergencies: int = 0
     reports_to_hq: int = 0
     truth_snaps: list[list[Any]] = field(default_factory=list)
+    sim_kills: list[list[str]] = field(default_factory=list)          # exercise: [victim, shooter]
+    forced: list[list[Any]] = field(default_factory=list)             # forced landings: [aircraft, base, t]
+    locks: dict[str, float] = field(default_factory=dict)             # truth -> first fire-control lock

@@ -168,7 +168,9 @@ def step_mission(world: "World", ac: Aircraft, dt: float) -> None:
         ac.hdg = bearing_deg(wx, wy)
         ac.spd = 0.0
         ac.cmd_hdg, ac.cmd_spd = ac.hdg, 0.0
-        if m.waypoints:
+        if m.alt_day > 0.0:
+            ac.cmd_alt = balloon_altitude(world, m)
+        elif m.waypoints:
             ac.cmd_alt = m.waypoints[0].alt
         return
     if m.orbit_until > world.t:
@@ -183,12 +185,71 @@ def step_mission(world: "World", ac: Aircraft, dt: float) -> None:
         ac.cmd_hdg = bearing_deg(dx, dy)
         ac.cmd_alt = wp.alt
         ac.cmd_spd = wp.spd
+        if m.agl > 0.0 and wp.alt <= 1000.0:
+            ac.cmd_alt = terrain_follow_alt(world, ac, m.agl)
     if d < max(3.0, ac.spd * dt / 1000.0 * 2.5):
         _waypoint_action(world, ac, wp)
         m.wp += 1
         if m.wp >= len(m.waypoints) and ac.state == "airborne" and m.kind == "route":
             ac.state = "gone"
             world.log_event("sys", f"{ac.callsign} left the area", ac.id)
+
+
+def balloon_altitude(world: "World", m) -> float:
+    """Float altitude of a free balloon: high by day, sinking after sunset as the gas cools,
+    ballast drops keep it from falling below the night floor; rises again after sunrise."""
+    h = world.local_hour()
+    rise, sets = 8.5, 17.0           # winter Urals, local solar time
+    if rise + 1.5 <= h <= sets:
+        f = 1.0
+    elif sets < h < sets + 3.0:
+        f = 1.0 - (h - sets) / 3.0
+    elif rise <= h < rise + 1.5:
+        f = (h - rise) / 1.5
+    else:
+        f = 0.0
+    return m.alt_night + (m.alt_day - m.alt_night) * f
+
+
+def terrain_follow_alt(world: "World", ac: Aircraft, agl: float) -> float:
+    """Terrain-following: clear the highest ground within ~6 km ahead by `agl` metres."""
+    hx, hy = heading_vec(ac.hdg)
+    terr = world.theater.terrain
+    top = 0.0
+    for k in (0.0, 1.5, 3.0, 4.5, 6.0):
+        top = max(top, terr.height(ac.x + hx * k, ac.y + hy * k))
+    return top + agl
+
+
+def signal_to_land(world: "World", ac: Aircraft, fl_callsign: str) -> str:
+    """An intercepted aircraft reacts to "follow me" signals. Returns a short pilot report."""
+    m = ac.mission
+    if m is None:
+        return "no reaction"
+    beh = m.on_signal or ("comply" if ac.side == "civil" else "ignore")
+    if beh.startswith("shots:") and not m.warned:
+        return "no reaction to wing-rocking or lights"
+    if beh.startswith("shots:"):
+        beh = "comply:" + beh.split(":", 1)[1]
+    if beh.startswith("comply"):
+        if m.signaled:
+            return "following us"
+        base = beh.split(":", 1)[1] if ":" in beh else ""
+        b = world.airbases.get(base) or min(world.airbases.values(), default=None,
+                                              key=lambda bb: math.hypot(bb.x - ac.x, bb.y - ac.y))
+        if b is None:
+            return "no airfield"
+        m.signaled = True
+        m.on_intercept = "comply"
+        m.waypoints = m.waypoints[:m.wp] + [Waypoint(b.x, b.y, 300.0, max(ac.spd * 0.6, 60.0), "land;forced")]
+        world.log_event("scenario", f"{ac.callsign} acknowledged signals and is following to {b.name}", ac.id)
+        return f"he is lowering his gear and following us to {b.name}"
+    if beh == "evade":
+        ac.cmd_hdg = (ac.hdg + world.rng.choice([-80.0, 80.0])) % 360.0
+        if m.wp < len(m.waypoints):
+            m.waypoints[m.wp].alt = max(150.0, ac.alt - 3000.0)
+        return "he is turning away and descending"
+    return "no reaction to signals"
 
 
 def _waypoint_action(world: "World", ac: Aircraft, wp: Waypoint) -> None:
@@ -199,6 +260,11 @@ def _waypoint_action(world: "World", ac: Aircraft, wp: Waypoint) -> None:
             ac.jamming = False
         elif act in ("land", "remove"):
             ac.state = "landed" if act == "land" else "gone"
+            if act == "land" and "forced" in wp.action:
+                b = min(world.airbases.values(), default=None, key=lambda bb: math.hypot(bb.x - ac.x, bb.y - ac.y))
+                world.stats.forced.append([ac.id, b.id if b else "", world.t])
+                world.vars[f"forced_{ac.id}"] = 1.0
+                world.alert(f"{ac.callsign} has landed at {b.name if b else 'the airfield'} under escort", ac.id, 1)
         elif act.startswith("orbit:"):
             ac.mission.orbit_until = world.t + float(act.split(":")[1])
         elif act.startswith("var:"):

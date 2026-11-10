@@ -1,0 +1,493 @@
+id = "us_northern_shield"
+title = "Northern Shield"
+subtitle = "Alaskan NORAD Region, February 1986 — hypothetical"
+summary = "A what-if built from the plans of the time. The crisis has gone too far. Six BEAR H carriers are coming over the Bering Sea with cruise missiles that hug the ground below every radar in Alaska except the ones flying. Kill the carriers before they launch — then hunt the missiles in the dark."
+faction = "US"
+kind = "scenario"
+photo = ["Tu-95MS", "E-3A"]
+photo_caption = "BEAR H — carrier of the AS-15 cruise missile (file photograph)"
+era = "1980s"
+difficulty = 4
+order = 40
+theater = "alaska"
+start = "1986-02-20T09:30:00"
+tz = "Z"
+duration_min = 100
+seed = 1986
+reliability = 4.0
+
+briefing = """
+ALASKAN NORAD REGION — ROCC ELMENDORF. THIS SCENARIO IS HYPOTHETICAL.
+
+SITUATION. After a week of crisis the Soviet Union has dispersed its bomber force. Intelligence expects BEAR H regiments from Anadyr to attack Alaska's air bases with AS-15 cruise missiles to open a path for the main strike against the continental United States. The missiles are small, fly at about 60 metres following the ground, and are invisible to ground radars beyond a few dozen kilometres. Only the AWACS and the Eagles' look-down radars can see them.
+
+FORCES. Two E-3A Sentries airborne (DARKSTAR, SENTRY 2). F-15A Eagles at Galena, King Salmon and Elmendorf. AN/FPS-117 radars on the west coast.
+
+RULES OF ENGAGEMENT. DEFCON 2, ADW YELLOW, weapons TIGHT. Expect the Region to declare an air defense emergency: from then on Soviet aircraft in the ADIZ are hostile.
+
+TASKS.
+  • Destroy the carriers before they reach their launch points.
+  • Destroy cruise missiles before they reach Anchorage, Fairbanks and the forward bases.
+  • Keep the AWACS alive and the Eagles fuelled.
+  • A Korean Air cargo 747 is still inbound to Anchorage. Do not shoot it down.
+"""
+
+[[intel]]
+title = "Cruise missiles"
+text = "AS-15 (Kh-55): radar cross-section about a tenth of a square metre, 750 km/h, 50-100 m above the terrain. Ground radars see them only near the coast. Put an Eagle above the expected track and let its APG-63 look down."
+
+[[intel]]
+title = "Jamming"
+text = "A BADGER is expected to orbit near St. Lawrence Island with noise jammers against the coastal radars. Triangulate it; it is a legitimate target once the emergency is declared."
+
+[automation]
+surveil = true
+ident = true
+height = true
+tech = true
+
+[weather]
+k_factor = 1.333
+wind_from = 20.0
+wind_kmh = 60.0
+ceiling_m = 900.0
+visibility_km = 8.0
+night = true
+sea_state = 5.0
+
+[hq]
+name = "ALASKAN NORAD REGION"
+readiness = "DEFCON 2"
+alert = "YELLOW"
+weapons_status = "TIGHT"
+[hq.policy]
+response_s = [30.0, 70.0]
+declare_hostile = "var:war"
+engage = "var:war"
+ram = "deny"
+special_release = "deny"
+weapons_status_FREE = "var:war"
+alert_RED = "var:war"
+mode1_valid = ["24", "61"]
+track_start = 501
+
+[vars]
+war = 0
+
+[[link]]
+id = "D_west"
+name = "West coast radar microwave"
+kind = "data"
+delay_s = 2.0
+[[link]]
+id = "D_interior"
+name = "Interior radar microwave"
+kind = "data"
+delay_s = 2.0
+[[link]]
+id = "D_awacs"
+name = "AWACS JTIDS link"
+kind = "data"
+delay_s = 1.0
+[[link]]
+id = "V_galena"
+name = "Galena FOL line"
+kind = "voice"
+delay_s = 5.0
+[[link]]
+id = "V_kingsalmon"
+name = "King Salmon FOL line"
+kind = "voice"
+delay_s = 5.0
+[[link]]
+id = "V_elmendorf"
+name = "Elmendorf line"
+kind = "voice"
+delay_s = 4.0
+
+[[radar]]
+site = "tin_city"
+type = "AN/FPS-117"
+link = "D_west"
+[[radar]]
+site = "cape_romanzof"
+type = "AN/FPS-117"
+link = "D_west"
+[[radar]]
+site = "cape_newenham"
+type = "AN/FPS-117"
+link = "D_west"
+[[radar]]
+site = "kotzebue_r"
+type = "AN/FPS-117"
+link = "D_west"
+[[radar]]
+site = "campion"
+type = "AN/FPS-117"
+link = "D_interior"
+[[radar]]
+site = "tatalina"
+type = "AN/FPS-117"
+link = "D_interior"
+[[radar]]
+site = "indian_mtn"
+type = "AN/FPS-117"
+link = "D_interior"
+[[radar]]
+site = "sparrevohn"
+type = "AN/FPS-117"
+link = "D_interior"
+[[radar]]
+site = "king_salmon_r"
+type = "ARSR-3"
+link = "D_interior"
+[[radar]]
+site = "fire_island"
+type = "ARSR-3"
+link = "D_interior"
+[[radar]]
+site = "murphy_dome"
+type = "ARSR-3"
+link = "D_interior"
+[[radar]]
+id = "darkstar_r"
+name = "DARKSTAR (E-3A)"
+type = "AN/APY-1"
+carrier = "awacs1"
+link = "D_awacs"
+[[radar]]
+id = "sentry2_r"
+name = "SENTRY 2 (E-3A)"
+type = "AN/APY-1"
+carrier = "awacs2"
+link = "D_awacs"
+
+[[airbase]]
+site = "elmendorf"
+link = "V_elmendorf"
+[[airbase]]
+site = "galena"
+link = "V_galena"
+[[airbase]]
+site = "king_salmon"
+link = "V_kingsalmon"
+[[airbase]]
+site = "eielson"
+[[airbase]]
+site = "anchorage_intl"
+[[airbase]]
+site = "fairbanks_intl"
+[[airbase]]
+site = "provideniya"
+side = "red"
+
+[[squadron]]
+id = "galena_det"
+name = "43rd TFS det. Galena"
+base = "galena"
+type = "F-15A"
+callsign = "TWIN"
+ready = { "5" = 4, "15" = 2 }
+pilots = 8
+
+[[squadron]]
+id = "ks_det"
+name = "43rd TFS det. King Salmon"
+base = "king_salmon"
+type = "F-15A"
+callsign = "FANG"
+ready = { "5" = 4, "15" = 2 }
+pilots = 8
+
+[[squadron]]
+id = "43tfs"
+name = "43rd TFS"
+base = "elmendorf"
+type = "F-15A"
+callsign = "COBRA"
+ready = { "5" = 2, "15" = 6 }
+pilots = 12
+
+[[squadron]]
+id = "54tfs"
+name = "54th TFS"
+base = "elmendorf"
+type = "F-15A"
+callsign = "VIPER"
+ready = { "15" = 4, "30" = 4 }
+pilots = 10
+
+[[flight]]
+id = "awacs1"
+type = "E-3A"
+callsign = "DARKSTAR"
+side = "blue"
+truth_label = "E-3A Sentry"
+markings = "USAF"
+start = { lat = 63.6, lon = -161.0, alt_m = 9000.0, kmh = 650.0 }
+route = [
+  { lat = 64.0, lon = -161.8, alt_m = 9000.0, kmh = 650.0, action = "orbit:6000" },
+  { lat = 61.25, lon = -149.8, alt_m = 1000.0, kmh = 420.0, action = "land" },
+]
+transponder = { system = "sif", codes = { "1" = "24", "3" = "4401" } }
+flight_plan = { kind = "MIL", mode3 = "4401", note = "AWACS orbit" }
+
+[[flight]]
+id = "awacs2"
+type = "E-3A"
+callsign = "SENTRY 2"
+side = "blue"
+truth_label = "E-3A Sentry"
+markings = "USAF"
+start = { lat = 59.6, lon = -158.5, alt_m = 9000.0, kmh = 650.0 }
+route = [
+  { lat = 59.8, lon = -159.6, alt_m = 9000.0, kmh = 650.0, action = "orbit:6000" },
+  { lat = 61.25, lon = -149.8, alt_m = 1000.0, kmh = 420.0, action = "land" },
+]
+transponder = { system = "sif", codes = { "1" = "24", "3" = "4402" } }
+flight_plan = { kind = "MIL", mode3 = "4402", note = "AWACS orbit" }
+
+[[flight]]
+id = "bearA"
+type = "Tu-95MS"
+callsign = "BEAR A"
+side = "red"
+count = 2
+spacing_km = 10.0
+spawn_t = 300.0
+truth_label = "Tu-95MS BEAR H (cruise-missile carrier)"
+markings = "red star, Soviet Long-Range Aviation, AS-15 on rotary launcher"
+nationality = "USSR"
+start = { lat = 64.6, lon = -174.0, alt_m = 10500.0, kmh = 760.0 }
+route = [
+  { lat = 64.1, lon = -170.0, alt_m = 10500.0, kmh = 760.0 },
+  { lat = 63.6, lon = -167.6, alt_m = 10500.0, kmh = 760.0, action = "var:launch_a" },
+  { lat = 64.6, lon = -173.6, alt_m = 10500.0, kmh = 760.0, action = "remove" },
+]
+transponder = { system = "kremniy", codes = { "period" = "FEB" } }
+
+[[flight]]
+id = "bearB"
+type = "Tu-95MS"
+callsign = "BEAR B"
+side = "red"
+count = 2
+spacing_km = 10.0
+spawn_t = 700.0
+truth_label = "Tu-95MS BEAR H (cruise-missile carrier)"
+markings = "red star, Soviet Long-Range Aviation"
+nationality = "USSR"
+start = { lat = 61.6, lon = -173.6, alt_m = 10000.0, kmh = 760.0 }
+route = [
+  { lat = 60.7, lon = -169.0, alt_m = 10000.0, kmh = 760.0 },
+  { lat = 60.0, lon = -166.0, alt_m = 10000.0, kmh = 760.0, action = "var:launch_b" },
+  { lat = 61.0, lon = -173.5, alt_m = 10500.0, kmh = 760.0, action = "remove" },
+]
+transponder = { system = "kremniy", codes = { "period" = "FEB" } }
+
+[[flight]]
+id = "bearC"
+type = "Tu-95MS"
+callsign = "BEAR C"
+side = "red"
+count = 2
+spacing_km = 10.0
+spawn_t = 1500.0
+truth_label = "Tu-95MS BEAR H (cruise-missile carrier)"
+markings = "red star, Soviet Long-Range Aviation"
+nationality = "USSR"
+start = { lat = 66.9, lon = -173.5, alt_m = 11000.0, kmh = 760.0 }
+route = [
+  { lat = 67.1, lon = -169.5, alt_m = 11000.0, kmh = 760.0 },
+  { lat = 67.0, lon = -166.5, alt_m = 11000.0, kmh = 760.0, action = "var:launch_c" },
+  { lat = 66.4, lon = -173.5, alt_m = 11000.0, kmh = 760.0, action = "remove" },
+]
+transponder = { system = "kremniy", codes = { "period" = "FEB" } }
+
+[[flight]]
+id = "badger"
+type = "Tu-16"
+callsign = "BADGER"
+side = "red"
+spawn_t = 200.0
+truth_label = "Tu-16P BADGER (stand-off jammer)"
+markings = "red star"
+nationality = "USSR"
+jammer = "ECM-SPS"
+jamming = true
+start = { lat = 63.9, lon = -172.8, alt_m = 9000.0, kmh = 720.0 }
+route = [
+  { lat = 63.4, lon = -171.2, alt_m = 9000.0, kmh = 700.0, action = "orbit:5400" },
+  { lat = 64.5, lon = -175.0, alt_m = 9000.0, kmh = 700.0, action = "remove" },
+]
+transponder = { system = "kremniy", codes = { "period" = "FEB" } }
+
+[[flight]]
+id = "alcm_a"
+type = "AS-15"
+callsign = "VAMPIRE A"
+side = "red"
+spawn = "trigger"
+launch_from = "bearA-1"
+count = 4
+spacing_km = 2.0
+agl_m = 60.0
+truth_label = "AS-15 KENT cruise missile"
+markings = "none (missile)"
+start = { lat = 63.6, lon = -167.6, alt_m = 3000.0, kmh = 760.0 }
+route = [
+  { lat = 63.4, lon = -162.0, alt_m = 60.0, kmh = 760.0 },
+  { lat = 64.74, lon = -156.94, alt_m = 60.0, kmh = 760.0 },
+  { lat = 64.7, lon = -147.2, alt_m = 60.0, kmh = 760.0, action = "remove" },
+]
+transponder = { system = "none" }
+
+[[flight]]
+id = "alcm_b"
+type = "AS-15"
+callsign = "VAMPIRE B"
+side = "red"
+spawn = "trigger"
+launch_from = "bearB-1"
+count = 4
+spacing_km = 2.0
+agl_m = 60.0
+truth_label = "AS-15 KENT cruise missile"
+markings = "none (missile)"
+start = { lat = 60.0, lon = -166.0, alt_m = 3000.0, kmh = 760.0 }
+route = [
+  { lat = 59.4, lon = -161.0, alt_m = 60.0, kmh = 760.0 },
+  { lat = 58.68, lon = -156.65, alt_m = 60.0, kmh = 760.0 },
+  { lat = 61.25, lon = -149.8, alt_m = 60.0, kmh = 760.0, action = "remove" },
+]
+transponder = { system = "none" }
+
+[[flight]]
+id = "alcm_c"
+type = "AS-15"
+callsign = "VAMPIRE C"
+side = "red"
+spawn = "trigger"
+launch_from = "bearC-1"
+count = 4
+spacing_km = 2.0
+agl_m = 60.0
+truth_label = "AS-15 KENT cruise missile"
+markings = "none (missile)"
+start = { lat = 67.0, lon = -166.5, alt_m = 3000.0, kmh = 760.0 }
+route = [
+  { lat = 66.4, lon = -160.0, alt_m = 60.0, kmh = 760.0 },
+  { lat = 65.2, lon = -152.0, alt_m = 60.0, kmh = 760.0 },
+  { lat = 64.67, lon = -147.1, alt_m = 60.0, kmh = 760.0, action = "remove" },
+]
+transponder = { system = "none" }
+
+[[flight]]
+id = "kal_cargo"
+type = "B747"
+callsign = "KOREAN 9061"
+side = "civil"
+spawn_t = 600.0
+truth_label = "Boeing 747F, Korean Air cargo (Seoul–Anchorage)"
+markings = "Korean Air cargo"
+start = { lat = 58.6, lon = -172.0, alt_m = 10600.0, kmh = 900.0 }
+route = [
+  { lat = 59.6, lon = -162.0, alt_m = 10600.0, kmh = 900.0 },
+  { lat = 61.17, lon = -149.99, alt_m = 900.0, kmh = 420.0, action = "land" },
+]
+transponder = { system = "atc", codes = { "3" = "2061" } }
+flight_plan = { kind = "IFR", mode3 = "2061", note = "R-20 eastbound, cleared through the emergency" }
+
+[[trigger]]
+id = "open"
+cond = { type = "time", t = 5.0 }
+actions = [{ do = "message", channel = "tty", sender = "ALASKAN NORAD REGION", ack = true, kind = "order", text = "DEFCON 2. ADW YELLOW. WEAPONS TIGHT. BEAR H REGIMENTS AIRBORNE FROM ANADYR. EXPECT CRUISE MISSILE ATTACK ON ALASKAN BASES. DARKSTAR AND SENTRY 2 ON STATION." }]
+
+[[trigger]]
+id = "war"
+cond = { type = "time", t = 840.0 }
+actions = [
+  { do = "set_var", name = "war", value = 1.0 },
+  { do = "hq", weapons_status = "FREE", alert = "RED", readiness = "DEFCON 1" },
+  { do = "authorize", ac = "bearA" },
+  { do = "message", channel = "tty", sender = "ALASKAN NORAD REGION", ack = true, kind = "order", priority = 2, text = "FLASH. AIR DEFENSE EMERGENCY DECLARED. ADW RED. WEAPONS FREE. SOVIET AIRCRAFT IN THE ADIZ ARE HOSTILE. DESTROY CARRIERS BEFORE LAUNCH." },
+]
+
+[[trigger]]
+id = "launch_a"
+cond = { type = "var", name = "launch_a", op = ">=", value = 1.0 }
+actions = [{ do = "spawn", flight = "alcm_a" }, { do = "message", channel = "voice", sender = "DARKSTAR", priority = 2, text = "DARKSTAR: multiple small fast returns separating from BEAR A, descending. Cruise missile launch!" }]
+
+[[trigger]]
+id = "launch_b"
+cond = { type = "var", name = "launch_b", op = ">=", value = 1.0 }
+actions = [{ do = "spawn", flight = "alcm_b" }, { do = "message", channel = "voice", sender = "SENTRY 2", priority = 2, text = "SENTRY 2: launch from BEAR B, four missiles heading east, low." }]
+
+[[trigger]]
+id = "launch_c"
+cond = { type = "var", name = "launch_c", op = ">=", value = 1.0 }
+actions = [{ do = "spawn", flight = "alcm_c" }, { do = "message", channel = "voice", sender = "DARKSTAR", priority = 2, text = "DARKSTAR: BEAR C has launched. Tracks heading for the interior." }]
+
+[[trigger]]
+id = "tin_jam"
+cond = { type = "time", t = 1200.0 }
+actions = [{ do = "radar_status", site = "tin_city", status = "degraded", db = 8.0, text = "TIN CITY: HEAVY NOISE JAMMING, RANGE REDUCED" }]
+
+[[objective]]
+id = "carriers"
+text = "Destroy at least three BEAR carriers"
+kind = "destroy_count"
+params = { ac = ["bearA", "bearB", "bearC"], min = 3 }
+points = 25
+
+[[objective]]
+id = "missiles"
+text = "Destroy at least six cruise missiles"
+kind = "destroy_count"
+params = { ac = ["alcm_a", "alcm_b", "alcm_c"], min = 6 }
+points = 25
+
+[[objective]]
+id = "anchorage"
+text = "No more than one cruise missile reaches the Anchorage defended area"
+kind = "max_in_zone"
+params = { ac = ["alcm_b"], zone = "anchorage_da", max = 1 }
+points = 15
+
+[[objective]]
+id = "awacs"
+text = "Keep both AWACS alive"
+kind = "not_destroyed"
+params = { ac = "awacs1" }
+points = 5
+
+[[objective]]
+id = "kal"
+text = "Do not shoot down the Korean cargo 747"
+kind = "not_destroyed"
+params = { ac = "kal_cargo" }
+points = 10
+penalty = 50
+
+[[objective]]
+id = "fratricide"
+text = "No fratricide"
+kind = "no_fratricide"
+points = 10
+penalty = 30
+
+[[objective]]
+id = "civil"
+text = "No civil losses"
+kind = "no_civil_losses"
+points = 10
+
+[[headline]]
+cond = { type = "var", name = "civil_losses", op = ">=", value = 1.0 }
+text = "AIRLINER LOST IN ALASKA AIR BATTLE"
+sub = "A Korean cargo jet was shot down amid the chaos of the attack."
+
+[[headline]]
+cond = { type = "time", t = 0.0 }
+text = "ALASKA HOLDS"
+sub = "Hypothetical: what the planners of the 1980s feared, and what they built to stop it."

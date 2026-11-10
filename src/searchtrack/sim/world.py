@@ -116,6 +116,9 @@ class World:
     cities: list[dict[str, Any]] = field(default_factory=list)
     pending_flights: dict[str, dict[str, Any]] = field(default_factory=dict)
     briefing: str = ""
+    exercise: bool = False                # exercise rules: kills are simulated and scored
+    faction_override: dict[str, Any] = field(default_factory=dict)
+    sun_offset_h: float = 0.0             # local solar time minus scenario clock
     intel: list[list[str]] = field(default_factory=list)
     headlines: list[dict[str, Any]] = field(default_factory=list)
     ids: dict[str, int] = field(default_factory=dict)
@@ -139,6 +142,9 @@ class World:
         self.catalog = catalog()
         self.theater = theater(self.theater_id)
         self.faction_def = self.catalog.factions[self.faction]
+        if self.faction_override:
+            import dataclasses
+            self.faction_def = dataclasses.replace(self.faction_def, **self.faction_override)
         self.rng = random.Random(self.seed)
         if self.rng_state:
             s = self.rng_state
@@ -205,6 +211,18 @@ class World:
 
     def mask_for(self, site) -> Optional[HorizonMask]:
         k = site.k_override or self.weather.k_factor
+        if site.carrier:
+            # airborne radar: smooth-Earth horizon from the aircraft's altitude (position independent)
+            hq = round(site.h_ant / 250.0) * 250.0
+            key = ("air", site.type_id, hq, round(k, 3))
+            m = self.masks.get(key)
+            if m is None:
+                rt = self.catalog.radars.get(site.type_id)
+                m = compute_mask(Terrain.flat(0.0, half_km=(rt.range_km if rt else 400.0) + 60.0, spacing=8.0),
+                                 0.0, 0.0, max(hq, 50.0), (rt.range_km if rt else 400.0) + 10.0,
+                                 land_sigma0_db=rt.clutter_db if rt else -20.0, sea_state=self.weather.sea_state, k=k)
+                self.masks[key] = m
+            return m
         key = (site.id, round(k, 3))
         m = self.masks.get(key)
         if m is None:
@@ -333,9 +351,29 @@ class World:
         site = self.radars[best.site_id]
         return True, f"Height request {tid} → {site.name} (queue {len(best.queue)})"
 
+    def sim_killed(self, victim: str) -> bool:
+        return self.vars.get(f"simkill_{victim}", 0.0) > 0.0
+
+    def local_hour(self, t: Optional[float] = None) -> float:
+        """Local solar time of day (hours) at the theater."""
+        hh, mm = (int(x) for x in self.start_clock[11:16].split(":"))
+        return (hh + mm / 60.0 + self.sun_offset_h + ((self.t if t is None else t) / 3600.0)) % 24.0
+
     def destroy(self, victim: str, cause: str, shooter: str = "", crash: bool = False) -> None:
         ac = self.aircraft.get(victim)
         if ac is None or ac.state != "airborne":
+            return
+        if self.exercise and not crash:
+            if self.sim_killed(victim):
+                return
+            if ac.side == "civil":
+                self.vars["civil_losses"] = self.vars.get("civil_losses", 0.0) + 1
+                self.alert(f"EXERCISE VIOLATION: simulated attack on CIVIL aircraft {ac.callsign}", victim, 2)
+            self.vars[f"simkill_{victim}"] = 1.0
+            self.stats.sim_kills.append([victim, shooter or cause])
+            self.vars["sim_kills"] = self.vars.get("sim_kills", 0.0) + 1
+            self.alert(f"EXERCISE: {ac.callsign} assessed KILLED by {shooter or cause} (simulated)", victim, 0)
+            self.log_event("kill", f"Simulated kill: {ac.callsign} by {shooter or cause}", victim)
             return
         ac.state = "destroyed"
         ac.destroyed_by = cause
@@ -406,6 +444,8 @@ class World:
         for m in list(self.missiles.values()):
             sam.missile_step(self, m, dt)
         for site in self.radars.values():
+            if site.carrier:
+                self._carry(site)
             self._reliability(site)
             paints, reps = radar.sweep(self, site, dt)
             if paints:
@@ -445,6 +485,21 @@ class World:
             scenario.end(self, "Shift complete", "time")
 
     # ------------------------------------------------------------ subsystems
+    def _carry(self, site: RadarSite) -> None:
+        """Airborne radar rides with its aircraft; off the air if the aircraft is not airborne."""
+        ac = self.aircraft.get(site.carrier)
+        if ac is None or ac.state != "airborne":
+            if site.status != "down":
+                site.status = "down"
+                site.fail_t = 1e12
+                self.unit_report(site, "Airborne radar off station")
+            return
+        site.x, site.y, site.elev, site.mast_m = ac.x, ac.y, ac.alt, 0.0
+        if site.status == "down" and site.fail_t >= 1e11:
+            site.status = "ok"
+            site.fail_t = -1.0
+            self.unit_report(site, "Airborne radar on station")
+
     def _auto_height(self) -> None:
         for trk in self.tracks.values():
             if trk.lost or trk.hf_requested or trk.jammer:

@@ -22,6 +22,8 @@ SPECS: dict[str, dict] = {
                   tail=dict(span=0.66, pos=0.83, root=0.13, sweep=45), fins=2),
     "B-52G": dict(L=48.5, S=56.4, sweep=35, wing_pos=0.34, root=0.20, taper=0.33, fw=0.06,
                   tail=dict(span=0.30, pos=0.88, root=0.08, sweep=35), pods=[0.30, 0.60], pod_twin=True),
+    "Vulcan B2": dict(L=30.5, S=33.8, sweep=50, kind="delta", wing_pos=0.30, root=0.62, fw=0.08, tail=None,
+                      root_engines=True),
     "B-47E": dict(L=33.5, S=35.4, sweep=35, wing_pos=0.35, root=0.17, taper=0.35, fw=0.06,
                   tail=dict(span=0.35, pos=0.88, root=0.09, sweep=35), pods=[0.30, 0.75], pod_twin=False),
     "KC-135A": dict(L=41.5, S=39.9, sweep=35, wing_pos=0.36, root=0.18, taper=0.30, fw=0.08,

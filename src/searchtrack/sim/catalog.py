@@ -51,7 +51,11 @@ class RadarType:
     lobing: bool = False             # strong ground-reflection lobing (VHF)
     channels: int = 1
     freq_agile: bool = False
-    height: str = "none"             # none | vbeam | nod
+    height: str = "none"             # none | vbeam | 3d | nod
+    pulse_doppler: bool = False      # high-PRF Doppler processing: look-down over clutter
+    pd_rejection_db: float = 55.0    # clutter rejection outside the Doppler notch
+    pd_notch_mps: float = 28.0       # radial speeds below this fall in the clutter notch
+    airborne: bool = False
     height_sigma_m0: float = 300.0
     height_sigma_per_km: float = 2.0
     range_sigma_km: float = 0.5

@@ -6,7 +6,7 @@ from __future__ import annotations
 import math
 from typing import TYPE_CHECKING, Optional
 
-from . import intercept
+from . import flight as flight_mod, intercept
 from .flight import cruise_speed, fuel_flow, ground_velocity, max_speed, mil_speed, react_to_intercept
 from .geo import FT, angle_diff, bearing_deg, heading_vec, radar_horizon_km
 from .state import Aircraft, Flight, Missile, PendingOrder, Transponder
@@ -362,6 +362,8 @@ def _airborne_radar(world: "World", fl: Flight, lead: Aircraft, at, est) -> None
             best, bscore = c, score
     if best is not None and world.rng.random() < 0.45:
         fl.contact, fl.contact_t = best.id, world.t
+        world.stats.locks.setdefault(best.id, world.t)
+        world.vars[f"locked_{best.id}"] = 1.0
         if fl.state in ("vector", "airborne", "hold"):
             fl.state = "contact"
         d_nm = math.hypot(best.x - lead.x, best.y - lead.y) / 1.852
@@ -407,13 +409,16 @@ def _terminal(world: "World", fl: Flight, lead: Aircraft, at, c: Aircraft, dt: f
     zoom = max(at.zoom_ceiling_m, at.ceiling_m)
     # pilot steers on his own radar/visual picture (no ground delay)
     if fl.state in ("contact", "judy", "vid", "shadow", "attack"):
-        if fl.task in ("id", "shadow") or (fl.task == "intercept" and not fl.weapons_free):
+        if fl.task in ("id", "shadow", "force_land") or (fl.task == "intercept" and not fl.weapons_free) or \
+                world.sim_killed(c.id):
             ux, uy = (cvx, cvy)
             spd = math.hypot(ux, uy)
             if spd > 1e-6:
                 ux, uy = ux / spd, uy / spd
             # trail point: inside VID distance until identified, then a comfortable shadow
             trail = (0.42 if world.weather.night else 1.1) if not fl.vid_done else 2.0
+            if fl.task == "force_land":
+                trail = 0.35                  # alongside, where the crew can see the signals
             tx, ty = c.x - ux * trail, c.y - uy * trail
             close = math.hypot(tx - lead.x, ty - lead.y)
             if close > 3.0:
@@ -449,6 +454,19 @@ def _terminal(world: "World", fl: Flight, lead: Aircraft, at, c: Aircraft, dt: f
         world.radio(fl, "only debris here" if world.faction_def.id == "US" else "I see only falling debris.")
     if fl.vid_done and fl.state in ("contact", "judy", "vid"):
         fl.state = "shadow"
+    # ---- "follow me": rock the wings and flash the lights alongside, at night with the landing lights
+    key = f"sig_{fl.id}_{c.id}"
+    if fl.task == "force_land" and d3 > 1.4 and world.vars.get(key, 0.0) > 0.0:
+        world.vars[key] = max(0.0, world.vars[key] - 2.0 * dt)     # signals only work in steady formation
+    if fl.task == "force_land" and fl.vid_done and c.kind == "aircraft" and d3 <= 1.4 and c.mission is not None \
+            and not c.mission.signaled:
+        world.vars[key] = world.vars.get(key, 0.0) + dt
+        need_s = 120.0 if world.weather.night else 60.0
+        if world.vars[key] >= need_s:
+            world.vars[key] = -240.0          # try again in a few minutes if ignored
+            rep = flight_mod.signal_to_land(world, c, fl.callsign)
+            world.radio(fl, f"signals given — {rep}" if world.faction_def.id == "US" else f"Signals given: {rep}.",
+                        priority=1)
     # ---- weapons
     if fl.task == "ram":
         _ram(world, fl, lead, c, d3)
@@ -478,6 +496,16 @@ def _complete_vid(world: "World", fl: Flight, c: Aircraft) -> None:
 
 
 def _attack(world: "World", fl: Flight, lead: Aircraft, at, c: Aircraft, d3: float) -> None:
+    if world.sim_killed(c.id):
+        return
+    if c.side == world.own_side and fl.tally and d3 < 2.5:
+        # the pilot can see it: one of ours. Break off and look again.
+        if world.vars.get(f"ff_{fl.id}_{c.id}", 0.0) <= 0.0:
+            world.vars[f"ff_{fl.id}_{c.id}"] = 1.0
+            world.radio(fl, "that's a friendly, breaking off" if world.faction_def.id == "US" else
+                        "This is our aircraft! Breaking off.", priority=1)
+        fl.contact = ""
+        return
     ok, why = world.can_engage_truth(c.id, fl)
     if not ok:
         return
@@ -499,6 +527,24 @@ def _attack(world: "World", fl: Flight, lead: Aircraft, at, c: Aircraft, d3: flo
             continue
         if abs(c.alt - lead.alt) > 2500.0:
             continue
+        if wt.kind == "gun":
+            # a gun burst is resolved at once: hit probability falls off with range
+            lead.weapons[wid] = cnt - 1
+            world.stats.aam_shots += 1
+            fl.shots += 1
+            fl.state = "attack"
+            world.vars[key] = world.t + 6.0
+            tvx, tvy = ground_velocity(world, c)
+            slow = 2.2 if math.hypot(tvx, tvy) < 80.0 else 1.0      # a drifting balloon or a light aircraft
+            p = min(0.9, wt.pk * slow * max(0.15, min(1.2, 1.25 - d3 / max(wt.max_km, 0.1))))
+            hit = world.rng.random() < p
+            world.radio(fl, ("guns, guns" if world.faction_def.id == "US" else "Firing cannon.") +
+                        (" — hits!" if hit else ""), priority=1)
+            world.log_event("weapon", f"{fl.callsign} fired a {wt.name} burst at {c.callsign or c.id}"
+                            f"{' — hit' if hit else ' — missed'}", fl.id)
+            if hit:
+                world.destroy(c.id, f"gunfire from {fl.callsign}", fl.id)
+            return
         shots = min(cnt, wt.salvo)
         lead.weapons[wid] = cnt - shots
         for i in range(shots):

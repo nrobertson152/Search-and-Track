@@ -51,7 +51,8 @@ RU: dict[str, str] = {
     "SURVEILLANCE": "ОБНАРУЖЕНИЕ", "IDENTIFICATION": "ОПОЗНАВАНИЕ", "HEIGHT": "ВЫСОТОМЕР", "TECHNICAL": "ТЕХНИКА",
     "SAVE (F5)": "ЗАПИСЬ", "LOAD (F9)": "ЗАГРУЗКА", "END SHIFT": "СДАТЬ СМЕНУ",
     # ---- menus & scenes
-    "RESUME": "ПРОДОЛЖИТЬ", "SAVE": "ЗАПИСЬ", "LOAD": "ЗАГРУЗКА", "OPERATOR'S MANUAL": "НАСТАВЛЕНИЕ",
+    "RESUME": "ПРОДОЛЖИТЬ", "SAVE": "ЗАПИСЬ", "LOAD": "ЗАГРУЗКА", "< PREV": "< ПРЕД.", "NEXT >": "СЛЕД. >",
+    "OPERATOR'S MANUAL": "НАСТАВЛЕНИЕ",
     "SOUND": "ЗВУК", "END SHIFT → DEBRIEF": "СДАТЬ СМЕНУ", "QUIT TO TITLE": "ВЫХОД", "SETTINGS": "НАСТРОЙКИ",
     "TAKE THE WATCH >>": "ЗАСТУПИТЬ НА ДЕЖУРСТВО", "BACK": "НАЗАД", "SUMMARY": "ИТОГИ",
     "DETECTION & ID": "ОБНАРУЖЕНИЕ", "TIMELINE": "ХРОНОЛОГИЯ", "BACK TO TITLE": "В НАЧАЛО",

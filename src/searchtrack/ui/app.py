@@ -192,6 +192,14 @@ def screenshot(path: str, sid: str | None, seconds: float, console: int, mode: s
         app.start_briefing(sid)
         app.scene.t = 100.0
         app.frame([])
+    elif scene == "manual":
+        from .manual import ManualScene
+        from .theme import theme_for
+        app.gui.set_theme(theme_for(faction or "US"))
+        app.push(ManualScene(app, None, chapter=console))
+        app.scene.scroll = seconds if seconds < 5000 else 0
+        for _ in range(2):
+            app.frame([])
     elif scene in ("campaign", "alert", "operations"):
         from .campaign import AlertDutyScene, CampaignScene
         from .scenes import OperationsScene

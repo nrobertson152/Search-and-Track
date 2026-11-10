@@ -1,0 +1,257 @@
+id = "su_training_jamming"
+title = "Training: Jamming Drill"
+subtitle = "4th Separate Air Defense Army — exercise, instructor-led"
+summary = "A barrage jammer blinds the centimetric radars. Find the target with the metric-band companies, keep the board alive, and guide a pair to it from the board."
+faction = "USSR"
+kind = "training"
+photo = ["Tu-16", "MiG-17PF"]
+photo_caption = "Ту-16 с аппаратурой РЭБ · Tu-16 with jamming equipment"
+era = "1960s"
+difficulty = 1
+order = 3
+theater = "middle_urals"
+start = "1962-02-20T12:00:00"
+tz = "MSK"
+duration_min = 70
+seed = 220
+reliability = 50.0
+exercise = true
+
+briefing = """
+COMMAND POST, 4th SEPARATE AIR DEFENSE ARMY — TACTICAL EXERCISE, ELECTRONIC WARFARE
+
+A Tu-16 with an SPS noise jammer will play the enemy, coming from the north-west toward Sverdlovsk with its jammer running. It is a TRAINING target.
+
+What you will learn:
+  1. What a barrage jammer does to a scope.
+  2. Frequency diversity: the jammer covers the centimetric band, not the metric one. Our radar positions mix both on purpose.
+  3. Keeping the plotting board alive from the radars that can still see.
+  4. Guiding a pair from the board when the guidance-point radars are blind.
+
+The instructor's card is pinned to the plotting board.
+"""
+
+[automation]
+surveil = true
+ident = false
+height = false
+tech = true
+
+[weather]
+k_factor = 1.333
+wind_from = 300.0
+wind_kmh = 45.0
+ceiling_m = 4000.0
+visibility_km = 25.0
+night = false
+
+[hq]
+name = "4th ARMY CP"
+readiness = "INCREASED"
+weapons_status = "HOLD"
+[hq.policy]
+response_s = [40.0, 80.0]
+declare_hostile = "evidence"
+engage = "deny"
+iff_period = "FEB"
+track_start = 6101
+
+[[link]]
+id = "T_gp"
+name = "Guidance points"
+[[link]]
+id = "T_tagil"
+name = "Nizhny Tagil telephone"
+[[link]]
+id = "T_kamensk"
+name = "Kamensk telephone"
+[[link]]
+id = "T_zlatoust"
+name = "Zlatoust telephone"
+[[link]]
+id = "T_kyshtym"
+name = "Kyshtym telephone"
+[[link]]
+id = "A_koltsovo"
+name = "Koltsovo line"
+delay_s = 15.0
+
+[[radar]]
+site = "koltsovo_gp"
+type = "P-30"
+gci = true
+link = "T_gp"
+[[radar]]
+site = "shagol_gp"
+type = "P-20"
+gci = true
+link = "T_gp"
+[[radar]]
+site = "rlr_tagil"
+type = "P-10"
+link = "T_tagil"
+[[radar]]
+site = "rlr_zlatoust"
+type = "P-20"
+link = "T_zlatoust"
+[[radar]]
+site = "rlr_kamensk"
+type = "P-12"
+link = "T_kamensk"
+[[radar]]
+site = "rlr_kyshtym"
+type = "P-30"
+link = "T_kyshtym"
+
+[[airbase]]
+site = "koltsovo"
+link = "A_koltsovo"
+[[airbase]]
+site = "shagol"
+
+[[squadron]]
+id = "kol_iap"
+name = "Koltsovo IAP"
+base = "koltsovo"
+type = "MiG-17PF"
+callsign = "5"
+ready = { "3" = 2, "7" = 2 }
+pilots = 4
+iff_codes = { period = "AUG" }
+
+[[flight]]
+id = "drone"
+type = "Tu-16"
+callsign = "TRAINING TARGET"
+side = "blue"
+spawn_t = 15.0
+truth_label = "Tu-16 with SPS jammer (exercise target)"
+markings = "red star, Long-Range Aviation"
+jammer = "ECM-SPS"
+jamming = true
+start = { lat = 59.0, lon = 57.2, alt_m = 8500.0, kmh = 760.0 }
+route = [
+  { lat = 58.1, lon = 59.2, alt_m = 8500.0, kmh = 760.0 },
+  { lat = 57.2, lon = 60.5, alt_m = 8500.0, kmh = 740.0 },
+  { lat = 56.3, lon = 62.6, alt_m = 9000.0, kmh = 760.0 },
+  { lat = 55.6, lon = 65.4, alt_m = 9000.0, kmh = 760.0, action = "remove" },
+]
+transponder = { system = "kremniy", on = false, codes = { period = "FEB" } }
+
+[[traffic]]
+count = 3
+routes = [["Sverdlovsk", "Chelyabinsk"], ["Sverdlovsk", "Perm"], ["Sverdlovsk", "Tyumen"]]
+types = ["Il-14", "Il-18"]
+alt_m = [3000.0, 6000.0]
+t_window = [0.0, 3000.0]
+transponder = "none"
+plans = false
+callsigns = ["AEROFLOT"]
+
+# ---------------------------------------------------------------- instructor
+[[lesson]]
+title = "Noise on the scope"
+text = "The Tu-16 is running a barrage jammer. On the board you will see nothing yet: look at the guidance point's own scope. The noise paints a bright spoke along the jammer's bearing and hides everything behind it."
+action = "Press M, or the RADAR SCOPE key"
+mode = "scope"
+highlight = ["RADAR SCOPE"]
+done = { type = "ui", event = "mode_scope" }
+
+[[lesson]]
+title = "Another band"
+text = "Koltsovo's P-30 works in the centimetric band, and so does the jammer. The P-12 of the Kamensk radar company and the P-10 at Nizhny Tagil work on metre waves, far outside its reach. Look at Kamensk."
+action = "Step to the Kamensk radar company with < and > (or , and .)"
+mode = "scope"
+highlight = ["<", ">"]
+mark = "drone"
+mark_label = "JAMMER"
+mark_label_ru = "ПОСТАНОВЩИК ПОМЕХ"
+done = { type = "ui", event = "scope_rlr_kamensk" }
+
+[[lesson]]
+title = "The board holds"
+text = "The metric-band companies go on telephoning in their targets, so the board keeps the jammer: a target number will be allotted from their reports. This is why every PVO radar position mixes bands."
+action = "Press M twice for the BOARD and wait for the target number"
+mode = "map"
+console = "TRACKS"
+highlight = ["BOARD", "TABLE tracks"]
+mark = "drone"
+mark_label = "TRAINING TARGET"
+mark_label_ru = "УЧЕБНАЯ ЦЕЛЬ"
+done = { type = "tracked", ac = "drone", skin = true }
+
+[[lesson]]
+title = "Identify"
+text = "It is our Tu-16, playing the enemy: on the board, a TRAINING target."
+action = "TRACKS F1: select its target number, press TRAINING"
+console = "TRACKS"
+highlight = ["TRAINING", "TABLE tracks"]
+done = { type = "identity", ac = "drone", is = ["faker"], skin = true }
+
+[[lesson]]
+title = "Scramble"
+text = "Send a pair from Koltsovo for an identification pass. The guidance-point radars are centimetric and jammed, so the pair will be steered from the board, on reports minutes old."
+action = "WEAPONS F2: ×2, ID PASS, then SCRAMBLE ON the target"
+console = "WEAPONS"
+highlight = ["×2", "ID PASS", "SCRAMBLE*"]
+mark = "koltsovo"
+mark_label = "KOLTSOVO IAP"
+mark_label_ru = "КОЛЬЦОВО · ИАП"
+done = { type = "scrambled", n = 1 }
+
+[[lesson]]
+title = "Guidance from the board"
+text = "Each vector is computed from the board, extrapolated over the reporting delay. The last few kilometres are up to the pilots' own eyes and radar. Speed up time while they fly."
+action = "Press 8× (or +) and watch the pair close"
+highlight = ["8×", "TABLE fl"]
+mark = "drone"
+done = { type = "vid", ac = "drone" }
+
+[[lesson]]
+title = "Return to base"
+text = "Visual identification complete: our Tu-16. Bring the pair home."
+action = "WEAPONS F2: select the flight, press RTB"
+console = "WEAPONS"
+highlight = ["RTB", "TABLE fl"]
+done = { type = "any", of = [{ type = "flight", state = "rtb" }, { type = "flights_home" }] }
+
+[lesson_end]
+title = "Exercise complete"
+text = "A barrage jammer blinds one band, not all of them. Many radars on many wavelengths kept the board alive, and the board guided the pair. That is the training course complete."
+reason = "Exercise complete"
+
+# ---------------------------------------------------------------- scoring
+[[objective]]
+id = "track"
+text = "Hold the jammer on the board"
+kind = "identify"
+params = { ac = "drone", correct = ["pending", "unknown", "faker", "friend"], from = "track" }
+points = 30
+
+[[objective]]
+id = "ident"
+text = "Identify it as a TRAINING target"
+kind = "identify"
+params = { ac = "drone", correct = ["faker"], wrong = ["hostile"] }
+points = 20
+
+[[objective]]
+id = "vid"
+text = "Identify it visually"
+kind = "vid"
+params = { ac = "drone" }
+points = 30
+
+[[objective]]
+id = "nociv"
+text = "No civil aircraft engaged"
+kind = "no_civil_losses"
+points = 10
+penalty = 100
+
+[[objective]]
+id = "frat"
+text = "No fratricide"
+kind = "no_fratricide"
+points = 10
+penalty = 50

@@ -240,7 +240,7 @@ title = "Go and look"
 text = "Higher authority wants evidence: a visual identification, an active jammer, or a hostile act. Send a pair of Voodoos for an identification pass. Weapons stay on HOLD."
 action = "WEAPONS F2: ×2, ID PASS, then SCRAMBLE ON the unknown"
 console = "WEAPONS"
-highlight = ["×2", "ID PASS", "SCRAMBLE ON*"]
+highlight = ["×2", "ID PASS", "SCRAMBLE*"]
 mark = "dow"
 mark_label = "DOW AFB · 75th FIS"
 done = { type = "scrambled", n = 1 }

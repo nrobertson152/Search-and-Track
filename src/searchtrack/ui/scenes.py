@@ -8,6 +8,7 @@ import pygame
 from ..sim import aar, commands, doctrine, scenario, tracking
 from ..sim.world import DT
 from .lesson import CONSOLE_TABS, LessonCard
+from .manual import ManualScene
 from .consoles import (CommsConsole, IntelConsole, MissilesConsole, RadarNetConsole, StatusConsole, TECH_NOTES,
                        TracksConsole, WeaponsConsole)
 from . import fx
@@ -24,22 +25,6 @@ HOUSING_R = R(4, 56, 990, 808)          # the main display console
 MAP_R = R(22, 70, 954, 690)             # its tube
 CONSOLE_R = R(1000, 94, 596, 770)       # the operator console on the right
 TICKER_R = R(8, 870, 1584, 26)
-
-CONTROLS_HELP = """CONTROLS
-Mouse: left-click selects tracks, flights and sites. On the US display, clicking empty space places the light gun. Right-drag pans the display; the wheel zooms.
-Space: pause / resume.   + / − : time compression.   M: switch situation display ↔ radar scope.
-F1 tracks · F2 weapons · F3 missiles · F4 radar net · F5 save · F6 comms · F7 intel · F8 status · F9 load
-I: initiate a track at the light gun (US).   H: height request.   Tab: next track.   A: acknowledge all.
-C: coverage overlay.   [ / ] : coverage altitude.   , / . : scope radar.   R: scope range.   Esc: menu.
-
-THE CORE LOOP
-1. Returns appear. Initiate a track (US) or wait for the target number from the radar companies (USSR).
-2. Get an altitude: a height finder (US) or the V-beam estimate (USSR).
-3. Identify: IFF, flight-plan correlation (US: ±5 min and 10/20 nm), behaviour, visual identification.
-4. Commit interceptors: choose the task (ID pass / intercept / shadow) and the geometry, and watch the predicted intercept point and fuel.
-5. Weapons only under the rules of engagement. Ask higher authority, and expect them to ask for evidence.
-6. Keep the network healthy: radar faults, telephone lines, the AN/FSQ-7 duplex, alerts that need acknowledging.
-"""
 
 
 class Scene:
@@ -308,30 +293,6 @@ class OperationsScene(Scene):
             if gui.button(R(1280, 806, 260, 44), "BRIEFING >>", color=th.lamp_green, size=15):
                 self.app.start_briefing(cur["id"])
         if gui.button(R(60, 820, 160, 40), "BACK", size=13) or any(e.key == pygame.K_ESCAPE for e in gui.keys):
-            self.app.pop()
-
-
-# ====================================================================== MANUAL
-class ManualScene(Scene):
-    def __init__(self, app, back):
-        super().__init__(app)
-        self.back = back
-        self.page = 0
-
-    def draw(self, screen):
-        gui = self.app.gui
-        th = gui.theme
-        screen.fill((10, 12, 12))
-        inner = gui.panel(R(40, 30, W - 80, H - 60), "OPERATOR'S MANUAL", "Search and Track")
-        pages = [CONTROLS_HELP, TECH_NOTES]
-        for i, lab in enumerate(["CONTROLS & CORE LOOP", "RADAR & TECHNICAL NOTES"]):
-            if gui.button(R(inner.x + i * 260, inner.y, 250, 28), lab, lit=self.page == i):
-                self.page = i
-        body = R(inner.x, inner.y + 40, inner.w, inner.h - 90)
-        gui.glass(body)
-        gui.wrapped(body.inflate(-24, -16), pages[self.page], 15, th.text, "tty", scroll_id=f"man{self.page}")
-        if gui.button(R(inner.right - 160, inner.bottom - 40, 160, 34), "BACK", size=13) or \
-                any(e.key == pygame.K_ESCAPE for e in gui.keys):
             self.app.pop()
 
 

@@ -193,7 +193,7 @@ title = "Commit"
 text = "Send a pair of Voodoos from Dow for an identification pass on the skin track. Keep the radars on different channels and the track will hold."
 action = "WEAPONS F2: ×2, ID PASS, STERN, then SCRAMBLE ON the track"
 console = "WEAPONS"
-highlight = ["×2", "ID PASS", "STERN", "SCRAMBLE ON*"]
+highlight = ["×2", "ID PASS", "STERN", "SCRAMBLE*"]
 mark = "dow"
 mark_label = "DOW AFB · 75th FIS"
 done = { type = "scrambled", n = 1 }

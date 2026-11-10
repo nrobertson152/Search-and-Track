@@ -57,7 +57,7 @@ class LessonCard:
             hl.add(CONSOLE_TABS[CONSOLE_INDEX[con]])
         mode = ls.get("mode")
         if mode and scene.mode != mode:
-            hl.add(MODE_KEYS[mode])
+            hl.add("BOARD" if mode == "map" and scene.world.faction == "USSR" else MODE_KEYS[mode])
         return hl
 
     # ------------------------------------------------------------ marks on the display

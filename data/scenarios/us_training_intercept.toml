@@ -175,7 +175,7 @@ title = "Scramble"
 text = "Dow AFB keeps F-101B Voodoos of the 75th FIS on five-minute alert. Commit a pair for an identification pass: the computer brings them up behind the target, where the pilots can read its markings."
 action = "WEAPONS F2: ×2, ID PASS, STERN, then SCRAMBLE ON the track"
 console = "WEAPONS"
-highlight = ["×2", "ID PASS", "STERN", "SCRAMBLE ON*"]
+highlight = ["×2", "ID PASS", "STERN", "SCRAMBLE*"]
 mark = "dow"
 mark_label = "DOW AFB · 75th FIS"
 done = { type = "scrambled", n = 1 }

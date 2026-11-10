@@ -50,6 +50,7 @@ def scramble(world: "World", sq_id: str, n: int, task: str, target: str = "", ge
             delay = max(delay, float(b) * 60.0 * world.rng.uniform(0.55, 0.85))
     sq.airborne += taken
     sq.pilots -= taken
+    delay *= world.vars.get("scramble_factor", 1.0)
     delay += (link.delay_s if link else 10.0)
     no = sq.next_no
     sq.next_no += 1

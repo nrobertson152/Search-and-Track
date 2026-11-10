@@ -491,6 +491,7 @@ def ask(w: "World", kind: str, title: str, text: str, options: list[str], defaul
         ref: str = "", effects: Optional[dict[str, list]] = None, data: Optional[dict[str, Any]] = None) -> Decision:
     b = w.battle
     b.decision_seq += 1
+    timeout_s *= w.vars.get("decision_time", 1.0)          # difficulty: more (or less) time to think
     d = Decision(id=b.decision_seq, t=w.t, kind=kind, title=title, text=text, options=list(options), default=default,
                  t_expire=w.t + timeout_s, ref=ref, data=dict(data or {}, effects=dict(effects or {})))
     b.decisions.append(d)

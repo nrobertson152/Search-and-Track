@@ -46,6 +46,8 @@ class App:
         self.settings = self.load_settings()
         self.audio = Audio(enabled=sound and not headless)
         self.audio.volume = float(self.settings.get("volume", 0.7))
+        from .music import Music
+        self.music = Music(self.audio, float(self.settings.get("music", 0.5)))
         self.gui = Gui(self.screen, US, self.audio)
         self.gui.lang_mode = "en"     # every console and screen is in English; only the PVO board is lettered in Russian
         self.scenes: list = []
@@ -181,6 +183,7 @@ class App:
         sc.update(self.dt)
         sc.draw(self.screen)
         self.gui.end()
+        self.music.update(self.dt)
 
     def run(self) -> None:
         while self.running:

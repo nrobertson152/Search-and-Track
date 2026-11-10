@@ -98,6 +98,9 @@ class TitleScene(Scene):
 
     def update(self, dt):
         self.t += dt
+        mu = self.app.music
+        if mu.faction != self.faction or mu.mode != "title":
+            mu.play(self.faction, "title")
 
     def draw(self, screen):
         gui = self.app.gui
@@ -386,6 +389,7 @@ class BriefingScene(Scene):
         self.orders = None
         self.extras = None
         app.audio.play("tty")
+        app.music.play(self.world.faction, "brief")
 
     def update(self, dt):
         self.t += dt
@@ -471,15 +475,21 @@ class BriefingScene(Scene):
                     stt[s.type_id] = stt.get(s.type_id, 0) + 1
             gui.label((fr.x, fr.y + 36), "MISSILES: " + ", ".join(f"{v}× {k}" for k, v in stt.items()), 12,
                       (200, 192, 170), "eng_r")
+        from ..sim import difficulty
+        level = self.app.settings.get("difficulty", "regular")
+        gui.label((1560, 786), f"DIFFICULTY: {level.upper()} (settings)", 11, (170, 164, 140), "eng_r", "right")
         if self.world.battle.active:
             if gui.button(R(1260, 806, 300, 54), "TAKE COMMAND >>", color=th.lamp_green, size=15,
                           tip="Command the defence: the staff runs the routine, you make the calls."):
+                difficulty.apply(self.world, level)
                 self.app.start_command(self.world)
             if gui.button(R(1090, 812, 160, 44), "SPECTATE", size=13,
                           tip="Watch the battle unfold with both sides on their own; take command at any time."):
+                difficulty.apply(self.world, level)
                 self.world.battle.spectator = True
                 self.app.start_command(self.world)
         elif gui.button(R(1260, 806, 300, 54), "TAKE THE WATCH >>", color=th.lamp_green, size=15):
+            difficulty.apply(self.world, level)
             self.app.start_command(self.world)
         if gui.button(R(920, 812, 150, 44), "BACK", size=13) or any(e.key == pygame.K_ESCAPE for e in gui.keys):
             self.app.pop()
@@ -763,6 +773,14 @@ class CommandScene(Scene):
     def update(self, dt):
         w = self.world
         self.fps = 0.9 * self.fps + 0.1 * (1.0 / max(dt, 1e-3))
+        self._music_t = getattr(self, "_music_t", 0.0) + dt
+        if self._music_t > 1.0:
+            from .music import intensity
+            self._music_t = 0.0
+            mu = self.app.music
+            if mu.mode not in (0, 1, 2) or mu.faction != w.faction:
+                mu.play(w.faction, 0)
+            mu.set_intensity(intensity(w) if not w.ended else 0)
         if self.menu:
             return
         if self.speed > 0 and not w.ended:
@@ -1383,6 +1401,7 @@ class DebriefScene(Scene):
         self.news = headlines(world, self.rep)
         self.on_done = on_done
         app.audio.play("tty")
+        app.music.play(world.faction, "end")
 
     def update(self, dt):
         snaps = self.world.stats.truth_snaps

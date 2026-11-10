@@ -232,3 +232,19 @@ def test_granit_salvo_needs_a_fresh_fix():
     assert naval.ship_salvo(w, act) == 6
     assert naval.ship_salvo(w, act) == 0                          # one salvo only
     assert sum(1 for a in w.aircraft.values() if a.type_id == "SS-N-19") == 6
+
+
+def test_difficulty_scales_the_raids_and_the_help_once():
+    from searchtrack.sim import difficulty
+    easy = scenario.build_world("us_battle_bering", seed=1)
+    difficulty.apply(easy, "recruit")
+    assert easy.battle.groups["backfire_a"].n == 4 and easy.automation["tech"]
+    assert easy.vars["decision_time"] == 2.0
+    difficulty.apply(easy, "veteran")                             # applied once: a loaded game keeps it
+    assert easy.battle.groups["backfire_a"].n == 4
+    hard = scenario.build_world("us_battle_bering", seed=1)
+    difficulty.apply(hard, "veteran")
+    assert hard.battle.groups["backfire_a"].n == 8
+    watch = scenario.build_world("us_northern_vigil", seed=1)
+    difficulty.apply(watch, "veteran")
+    assert not any(watch.automation.values())

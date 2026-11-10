@@ -118,7 +118,8 @@ class LessonCard:
             pygame.draw.circle(s, c, (sx, sy), rad, 2)
         pygame.draw.circle(s, col, (sx, sy), 12, 2)
         lab = ls.get("mark_label", "")
-        if scene.world.faction == "USSR" and gui.lang_mode != "en" and ls.get("mark_label_ru"):
+        if scene.world.faction == "USSR" and scene.mode == "map" and scene.map.lang_mode == "ru" \
+                and ls.get("mark_label_ru"):                 # the plotting board is lettered in Russian
             lab = ls["mark_label_ru"]
         if lab:
             lx, ly = sx + 20, sy - 30
@@ -231,15 +232,13 @@ class LessonCard:
         age = gui.time - self.flash_t
         if 0 <= age < 1.6 and not ls.get("final"):
             a = int(255 * min(1.0, (1.6 - age) / 0.6))
-            st = gui.cached(("lesson_ok", ussr), lambda: cinema.stamp("ВЫПОЛНЕНО" if ussr else "DONE",
-                                                                    GREEN, 22, -8.0, seed=5))
+            st = gui.cached(("lesson_ok",), lambda: cinema.stamp("DONE", GREEN, 22, -8.0, seed=5))
             st.set_alpha(a)
             s.blit(st, (r.right - st.get_width() - 14, r.y + head_h + 4))
             st.set_alpha(255)
         if ls.get("final"):
-            st = gui.cached(("lesson_final", ussr), lambda: cinema.stamp(
-                "ЗАЧЁТ" if ussr else "LESSON COMPLETE", RED, 24, -7.0,
-                sub="EXERCISE PASSED" if not ussr else "PASSED", seed=9))
+            st = gui.cached(("lesson_final",), lambda: cinema.stamp(
+                "LESSON COMPLETE", RED, 24, -7.0, sub="EXERCISE PASSED", seed=9))
             s.blit(st, (r.right - st.get_width() - 10, r.bottom - st.get_height() - 4))
         # the clip
         cx = x + width - 30

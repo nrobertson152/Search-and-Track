@@ -515,9 +515,9 @@ class RadarNetConsole(Console):
         colw = inner.w // 2 - 6
         lx = inner.x
         # ---- left: controls
-        gui.label((lx, y), s.name_ru if (gui.ussr and gui.lang_mode != "en" and s.name_ru) else s.name, 14,
+        gui.label((lx, y), s.name, 14,
                   th.engraving, "eng")
-        gui.label((lx, y + 17), f"{rt.name_ru if (gui.ussr and rt.name_ru) else rt.id} · {rt.band} {rt.freq_mhz:.0f} MHz "
+        gui.label((lx, y + 17), f"{rt.id} · {rt.band} {rt.freq_mhz:.0f} MHz "
                   f"{rt.peak_kw:,.0f} kW {rt.pulse_us:g} µs PRF {rt.prf:.0f} · {rt.az_beam_deg:g}°", 11,
                   th.engraving_dim, "eng_r")
         yy = y + 34

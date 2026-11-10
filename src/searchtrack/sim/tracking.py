@@ -35,17 +35,27 @@ def route_reports(world: "World", site, reports: list[Report]) -> None:
         manual_company(world, site, reports, link_up)
 
 
-def grid_label(world: "World", x: float, y: float) -> str:
+# the same letters transliterated, for consoles and reports (the board itself is lettered in Cyrillic)
+LAT = ["A", "B", "V", "G", "D", "E", "ZH", "I", "K", "L", "M", "N", "P", "R", "S", "T", "U", "F", "KH", "TS", "CH",
+       "SH", "EH", "YU", "YA"]
+
+
+def grid_letter(world: "World", x: float, y: float, cyrillic: bool = False) -> str:
+    """Letter of the 100 km square of the PVO grid that contains (x, y)."""
+    big = world.faction_def.grid_km * 10.0
+    i = (math.floor((x + 1000.0) / big) + 3 * math.floor((y + 1000.0) / big)) % len(CYR)
+    return CYR[i] if cyrillic else LAT[i]
+
+
+def grid_label(world: "World", x: float, y: float, cyrillic: bool = False) -> str:
     g = world.faction_def.grid_km
     big = g * 10.0
-    xi = math.floor((x + 1000.0) / big)
-    yi = math.floor((y + 1000.0) / big)
     sx = int(((x + 1000.0) % big) // g)
     sy = int(((y + 1000.0) % big) // g)
     fx = ((x + 1000.0) % g) / g
     fy = ((y + 1000.0) % g) / g
     snail = 1 + int(fx * 3) + 3 * (2 - int(fy * 3))
-    return f"{CYR[(xi + 3 * yi) % len(CYR)]}{sx}{sy}-{snail}"
+    return f"{grid_letter(world, x, y, cyrillic)}{sx}{sy}-{snail}"
 
 
 def quantize(world: "World", x: float, y: float) -> tuple[float, float]:

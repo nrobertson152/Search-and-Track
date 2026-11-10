@@ -220,7 +220,7 @@ class MapView:
             while gx <= x1:
                 gy = math.floor((y0 + 1000.0) / step) * step - 1000.0
                 while gy <= y1:
-                    lab = tracking.grid_label(w, gx + 1, gy + 1)[0]
+                    lab = tracking.grid_letter(w, gx + 1, gy + 1, cyrillic=getattr(self, "lang_mode", "ru") != "en")
                     sx, sy = tp(gx + 4, gy + step - 4)
                     surf.blit(TEXT.render(lab, 16, (76, 128, 124), "eng"), (sx + 2, sy - 2))
                     gy += step
@@ -493,7 +493,8 @@ class MapView:
             screen.blit(TEXT.render(f"{sub}  {clock(w, tk.t_update)}  ({age / 60:.0f}m)", 10, _fade(col, 0.85), "cyr"),
                         (lx + r + 3, ly))
             if tk.jammer:
-                screen.blit(TEXT.render("ПОМЕХА", 10, th.accent, "cyr"), (lx + r + 3, ly + 13))
+                screen.blit(TEXT.render("ПОМЕХА" if getattr(self, "lang_mode", "ru") != "en" else "JAMMING", 10,
+                                        th.accent, "cyr"), (lx + r + 3, ly + 13))
             if selected:
                 pygame.draw.circle(screen, th.lamp_white, (lx, ly), r + 5, 1)
             return

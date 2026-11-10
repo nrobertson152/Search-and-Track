@@ -67,7 +67,7 @@ def test_full_training_loop_through_the_ui(app):
 
 def test_soviet_title_and_board(app):
     from searchtrack.ui.scenes import CommandScene
-    press(app, "SELECT ПВО")
+    press(app, "SELECT PVO")
     assert app.scene.faction == "USSR"
     press(app, "SCENARIOS")
     app.scene.sel_id = "su_may_day"

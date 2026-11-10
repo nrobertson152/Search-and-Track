@@ -5,7 +5,7 @@ summary = "Inspired by the events of April 1978. A large aircraft has crossed th
 faction = "USSR"
 kind = "scenario"
 photo = ["B707", "Su-15TM"]
-photo_caption = "Су-15ТМ рядом с нарушителем · Su-15TM alongside an intruder (reconstruction)"
+photo_caption = "Su-15TM alongside an intruder (reconstruction)"
 era = "1970s"
 difficulty = 3
 order = 30
@@ -58,7 +58,7 @@ night = true
 sea_state = 4.0
 
 [hq]
-name = "КП ОБЪЕДИНЕНИЯ ПВО"
+name = "PVO CORPS CP"
 readiness = "CONSTANT"
 alert = ""
 weapons_status = "HOLD"
@@ -226,7 +226,7 @@ transponder = { system = "atc", codes = { "3" = "2000" } }
 [[trigger]]
 id = "open"
 cond = { type = "time", t = 5.0 }
-actions = [{ do = "message", channel = "tty", sender = "КП ОБЪЕДИНЕНИЯ", ack = true, kind = "order", text = "DUTY SHIFT CONSTANT READINESS. NO FOREIGN FLIGHTS PLANNED IN THE SECTOR TONIGHT. REPORT ALL TARGETS APPROACHING THE STATE BORDER." }]
+actions = [{ do = "message", channel = "tty", sender = "CORPS CP", ack = true, kind = "order", text = "DUTY SHIFT CONSTANT READINESS. NO FOREIGN FLIGHTS PLANNED IN THE SECTOR TONIGHT. REPORT ALL TARGETS APPROACHING THE STATE BORDER." }]
 
 [[trigger]]
 id = "teriberka"
@@ -236,12 +236,12 @@ actions = [{ do = "message", channel = "voice", sender = "RLR TERIBERKA", ack = 
 [[trigger]]
 id = "pressure1"
 cond = { type = "time", t = 1200.0 }
-actions = [{ do = "message", channel = "voice", sender = "КП ОБЪЕДИНЕНИЯ", ack = true, kind = "order", priority = 1, text = "Command post: the violator has been over our territory for ten minutes. What is it? Force it to land. It must not leave." }]
+actions = [{ do = "message", channel = "voice", sender = "CORPS CP", ack = true, kind = "order", priority = 1, text = "Command post: the violator has been over our territory for ten minutes. What is it? Force it to land. It must not leave." }]
 
 [[trigger]]
 id = "pressure2"
 cond = { type = "time", t = 2100.0 }
-actions = [{ do = "message", channel = "voice", sender = "КП ОБЪЕДИНЕНИЯ", ack = true, kind = "order", priority = 2, text = "Command post: permission to destroy the violator has been given. Report execution. It must not reach the border!" }]
+actions = [{ do = "message", channel = "voice", sender = "CORPS CP", ack = true, kind = "order", priority = 2, text = "Command post: permission to destroy the violator has been given. Report execution. It must not reach the border!" }]
 
 [[objective]]
 id = "report"
@@ -294,20 +294,20 @@ points = 5
 
 [[headline]]
 cond = { type = "destroyed", ac = "airliner" }
-text = "ГИБЕЛЬ ИНОСТРАННОГО АВИАЛАЙНЕРА"
+text = "FOREIGN AIRLINER SHOT DOWN"
 sub = "A foreign airliner with passengers was shot down over Karelia. International outrage; an inquiry is demanded."
 
 [[headline]]
 cond = { type = "var", name = "forced_airliner", op = ">=", value = 1.0 }
-text = "НАРУШИТЕЛЬ ПРИНУЖДЁН К ПОСАДКЕ"
+text = "VIOLATOR FORCED TO LAND"
 sub = "The intruder was forced down by Soviet interceptors; the crew have admitted a navigation error."
 
 [[headline]]
 cond = { type = "in_zone", ac = "airliner", zone = "foreign" }
-text = "НАРУШИТЕЛЬ УШЁЛ ЗА ГРАНИЦУ"
+text = "VIOLATOR ESCAPES ACROSS THE BORDER"
 sub = "The violator left Soviet airspace over Finland. Moscow wants to know why."
 
 [[headline]]
 cond = { type = "time", t = 0.0 }
-text = "ИНЦИДЕНТ НАД КОЛЬСКИМ ПОЛУОСТРОВОМ"
+text = "INCIDENT OVER THE KOLA PENINSULA"
 sub = "A foreign airliner strayed into Soviet airspace. The details remain unclear."

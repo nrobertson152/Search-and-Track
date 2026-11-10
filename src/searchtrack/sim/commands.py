@@ -133,7 +133,7 @@ def _report(w: World, track: str) -> Result:
     hdg = (math.degrees(math.atan2(trk.vx, trk.vy)) % 360.0)
     pos = tracking.grid_label(w, trk.x, trk.y) if w.faction_def.pipeline == "manual" else f"{trk.x:.0f}/{trk.y:.0f}"
     text = f"TRACK {trk.id} {doctrine.id_label(w, trk.identity)} AT {pos}, {alt}, HDG {hdg:03.0f}, {spd:.0f} KM/H, SIZE {trk.size}"
-    doctrine.send(w, "voice", "SD" if w.faction == "US" else "ДЕЖУРНЫЙ", "Reported to HQ: " + text, 0, False, track,
+    doctrine.send(w, "voice", "SD" if w.faction == "US" else "DUTY OFFICER", "Reported to HQ: " + text, 0, False, track,
                   "report")
     return True, "Reported to higher HQ"
 

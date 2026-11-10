@@ -17,6 +17,14 @@ def _mix(a, b, t):
     return tuple(int(a[i] + (b[i] - a[i]) * t) for i in range(3))
 
 
+def _fit(text: str, size: int, kind: str, width: int) -> str:
+    if TEXT.width(text, size, kind) <= width:
+        return text
+    while len(text) > 2 and TEXT.width(text + "…", size, kind) > width:
+        text = text[:-1]
+    return text.rstrip() + "…"
+
+
 class NetBoard:
     def __init__(self, world, theme, rect: pygame.Rect):
         self.world = world
@@ -56,8 +64,6 @@ class NetBoard:
         return s
 
     def _name(self, obj) -> str:
-        if self.ussr and getattr(obj, "name_ru", ""):
-            return obj.name_ru
         return obj.name
 
     # ------------------------------------------------------------ geometry helpers
@@ -102,9 +108,9 @@ class NetBoard:
         pygame.draw.rect(s, p["tile"], rr, border_radius=3)
         pygame.draw.rect(s, _mix(col, p["tile"], 0.35) if not sel else (255, 255, 255), rr, 1 if not sel else 2,
                          border_radius=3)
-        gui.label((rr.x + 18, rr.y + 2), title[:26], 12, p["text"], "eng")
+        gui.label((rr.x + 18, rr.y + 2), _fit(title, 12, "eng", rr.w - 22), 12, p["text"], "eng")
         if sub:
-            gui.label((rr.x + 18, rr.y + 17), sub[:34], 10, p["text_dim"], "eng_r")
+            gui.label((rr.x + 18, rr.y + 17), _fit(sub, 10, "eng_r", rr.w - 22), 10, p["text_dim"], "eng_r")
 
     # ------------------------------------------------------------ draw
     def draw(self, gui, sel: dict, dt: float) -> None:
@@ -124,14 +130,20 @@ class NetBoard:
         if self.ussr and gui.lang_mode == "ru+en":
             gui.label((r.x + 18, r.y + 32), "NETWORK MIMIC BOARD — WARNING AND CONTROL SYSTEM", 10, p["text_dim"], "eng_r")
         # ---- the command node
+        # A wide board (the SAGE display) puts the missile units along the bottom; the tall PVO
+        # plotting board stacks them under the fighter regiments in the right-hand column.
+        wide = r.w >= 900
+        cw = 240 if wide else 196
+        cmd_w = 220 if wide else 150
         cx, cy = r.centerx, r.y + int(r.h * 0.40)
-        cmd = R(cx - 110, cy - 34, 220, 68)
+        cmd = R(cx - cmd_w // 2, cy - 34, cmd_w, 68)
         hq = R(cx - 100, r.y + 62, 200, 40)
         pygame.draw.rect(s, p["tile"], cmd, border_radius=5)
         pygame.draw.rect(s, p["line"], cmd, 2, border_radius=5)
         if self.ussr:
-            gui.label((cmd.centerx, cmd.y + 6), "КП ОА ПВО" if gui.lang_mode != "en" else "ARMY COMMAND POST", 16,
-                      p["text"], "eng", "center")
+            head = "КП ОА ПВО" if gui.lang_mode != "en" else "ARMY COMMAND POST"
+            hs = 16 if TEXT.width(head, 16, "eng") <= cmd.w - 12 else 13
+            gui.label((cmd.centerx, cmd.y + 6 + (16 - hs) // 2), head, hs, p["text"], "eng", "center")
             gui.label((cmd.centerx, cmd.y + 28), "command post · plotting board", 10, p["text_dim"], "eng_r", "center")
         else:
             gui.label((cmd.centerx, cmd.y + 6), "DIRECTION CENTER · AN/FSQ-7", 15, p["text"], "eng", "center")
@@ -159,10 +171,10 @@ class NetBoard:
         top, bot = r.y + 120, r.bottom - 30
         n = max(1, len(radars))
         step = min(64, (bot - top) / n)
-        bus_x = r.x + 300
+        bus_x = r.x + 16 + cw + (44 if wide else 18)
         for i, site in enumerate(radars):
             y = int(top + step * i + step / 2)
-            rr = R(r.x + 16, y - 16, 240, 32)
+            rr = R(r.x + 16, y - 16, cw, 32)
             ln = w.links.get(site.link)
             link_up = ln is None or ln.up
             jammed = bool(w.active_jammers(site))
@@ -173,7 +185,7 @@ class NetBoard:
             else:
                 col = p["ok"]
             rt = w.catalog.radars[site.type_id]
-            sub = f"{rt.name_ru if (self.ussr and rt.name_ru) else rt.id} · {site.status.upper()}" + \
+            sub = f"{rt.id} · {site.status.upper()}" + \
                   (" · JAM" if jammed else "") + (" · MTI" if site.mti else "")
             self._tile(gui, rr, self._name(site), sub, col, p, sel.get("site") == site.id)
             self._lamp(gui, (rr.x + 9, rr.y + 9), col, True, blink=site.status == "down" or jammed, r=4)
@@ -199,15 +211,18 @@ class NetBoard:
             self._pulses(s, [(bus_x, cy), (cmd.x, cy)], p["line"], 40.0, 3.0)
         # ---- airfields & squadrons (right)
         sqs = list(w.squadrons.values())
-        bus2 = r.right - 300
+        sams = list(w.sams.values())
+        right = len(sqs) + (0 if wide else len(sams))
+        bus2 = r.right - 16 - cw - (44 if wide else 18)
         top2 = r.y + 120
-        step2 = min(78, (r.y + r.h * 0.62 - top2) / max(1, len(sqs)))
+        limit2 = (r.y + r.h * 0.62) if wide else (r.bottom - 24)
+        step2 = min(78, (limit2 - top2) / max(1, right))
         ys2 = []
         for i, q in enumerate(sqs):
             y = int(top2 + step2 * i + step2 / 2)
             ys2.append(y)
             base = w.airbases.get(q.base_id)
-            rr = R(r.right - 256, y - 22, 240, 44)
+            rr = R(r.right - 16 - cw, y - 22, cw, 44)
             ln = w.links.get(base.link) if base else None
             link_up = ln is None or ln.up
             alert = sum(q.ready.values())
@@ -230,13 +245,26 @@ class NetBoard:
                 self._wire(s, pts, p["bad"], 2, dashed=True)
                 self._lamp(gui, ((rr.x + bus2) // 2, y), p["bad"], True, blink=True, r=4)
             self.nodes.append((rr, "squadron", q.id))
-        if sqs:
+        if not wide:
+            for i, sm in enumerate(sams):
+                y = int(top2 + step2 * (len(sqs) + i) + step2 / 2)
+                ys2.append(y)
+                rr = R(r.right - 16 - cw, y - 23, cw, 46)
+                link_up, col = self._sam_tile(gui, rr, sm, sel, p)
+                pts = [(rr.x, y), (bus2, y)]
+                if link_up:
+                    self._wire(s, pts, p["line"], 2)
+                    self._pulses(s, pts, p["line"], 20.0, i * 9.0)
+                else:
+                    self._wire(s, pts, p["bad"], 2, dashed=True)
+                    self._lamp(gui, ((rr.x + bus2) // 2, y), p["bad"], True, blink=True, r=4)
+                self.nodes.append((rr, "sam", sm.id))
+        if ys2:
             self._wire(s, [(bus2, min(ys2 + [cy])), (bus2, max(ys2 + [cy]))], p["line"], 3)
             self._wire(s, [(cmd.right, cy), (bus2, cy)], p["line"], 3)
             self._pulses(s, [(cmd.right, cy), (bus2, cy)], p["line"], 26.0, 5.0)
         # ---- missile units (bottom)
-        sams = list(w.sams.values())
-        if sams:
+        if sams and wide:
             busy = r.bottom - 120
             gap = min(250, (r.w - 40) // max(1, len(sams)))
             x0 = cx - gap * (len(sams) - 1) / 2
@@ -246,16 +274,7 @@ class NetBoard:
             for i, sm in enumerate(sams):
                 x = xs[i]
                 rr = R(x - min(110, gap // 2 - 6), busy + 40, min(220, gap - 12), 46)
-                st = w.catalog.sams[sm.type_id]
-                ln = w.links.get(sm.link)
-                link_up = ln is None or ln.up
-                ready = w.t >= sm.t_ready
-                col = p["bad"] if sm.status != "ok" or not link_up else p["ok"] if ready else p["warn"]
-                if sm.state in ("locked", "engaging"):
-                    col = p["lamp"]
-                self._tile(gui, rr, self._name(sm), f"{st.name_ru if (self.ussr and st.name_ru) else st.id} · "
-                           f"{sm.ready_missiles} msl · {sm.state.upper()}", col, p, sel.get("sam") == sm.id)
-                self._lamp(gui, (rr.x + 9, rr.y + 9), col, True, blink=sm.state == "engaging", r=4)
+                link_up, col = self._sam_tile(gui, rr, sm, sel, p)
                 pts = [(x, busy), (x, rr.y)]
                 if link_up:
                     self._wire(s, pts, p["line"], 2)
@@ -267,17 +286,36 @@ class NetBoard:
         # ---- message traffic counters
         unacked = sum(1 for m in w.messages if m.ack and not m.acked and m.delivered)
         lines_down = [ln for ln in w.links.values() if not ln.up]
-        info = R(cmd.x - 10, cmd.bottom + 16, cmd.w + 20, 52)
+        jam_sites = sum(1 for st in w.radars.values() if w.active_jammers(st))
+        cells = [(f"TRACKS {sum(1 for t in w.tracks.values() if not t.lost):>3}", p["text"]),
+                 (f"UNACK {unacked:>2}", p["bad"] if unacked else p["text"]),
+                 (f"LINES DOWN {len(lines_down)}", p["bad"] if lines_down else p["text"]),
+                 (f"JAMMED {jam_sites}", p["warn"] if jam_sites else p["text"])]
+        if wide:
+            info = R(cmd.x - 10, cmd.bottom + 16, cmd.w + 20, 52)
+            spots = [(10, 6), (120, 6), (10, 26), (120, 26)]
+        else:
+            info = R(cmd.x, cmd.bottom + 16, cmd.w, 90)
+            spots = [(10, 6), (10, 26), (10, 46), (10, 66)]
         pygame.draw.rect(s, p["tile"], info, border_radius=3)
         pygame.draw.rect(s, p["line_dim"], info, 1, border_radius=3)
-        gui.label((info.x + 10, info.y + 6), f"TRACKS {sum(1 for t in w.tracks.values() if not t.lost):>3}", 12,
-                  p["text"], "eng")
-        gui.label((info.x + 120, info.y + 6), f"UNACK {unacked:>2}", 12, p["bad"] if unacked else p["text"], "eng")
-        gui.label((info.x + 10, info.y + 26), f"LINES DOWN {len(lines_down)}", 12, p["bad"] if lines_down else p["text"],
-                  "eng")
-        jam_sites = sum(1 for st in w.radars.values() if w.active_jammers(st))
-        gui.label((info.x + 120, info.y + 26), f"JAMMED {jam_sites}", 12, p["warn"] if jam_sites else p["text"], "eng")
+        for (txt, col), (dx, dy) in zip(cells, spots):
+            gui.label((info.x + dx, info.y + dy), txt, 12, col, "eng")
         s.set_clip(None)
+
+    def _sam_tile(self, gui, rr, sm, sel, p):
+        w = self.world
+        st = w.catalog.sams[sm.type_id]
+        ln = w.links.get(sm.link)
+        link_up = ln is None or ln.up
+        ready = w.t >= sm.t_ready
+        col = p["bad"] if sm.status != "ok" or not link_up else p["ok"] if ready else p["warn"]
+        if sm.state in ("locked", "engaging"):
+            col = p["lamp"]
+        self._tile(gui, rr, self._name(sm), f"{st.id} · {sm.ready_missiles} msl · {sm.state.upper()}", col, p,
+                   sel.get("sam") == sm.id)
+        self._lamp(gui, (rr.x + 9, rr.y + 9), col, True, blink=sm.state == "engaging", r=4)
+        return link_up, col
 
     def pick(self, pos) -> tuple[str, str] | None:
         for rr, kind, oid in self.nodes:

@@ -47,7 +47,7 @@ class App:
         self.audio = Audio(enabled=sound and not headless)
         self.audio.volume = float(self.settings.get("volume", 0.7))
         self.gui = Gui(self.screen, US, self.audio)
-        self.gui.lang_mode = self.settings.get("labels", "ru+en")
+        self.gui.lang_mode = "en"     # every console and screen is in English; only the PVO board is lettered in Russian
         self.scenes: list = []
         self.campaign = None          # faction whose career the current watch belongs to
         self.running = True
@@ -103,7 +103,8 @@ class App:
         self.gui.set_theme(theme_for(self.scenes[0].faction))
 
     # ------------------------------------------------------------ persistence
-    DEFAULTS = {"labels": "ru+en", "volume": 0.7, "focus": 2, "film": True, "auto_slow": True}
+    DEFAULTS = {"board": "ru", "volume": 0.7, "music": 0.5, "focus": 2, "film": True, "auto_slow": True,
+                "difficulty": "regular"}
 
     def load_settings(self) -> dict:
         st = dict(self.DEFAULTS)

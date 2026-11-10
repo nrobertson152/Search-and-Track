@@ -201,7 +201,7 @@ class Backdrop:
             mx = br.x + br.w * k // 4
             pygame.draw.line(surf, _gray(14), (mx, br.y), (mx, br.bottom), 6)
         # placard over the board
-        title = "4-я ОТДЕЛЬНАЯ АРМИЯ ПВО" if self.faction == "USSR" else "NORTH AMERICAN AIR DEFENSE"
+        title = "4th SEPARATE AIR DEFENSE ARMY" if self.faction == "USSR" else "NORTH AMERICAN AIR DEFENSE"
         t = TEXT.render(title, 22, _gray(170), "eng")
         surf.blit(t, (br.centerx - t.get_width() // 2, br.y - 44))
         return surf

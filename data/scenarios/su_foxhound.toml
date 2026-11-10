@@ -5,7 +5,7 @@ summary = "The American Blackbird runs along the Kola coast at three times the s
 faction = "USSR"
 kind = "scenario"
 photo = ["SR-71A", "MiG-31"]
-photo_caption = "МиГ-31 «Фоксхаунд» · MiG-31 FOXHOUND, the Blackbird hunter"
+photo_caption = "MiG-31 FOXHOUND, the Blackbird hunter"
 era = "1980s"
 difficulty = 3
 order = 40
@@ -54,7 +54,7 @@ night = false
 sea_state = 3.0
 
 [hq]
-name = "КП ОБЪЕДИНЕНИЯ ПВО"
+name = "PVO CORPS CP"
 readiness = "INCREASED"
 alert = ""
 weapons_status = "HOLD"
@@ -228,12 +228,12 @@ transponder = { system = "none" }
 [[trigger]]
 id = "open"
 cond = { type = "time", t = 5.0 }
-actions = [{ do = "message", channel = "tty", sender = "КП ОБЪЕДИНЕНИЯ", ack = true, kind = "order", text = "INCREASED READINESS. NATO RECONNAISSANCE OVER THE BARENTS SEA. SR-71 EXPECTED. WEAPONS HOLD. DEMONSTRATE LOCK-ON. NO VIOLATION OF FOREIGN AIRSPACE." }]
+actions = [{ do = "message", channel = "tty", sender = "CORPS CP", ack = true, kind = "order", text = "INCREASED READINESS. NATO RECONNAISSANCE OVER THE BARENTS SEA. SR-71 EXPECTED. WEAPONS HOLD. DEMONSTRATE LOCK-ON. NO VIOLATION OF FOREIGN AIRSPACE." }]
 
 [[trigger]]
 id = "warn"
 cond = { type = "time", t = 1500.0 }
-actions = [{ do = "message", channel = "voice", sender = "РАЗВЕДКА", ack = true, kind = "order", priority = 1, text = "Intelligence: Blackbird departed Mildenhall two hours ago, tanked over the Norwegian Sea. Expect it at the Rybachy meridian in about ten minutes." }]
+actions = [{ do = "message", channel = "voice", sender = "INTELLIGENCE", ack = true, kind = "order", priority = 1, text = "Intelligence: Blackbird departed Mildenhall two hours ago, tanked over the Norwegian Sea. Expect it at the Rybachy meridian in about ten minutes." }]
 
 [[objective]]
 id = "lock"
@@ -273,10 +273,10 @@ penalty = 50
 
 [[headline]]
 cond = { type = "var", name = "locked_sr71", op = ">=", value = 1.0 }
-text = "«ЧЁРНЫЙ ДРОЗД» ВЗЯТ НА СОПРОВОЖДЕНИЕ"
+text = "BLACKBIRD LOCKED UP OVER THE BARENTS SEA"
 sub = "The Blackbird was locked up by a MiG-31 and turned back over the Barents Sea."
 
 [[headline]]
 cond = { type = "time", t = 0.0 }
-text = "РАЗВЕДЧИК НАТО У КОЛЬСКОГО ПОБЕРЕЖЬЯ"
+text = "NATO SPY PLANE OFF THE KOLA COAST"
 sub = "A NATO reconnaissance aircraft flew along the Kola coast. The PVO was on duty."

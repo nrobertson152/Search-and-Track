@@ -5,7 +5,7 @@ summary = "Inspired by the flight of 28 May 1987. Border Guards' Day. A small, s
 faction = "USSR"
 kind = "scenario"
 photo = ["C172", "MiG-23P"]
-photo_caption = "Лёгкий самолёт-нарушитель · the light aircraft intruder (reconstruction)"
+photo_caption = "The light aircraft intruder (reconstruction)"
 era = "1980s"
 difficulty = 3
 order = 50
@@ -58,7 +58,7 @@ night = false
 sea_state = 1.0
 
 [hq]
-name = "КП 6-й ОА ПВО"
+name = "6th ARMY CP"
 readiness = "CONSTANT"
 alert = ""
 weapons_status = "HOLD"
@@ -200,7 +200,7 @@ id = "torzhok_heli"
 name = "Helicopter det. Torzhok"
 base = "torzhok"
 type = "Mi-8"
-callsign = "Вертолёт 12"
+callsign = "HELICOPTER 12"
 ready = { "7" = 2, "20" = 2 }
 pilots = 4
 iff_codes = { period = "MAY" }
@@ -268,7 +268,7 @@ transponder = { system = "atc", codes = { "3" = "7000" } }
 [[flight]]
 id = "yak_a"
 type = "Yak-18T"
-callsign = "УЧЕБНЫЙ 21"
+callsign = "TRAINER 21"
 side = "blue"
 spawn_t = 3600.0
 truth_label = "Yak-18T trainer (DOSAAF flying club)"
@@ -289,7 +289,7 @@ transponder = { system = "kremniy", codes = { "period" = "APR" } }
 [[flight]]
 id = "yak_b"
 type = "Yak-18T"
-callsign = "УЧЕБНЫЙ 34"
+callsign = "TRAINER 34"
 side = "blue"
 spawn_t = 8400.0
 truth_label = "Yak-18T trainer (DOSAAF flying club)"
@@ -309,7 +309,7 @@ transponder = { system = "kremniy", codes = { "period" = "MAY" } }
 [[flight]]
 id = "heli_sar"
 type = "Mi-8"
-callsign = "ПОИСК 7"
+callsign = "SEARCH 7"
 side = "blue"
 spawn_t = 6000.0
 truth_label = "Mi-8 search-and-rescue helicopter"
@@ -328,7 +328,7 @@ transponder = { system = "kremniy", codes = { "period" = "APR" } }
 [[trigger]]
 id = "open"
 cond = { type = "time", t = 5.0 }
-actions = [{ do = "message", channel = "tty", sender = "КП 6-й ОА ПВО", ack = true, kind = "order", text = "CONSTANT READINESS. TRAINING FLIGHTS PLANNED PSKOV–NOVGOROD–KALININ 1500-2000. NEW IFF PERIOD IN EFFECT. LIGHT AND SPORT AIRCRAFT ARE NOT TO BE FIRED UPON." }]
+actions = [{ do = "message", channel = "tty", sender = "6th ARMY CP", ack = true, kind = "order", text = "CONSTANT READINESS. TRAINING FLIGHTS PLANNED PSKOV–NOVGOROD–KALININ 1500-2000. NEW IFF PERIOD IN EFFECT. LIGHT AND SPORT AIRCRAFT ARE NOT TO BE FIRED UPON." }]
 
 [[trigger]]
 id = "atc"
@@ -338,7 +338,7 @@ actions = [{ do = "message", channel = "voice", sender = "ATC LENINGRAD", text =
 [[trigger]]
 id = "handover"
 cond = { type = "in_zone", ac = "rust", zone = "moscow_district" }
-actions = [{ do = "message", channel = "voice", sender = "КП МОСКОВСКОГО ОКРУГА", ack = true, kind = "order", priority = 1, text = "Moscow District: we have your target number. Is it ours? A training aircraft? We need an answer now." }]
+actions = [{ do = "message", channel = "voice", sender = "MOSCOW DISTRICT CP", ack = true, kind = "order", priority = 1, text = "Moscow District: we have your target number. Is it ours? A training aircraft? We need an answer now." }]
 
 [[objective]]
 id = "report"
@@ -385,20 +385,20 @@ penalty = 30
 
 [[headline]]
 cond = { type = "var", name = "reached_moscow", op = ">=", value = 1.0 }
-text = "САМОЛЁТ-НАРУШИТЕЛЬ НА КРАСНОЙ ПЛОЩАДИ"
+text = "INTRUDER LANDS BESIDE RED SQUARE"
 sub = "A West German light aircraft landed beside the Kremlin. The Minister of Defence and the PVO commander have been dismissed."
 
 [[headline]]
 cond = { type = "var", name = "forced_rust", op = ">=", value = 1.0 }
-text = "НАРУШИТЕЛЬ ПОСАЖЕН"
+text = "INTRUDER ESCORTED DOWN"
 sub = "A light aircraft that crossed the border was escorted to a landing by a PVO helicopter."
 
 [[headline]]
 cond = { type = "destroyed", ac = "rust" }
-text = "ГИБЕЛЬ ЛЁГКОГО САМОЛЁТА"
+text = "LIGHT AIRCRAFT SHOT DOWN"
 sub = "A sport aircraft was shot down over the Kalinin region. A young pilot is dead; the world is watching."
 
 [[headline]]
 cond = { type = "time", t = 0.0 }
-text = "ДЕНЬ ПОГРАНИЧНИКА"
+text = "BORDER GUARDS' DAY PASSES QUIETLY"
 sub = "Border Guards' Day passed quietly over the Baltic and the Moscow region."

@@ -28,10 +28,10 @@ PY_URL="https://github.com/astral-sh/python-build-standalone/releases/download/$
 PY_SHA256=5854aa6ec71cad00334d5065633c210b2e7feb40956767a59a91791cadcf0b79
 TOOL_VERSION=1.9.1
 TOOL_URL="https://github.com/AppImage/appimagetool/releases/download/${TOOL_VERSION}/appimagetool-${ARCH}.AppImage"
-TOOL_SHA256="${TOOL_SHA256:-}"
+TOOL_SHA256=ed4ce84f0d9caff66f50bcca6ff6f35aae54ce8135408b3fa33abfc3cb384eb0
 RUNTIME_VERSION=20251108
 RUNTIME_URL="https://github.com/AppImage/type2-runtime/releases/download/${RUNTIME_VERSION}/runtime-${ARCH}"
-RUNTIME_SHA256="${RUNTIME_SHA256:-}"
+RUNTIME_SHA256=2fca8b443c92510f1483a883f60061ad09b46b978b2631c807cd873a47ec260d
 
 VERSION="${VERSION:-$(sed -n 's/^version = "\(.*\)"/\1/p' "$ROOT/pyproject.toml" | head -n 1)}"
 OUT="$DIST/SearchAndTrack-${VERSION}-${ARCH}.AppImage"

@@ -50,6 +50,7 @@ class App:
         self.gui.lang_mode = "en"     # every console and screen is in English; only the PVO board is lettered in Russian
         self.scenes: list = []
         self.campaign = None          # faction whose career the current watch belongs to
+        self.war = None               # id of the war the current battle belongs to
         self.running = True
         self.clock = pygame.time.Clock()
         self.clock_t = 0.0
@@ -88,10 +89,19 @@ class App:
         from .campaign import record_result
         from .scenes import DebriefScene
         on_done = (lambda f=world.faction: self.back_to_campaign(f)) if self.campaign else None
+        if self.war and world.battle.active:
+            from .war import book_battle
+            book_battle(self, world)
+            on_done = lambda f=world.faction: self.back_to_war(f)
         d = DebriefScene(self, world, on_done=on_done)
         if not world.scenario_id.startswith("alert_"):
             record_result(self, world, d.rep)
         self.replace_all(d)
+
+    def back_to_war(self, faction: str) -> None:
+        from .war import WarScene
+        self.to_title()
+        self.push(WarScene(self, faction))
 
     def back_to_campaign(self, faction: str) -> None:
         from .campaign import CampaignScene
@@ -208,11 +218,13 @@ def screenshot(path: str, sid: str | None, seconds: float, console: int, mode: s
         app.scene.scroll = seconds if seconds < 5000 else 0
         for _ in range(2):
             app.frame([])
-    elif scene in ("campaign", "alert", "operations"):
+    elif scene in ("campaign", "alert", "operations", "war"):
         from .campaign import AlertDutyScene, CampaignScene
         from .scenes import OperationsScene
+        from .war import WarScene
         f = faction or "US"
-        app.push({"campaign": CampaignScene, "alert": AlertDutyScene}.get(scene, lambda a, fa: OperationsScene(a, fa))(app, f))
+        app.push({"campaign": CampaignScene, "alert": AlertDutyScene, "war": WarScene}.get(
+            scene, lambda a, fa: OperationsScene(a, fa))(app, f))
         for _ in range(2):
             app.frame([])
     else:

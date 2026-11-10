@@ -166,3 +166,69 @@ def test_kola_battle_moves_through_its_phases():
     classes = {staff.classify(w, t) for t in w.tracks.values()}
     assert "unknown" in classes or "missile" in classes
     assert all(math.isfinite(a.x) and math.isfinite(a.y) for a in w.aircraft.values())
+
+
+# ------------------------------------------------------------------ the war: battles that remember
+
+def test_second_night_is_written_as_changes_to_the_first():
+    sc = scenario.load_scenario("us_battle_bering_2")
+    groups = {g["id"]: g for g in sc["group"]}
+    assert "backfire_c" in groups and "bear1" in groups          # added, and kept from the base
+    assert groups["bear2"]["entry"]["y"] > 0                      # patched: now down the Strait
+    assert {o["id"] for o in sc["objective"]} >= {"granit", "carrier"}
+    assert [p["id"] for p in sc["battle"]["phase"]] == ["night", "granit", "raid"]
+    assert sc["battle"]["red_target"] == "tf77"                   # merged from the base's [battle]
+
+
+def test_second_night_on_its_own_starts_from_assumed_losses():
+    w = scenario.build_world("us_battle_bering_2", seed=1)
+    assert w.battle.groups["backfire_a"].n == 4                   # 6 less the 2 the scenario assumes
+    assert "ffg46" not in w.ships
+
+
+def test_war_carries_losses_from_one_battle_to_the_next():
+    from searchtrack.sim import war
+    st = war.new_state("northern_war_us")
+    w = war.build_world(st, seed=5)
+    assert w.battle.groups["backfire_a"].n == 6                   # the war applies its own order of battle
+    w.battle.groups["backfire_a"].losses = 4
+    w.ships["ddg996"].state, w.ships["ddg996"].hp = "sunk", -5.0
+    w.ships["cvn70"].hp = w.ships["cvn70"].max_hp * 0.5
+    w.ships["frunze"].state = "crippled"
+    w.battle.counters["sq_lost_vf111"] = 3.0
+    w.battle.outcome = "DRAW"
+    war.advance(st, w)
+    assert st["mission"] == 1 and st["results"][0]["outcome"] == "DRAW"
+    w2 = war.build_world(st, seed=6)
+    assert w2.battle.groups["backfire_a"].n == 2
+    assert "ddg996" not in w2.ships and "frunze" not in w2.ships
+    assert all(s.carrier != "frunze" for s in w2.sams.values())
+    assert abs(w2.ships["cvn70"].hp / w2.ships["cvn70"].max_hp - 0.65) < 0.01    # half, patched up 15 %
+    assert "granit" not in {o.id for o in w2.objectives}           # no FRUNZE, no Granit salvo to stop
+    full = sum(scenario.build_world("us_battle_bering_2", seed=6, assumed=False).squadrons["vf111"].ready.values())
+    assert sum(w2.squadrons["vf111"].ready.values()) == full - 2  # 3 lost, 1 replaced
+    assert any("lost" in line for line in war.summary(st, "US"))
+
+
+def test_war_ends_when_the_carrier_is_lost():
+    from searchtrack.sim import war
+    st = war.new_state("northern_war_us")
+    w = war.build_world(st, seed=5)
+    w.ships["cvn70"].state = "sunk"
+    w.battle.outcome = "DEFEAT"
+    war.advance(st, w)
+    assert st["over"] and war.current(st) is None and st["outcome"] == "DEFEAT"
+
+
+def test_granit_salvo_needs_a_fresh_fix():
+    from searchtrack.sim.battle import naval
+    from searchtrack.sim.state import Contact
+    w = scenario.build_world("us_battle_bering_2", seed=3)
+    act = {"ship": "frunze", "weapon": "P-700", "n": 6, "target": "tf77", "fix_age_s": 240.0}
+    assert naval.ship_salvo(w, act) == 0                          # nobody has found the battle group
+    cv = w.ships["cvn70"]
+    w.battle.surface.setdefault("red", {})["cvn70"] = Contact("cvn70", cv.x, cv.y, 0.0, 0.0, 0.0, w.t, 5.0,
+                                                               "BEAR 1", "ship", w.t)
+    assert naval.ship_salvo(w, act) == 6
+    assert naval.ship_salvo(w, act) == 0                          # one salvo only
+    assert sum(1 for a in w.aircraft.values() if a.type_id == "SS-N-19") == 6

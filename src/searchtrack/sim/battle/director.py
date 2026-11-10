@@ -54,7 +54,7 @@ def start_phase(w: "World", i: int) -> None:
 # ------------------------------------------------------------------ actions
 
 ACTIONS = {"launch", "group", "decision", "standing", "reinforcement", "reinforce", "aew_withdraw", "fleet", "ready",
-           "located", "end_battle", "surge", "cap_station", "salvo"}
+           "located", "end_battle", "surge", "cap_station", "salvo", "ship_salvo"}
 
 
 def act(w: "World", a: dict) -> None:
@@ -149,6 +149,9 @@ def act(w: "World", a: dict) -> None:
     elif k == "salvo":
         from . import land
         land.salvo(w, a)
+    elif k == "ship_salvo":
+        from . import naval
+        naval.ship_salvo(w, a)
     elif k == "end_battle":
         b.end_t = w.t + float(a.get("delay_s", 30.0))
     else:
@@ -292,6 +295,10 @@ def objective(w: "World", o: "Objective", final: bool) -> Optional[str]:
         return "done" if final else None
     if k == "lose_at_most":
         if b.counters.get(f"aircraft_lost_{w.own_side}", 0.0) > float(p.get("n", 6)):
+            return "failed"
+        return "done" if final else None
+    if k == "prevent_salvo":                 # the enemy ship is put out of action before it can fire
+        if b.counters.get(f"salvo_{p['ship']}", 0.0) > 0:
             return "failed"
         return "done" if final else None
     if k == "hold_area":                     # a ship stays on its patrol line until a given time

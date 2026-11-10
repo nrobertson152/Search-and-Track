@@ -1,0 +1,15 @@
+id = "northern_war_su"
+title = "The Defence of the North"
+faction = "USSR"
+order = 1
+summary = "Two nights over the Kola Peninsula. The radars the Americans destroy on the first night stay destroyed; the regiments fight the second night with what they have left; and every Intruder shot down is one fewer over the bases."
+repair = 0.12
+
+[[mission]]
+scenario = "su_battle_kola"
+title = "Night 1 — The Northern Bastion"
+replacements = { monch_iap = 2, kilp_iap = 1 }
+
+[[mission]]
+scenario = "su_battle_kola_2"
+title = "Night 2 — The Second Strike"

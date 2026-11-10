@@ -117,7 +117,8 @@ class AircraftType:
     esm_km: float = 0.0              # passive detection range of a radiating ship radar
     jammer: str = ""                 # default jammer of an electronic-warfare aircraft
     seeker_km: float = 0.0           # missiles: seeker acquisition range
-    profile: str = ""                # missiles: high_dive | sea_skim
+    profile: str = ""                # missiles: high_dive | sea_skim | terrain | arm | glide
+    seeker_share: bool = False       # missiles: a salvo spreads itself over the targets it finds
     warhead_kg: float = 0.0          # missiles
     silhouette: str = ""
     provenance: str = "approximate"

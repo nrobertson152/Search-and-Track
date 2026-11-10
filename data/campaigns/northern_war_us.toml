@@ -1,0 +1,18 @@
+id = "northern_war_us"
+title = "The War in the North"
+faction = "US"
+order = 1
+summary = "Two nights in the Bering Sea with the Carl Vinson battle group. Every aircraft and ship you lose on the first night is missing on the second; every BACKFIRE you shoot down is one that does not come back — and if the FRUNZE is still afloat, she will be closing in with her Granits."
+repair = 0.15
+lost_text = "The carrier is lost. The battle group's war is over."
+
+[[mission]]
+scenario = "us_battle_bering"
+title = "Night 1 — The Outer Air Battle"
+requires = ["cvn70"]
+requires_text = "USS Carl Vinson has gone down. There is no second night for this battle group."
+replacements = { vf51 = 2, vf111 = 1 }
+
+[[mission]]
+scenario = "us_battle_bering_2"
+title = "Night 2 — The Second Raid"

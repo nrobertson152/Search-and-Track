@@ -228,6 +228,9 @@ def on_destroyed(w: "World", ac: Aircraft, cause: str, shooter: str) -> None:
     sg = w.battle.groups.get(shooter)
     if sg is not None:
         sg.kills += 1
+    fl = w.flights.get(ac.flight_id) if ac.flight_id else None
+    if fl is not None:
+        counter(w, f"sq_lost_{fl.squadron_id}")      # the squadron's loss, for the war's order of battle
     if ac.side == "civil":
         return
     by = unit_name(w, shooter) if shooter else cause

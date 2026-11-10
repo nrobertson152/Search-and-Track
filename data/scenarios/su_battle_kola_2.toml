@@ -1,0 +1,102 @@
+base = "su_battle_kola"
+id = "su_battle_kola_2"
+title = "The Second Strike"
+subtitle = "Kola Peninsula, the second night — hypothetical"
+summary = "The Americans come back for the radars they missed. Cruise missiles from the north this time, launched by B-52s far out over the Barents; Tomcats sent deep to kill the A-50; then what is left of the carrier's air wing, for the bases and the fleet."
+order = 8
+start = "1987-10-20T22:30:00"
+seed = 1942
+photo = ["MiG-31", "F-14A"]
+photo_caption = "F-14A Tomcat over the Norwegian Sea (file photograph)"
+
+briefing = """
+COMMAND POST, NORTHERN AIR DEFENSE — THE SECOND NIGHT. THIS SCENARIO IS HYPOTHETICAL.
+
+SITUATION. Last night's attack has been beaten off. What it destroyed stays destroyed: the radar companies that were hit are still off the air, the regiments are short of the aircraft they lost. The carrier is still in the Norwegian Sea. Intelligence expects the next blow from two sides: air-launched cruise missiles from B-52s over the Barents Sea — from the north, where our coastal radars look out to sea — and a second carrier strike from the west. The Tomcats have been seen working far forward: they want the A-50.
+
+YOUR FORCES. What is left of the regiments, the A-50, the radar companies still on the air, the missile battalions, and the KIROV group if it is still at sea.
+
+COMMAND. Cruise missiles from the north will come in low over the sea and the tundra toward the bases. The coastal companies will see them late; the A-50 will see them early — if it is still flying. Decide how much you risk it.
+"""
+
+# ---- played on its own, the second night starts from these losses (in the war, from the real ones)
+assumed_oob = { groups = { a6_ship = { lost = 2 }, a6_land = { lost = 3 }, sead_land = { lost = 1 }, sweep = { lost = 1 }, b52 = { lost = 3 }, rc135 = { lost = 1 }, p3c = { lost = 1 } }, squadrons = { monch_iap = { lost = 3 }, kilp_iap = { lost = 4 } }, ships = { otlichny = { state = "sunk", hp_frac = 0.0 } }, sites = ["rlr_rybachy"] }
+
+# ---- changes to the first night's forces and objectives
+group_patch = [
+  { id = "a6_land", target = "severomorsk3", route = [{ lat = 69.2, lon = 30.4, alt_m = 150.0 }, { lat = 69.0, lon = 31.9, alt_m = 150.0 }, { lat = 68.95, lon = 33.0, alt_m = 150.0 }] },
+  { id = "sweep", commit_km = 160.0, station = { lat = 69.4, lon = 32.6, alt_m = 9500.0, r_km = 30.0 } },
+]
+
+group_add = [
+  { id = "p3c_2", name = "P-3C Orion (second)", callsign = "ORION 2", side = "red", role = "recon", type = "P-3C", n = 1, entry = { lat = 71.0, lon = 23.0, alt_m = 6000.0 }, exit = { lat = 71.0, lon = 21.5 }, route = [{ lat = 70.95, lon = 29.0, alt_m = 6000.0 }], target = "nfleet", trigger = "phase" },
+  { id = "sweep_2", name = "F-14A deep sweep (A-50 hunters)", callsign = "BANDWAGON", side = "red", role = "sweep", type = "F-14A", n = 4, entry = { lat = 70.7, lon = 27.0, alt_m = 10500.0 }, exit = { lat = 70.7, lon = 24.0 }, route = [{ lat = 70.2, lon = 32.0, alt_m = 10500.0 }], station = { lat = 69.3, lon = 34.5, alt_m = 10500.0, r_km = 35.0 }, commit_km = 180.0, trigger = "phase" },
+  { id = "sead_2", name = "F/A-18A HARM shooters (second)", callsign = "STING", side = "red", role = "sead", type = "FA-18A", n = 4, entry = { lat = 69.8, lon = 27.6, alt_m = 7500.0 }, exit = { lat = 70.0, lon = 25.0 }, target = "a6_land", commit_km = 40.0, trigger = "phase" },
+]
+
+objective_drop = ["kirov", "ships", "strikers", "runways", "radars", "tomahawks", "bastion", "hidden"]
+
+objective_add = [
+  { id = "kirov", text = "KIROV survives", kind = "ship_survives", params = { ship = "kirov" }, points = 20 },
+  { id = "radars", text = "No more than three radars destroyed in the whole war", kind = "radars_survive", params = { max_destroyed = 3 }, points = 15 },
+  { id = "runways", text = "Never more than two fighter airfields closed at once", kind = "runways", params = { bases = ["kilpyavr", "monchegorsk", "afrikanda", "severomorsk3"], max_closed = 2 }, points = 15 },
+  { id = "missiles", text = "Shoot down 40% of the cruise missiles", kind = "missiles_stopped", params = { types = ["AGM-86C", "TLAM-C"], frac = 0.4, planned = 20 }, points = 15 },
+  { id = "mainstay", text = "Keep the A-50 flying", kind = "protect_group", params = { group = "a50" }, points = 15 },
+  { id = "strikers", text = "Shoot down half the strike aircraft", kind = "kill_fraction", params = { groups = ["a6_ship", "a6_land"], frac = 0.5 }, points = 15 },
+  { id = "hidden", text = "Deny NATO a fix on the fleet for fifteen minutes", kind = "deny_location", params = { before_min = 15.0 }, points = 5 },
+]
+
+[[battle.phase]]
+id = "watch"
+name = "PHASE I — THE SECOND NIGHT"
+earliest_min = 0.0
+text = "Reconnaissance again: another Orion is coming for the fleet. Long-range radar reports B-52s far to the north over the Barents. Expect them to fire from outside our reach."
+actions = [{ do = "launch", groups = ["p3c_2"], delay_s = 60.0 }]
+
+[[battle.phase]]
+id = "alcm"
+name = "PHASE II — CRUISE MISSILES FROM THE NORTH"
+earliest_min = 5.0
+latest_min = 8.0
+when = { type = "quiet", s = 120.0 }
+text = "Missile launches far to the north: air-launched cruise missiles, twelve or more, coming south low over the Barents toward the coast. More Tomahawks from the west. Targets: our radars and airfields."
+actions = [
+  { do = "salvo", weapon = "AGM-86C", n = 12, from = { lat = 70.95, lon = 34.4 }, route = [{ lat = 69.6, lon = 34.4 }], targets = ["rlr_teriberka", "severomorsk3", "zrdn_severomorsk", "olenya", "gp_kilpyavr", "rlr_lovozero"], stream_km = 7.0 },
+  { do = "salvo", weapon = "TLAM-C", n = 8, from = { lat = 69.25, lon = 29.5 }, route = [{ lat = 68.9, lon = 30.6 }], targets = ["kilpyavr", "monchegorsk", "rlr_kovdor", "gp_monchegorsk"], stream_km = 7.0 },
+]
+
+[[battle.phase]]
+id = "hunt"
+name = "PHASE III — THE HUNT FOR THE MAINSTAY"
+earliest_min = 15.0
+latest_min = 21.0
+when = { type = "quiet", s = 90.0 }
+text = "Two groups of Tomcats over the Barents, coming south-east fast. Jammers taking up their stations off Pechenga. They are going for the A-50."
+actions = [
+  { do = "launch", groups = ["ew_ship", "ew_land"] },
+  { do = "launch", groups = ["sweep", "sweep_2"], delay_s = 30.0 },
+  { do = "decision", kind = "aew", title = "MAINSTAY — STAY UP OR LAND?", text = "Eight Tomcats are coming for the A-50. It can stay up, pulled back south-east over the tundra with MiG-31s between it and the Tomcats — or land at Olenya and be safe, leaving us the coastal companies and the guidance points alone for the strike that will follow.", options = ["STAY UP", "LAND IT"], default = "STAY UP", timeout_s = 50.0, effects = { "STAY UP" = [{ do = "group", group = "a50", station = { lat = 67.55, lon = 35.2, alt_m = 9000.0, r_km = 25.0 } }, { do = "surge", squadrons = ["monch_iap"], lat = 68.6, lon = 33.3, alt_m = 10000.0, max_flights = 2 }], "LAND IT" = [{ do = "group", group = "a50", state = "egress" }] } },
+]
+
+[[battle.phase]]
+id = "strike"
+name = "PHASE IV — THE SECOND STRIKE"
+earliest_min = 22.0
+latest_min = 30.0
+when = { type = "quiet", s = 90.0 }
+text = "The carrier strike is coming in: Intruders high toward the fleet, Intruders low over Finnmark toward Severomorsk, Hornets with anti-radiation missiles ahead of both."
+actions = [
+  { do = "launch", groups = ["a6_ship", "sead_ship", "esc_ship"], delay_s = 60.0 },
+  { do = "launch", groups = ["a6_land", "sead_land", "sead_2"], delay_s = 90.0 },
+  { do = "reinforcement", id = "savatiya" },
+]
+
+[[trigger]]
+id = "emcon_q"
+cond = { type = "time", t = 20.0 }
+actions = [{ do = "decision", kind = "emcon", title = "FLEET RADARS — EMISSION CONTROL?", text = "Another Orion is coming to look for the fleet. Switch the KIROV group's search radars off and fight on the A-50's picture, or keep radiating?", options = ["GO SILENT", "KEEP RADIATING"], default = "GO SILENT", timeout_s = 60.0, effects = { "GO SILENT" = [{ do = "standing", emcon = true }], "KEEP RADIATING" = [] } }]
+
+[[trigger]]
+id = "emcon_off"
+cond = { type = "all", of = [{ type = "phase", at_least = 3 }, { type = "standing", key = "emcon", is = [true] }] }
+actions = [{ do = "decision", kind = "emcon", title = "STRIKE INBOUND — FLEET RADARS ON?", text = "The strike is airborne. Light the fleet's radars now, or stay silent a little longer?", options = ["LIGHT THEM OFF", "STAY SILENT"], default = "LIGHT THEM OFF", timeout_s = 40.0, effects = { "LIGHT THEM OFF" = [{ do = "standing", emcon = false }], "STAY SILENT" = [] } }]

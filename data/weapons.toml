@@ -360,3 +360,22 @@ max_km = 30.0
 missile = "WALLEYE"
 provenance = "approximate"
 notes = "[H] Released from low level after a pop-up; guided onto the aim point by the crew over the data link."
+
+[[weapon]]
+id = "P-700"
+name = "P-700 Granit (SS-N-19)"
+kind = "asm"
+max_km = 550.0
+missile = "SS-N-19"
+provenance = "approximate"
+notes = "[H] Ship-launched supersonic anti-ship missile of the KIROV and OSCAR classes."
+
+[[weapon]]
+id = "AGM-86C"
+name = "AGM-86C CALCM"
+kind = "lam"
+min_km = 30.0
+max_km = 1100.0
+missile = "AGM-86C"
+provenance = "approximate"
+notes = "[H] Conventional ALCM, released by B-52Gs well beyond the reach of the air defence."

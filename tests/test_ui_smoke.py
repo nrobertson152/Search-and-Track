@@ -122,3 +122,33 @@ def test_right_click_orders_send_the_nearest_interceptor(app):
     right_click(app, sc.map.w2s(trk.x, trk.y))
     click(app, (sc.L.display.x + 5, sc.L.display.bottom - 5))
     assert sc.ctx is None
+
+
+def test_war_room_to_a_battle_and_back(app):
+    """Title → THE WAR → briefing → battle → debrief books the night into the war → back to the war room."""
+    from searchtrack.sim import scenario
+    from searchtrack.ui.scenes import BriefingScene, CommandScene, DebriefScene
+    from searchtrack.ui.war import WarScene, load_war
+    press(app, "SELECT PVO")
+    press(app, "THE WAR")
+    assert isinstance(app.scene, WarScene) and app.scene.cid == "northern_war_su"
+    press(app, "BRIEFING")
+    assert isinstance(app.scene, BriefingScene) and app.scene.world.scenario_id == "su_battle_kola"
+    press(app, "SPECTATE")
+    sc = app.scene
+    assert isinstance(sc, CommandScene) and sc.world.battle.spectator
+    for _ in range(3):
+        app.frame([], mouse=(0, 0))
+    w = sc.world
+    w.battle.groups["a6_land"].losses = 2
+    scenario.end(w, "test")
+    w.battle.outcome = "DRAW"
+    app.start_debrief(w)
+    assert isinstance(app.scene, DebriefScene)
+    st = load_war(app, "northern_war_su")
+    assert st["mission"] == 1 and st["oob"]["groups"]["a6_land"]["lost"] == 2
+    press(app, "CONTINUE")
+    assert isinstance(app.scene, WarScene)
+    press(app, "BRIEFING")
+    assert app.scene.world.scenario_id == "su_battle_kola_2"
+    assert app.scene.world.battle.groups["a6_land"].n == 4

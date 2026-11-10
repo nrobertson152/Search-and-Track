@@ -85,6 +85,8 @@ def setup(w: "World", sc: dict) -> None:
         x, y = spec_xy(w, s)
         b.red_sensors.append({"name": s.get("name", "radar"), "x": x, "y": y, "h": float(s.get("mast_m", 30.0)),
                               "range_km": float(s.get("range_km", 300.0))})
+    for sq in w.squadrons.values():
+        w.vars[f"sq_strength_{sq.id}"] = float(sum(sq.ready.values()) + sq.maint)
     for spec in sc.get("ship", []):
         naval.add_ship(w, spec)
     for sh in w.ships.values():

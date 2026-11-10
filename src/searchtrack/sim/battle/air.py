@@ -422,7 +422,8 @@ def _strike_aim(w: "World", g: AirGroup, lead: Aircraft, at) -> tuple[Optional[t
     sid, c = best
     age = w.t - c.t
     x, y = c.x + c.vx * age, c.y + c.vy * age
-    return (x, y), ("fix" if age < 150.0 and c.err_km < 30.0 else "stale"), sid
+    q = "fix" if age < 150.0 and c.err_km < 30.0 else "stale" if age < 480.0 else "brief"
+    return (x, y), q, sid
 
 
 def _release(w: "World", g: AirGroup, ms: list[Aircraft], wid: str, ship: str) -> None:
@@ -576,11 +577,21 @@ def _fighter(w: "World", g: AirGroup, ms: list[Aircraft], lead: Aircraft) -> boo
     return False
 
 
-def _threatened(w: "World", g: AirGroup, x: float, y: float, km: float) -> Optional[Aircraft]:
+def _threatened(w: "World", g: AirGroup, x: float, y: float, km: float,
+                closing: bool = False) -> Optional[Aircraft]:
+    """An enemy fighter this side knows about within km -- with `closing`, only one heading our way."""
     for item in known_enemy_air(w, g.side):
-        a = item[0]
-        if combat.role_of(w, a) in ("interceptor", "fighter") and math.hypot(item[1] - x, item[2] - y) < km:
-            return a
+        a, tx, ty, _, vx, vy = item
+        if combat.role_of(w, a) not in ("interceptor", "fighter"):
+            continue
+        d = math.hypot(tx - x, ty - y)
+        if d >= km:
+            continue
+        if closing and d > km * 0.55:
+            v = math.hypot(vx, vy)
+            if v < 1e-6 or ((x - tx) * vx + (y - ty) * vy) / (v * max(d, 1e-6)) < 0.5:
+                continue                         # orbiting or going elsewhere: not yet a reason to run
+        return a
     return None
 
 
@@ -631,10 +642,15 @@ def _orbit(w: "World", g: AirGroup, ms: list[Aircraft], lead: Aircraft) -> None:
         return
     sx, sy, alt, r = g.station
     if g.role in ("ew", "awacs", "elint"):
-        threat = _threatened(w, g, lead.x, lead.y, 75.0 if g.role == "ew" else 110.0)
+        threat = _threatened(w, g, lead.x, lead.y, 75.0 if g.role == "ew" else 165.0 if g.role == "awacs" else 110.0,
+                             closing=g.role == "awacs")
         if threat is not None:
-            hx, hy = _home(w, g)
-            _fly(lead, hx, hy, alt, "mil")             # fall back toward home while fighters are close
+            if g.role == "awacs":                      # turn tail and run, straight away from the fighters
+                ax, ay = heading_vec(bearing_deg(lead.x - threat.x, lead.y - threat.y))
+                _fly(lead, lead.x + ax * 60.0, lead.y + ay * 60.0, alt, "mil")
+            else:
+                hx, hy = _home(w, g)
+                _fly(lead, hx, hy, alt, "mil")         # fall back toward home while fighters are close
             return
     _orbit_at(lead, sx, sy, alt, r)
     on = math.hypot(sx - lead.x, sy - lead.y) < r * 1.6

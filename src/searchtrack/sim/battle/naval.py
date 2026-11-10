@@ -183,6 +183,50 @@ def launch_asm(w: "World", shooter: Aircraft, wid: str, aim: tuple[float, float]
     return m
 
 
+def ship_salvo(w: "World", a: dict) -> int:
+    """A ship fires its anti-ship missiles at where its side believes the target group is.
+    A ship that is crippled or sunk fires nothing; nor does one that never got a fix."""
+    from types import SimpleNamespace
+    sh = w.ships.get(a["ship"])
+    if sh is None or sh.state in ("sunk", "crippled") or w.battle.counters.get(f"salvo_{sh.id}", 0) > 0:
+        return 0                                     # out of action, or already fired her one salvo
+    pic = w.battle.surface.get(sh.side, {})
+    tgt = a.get("target", "")
+    fresh = float(a.get("fix_age_s", 240.0))
+    best = None
+    for sid, c in pic.items():
+        o = w.ships.get(sid)
+        if o is None or o.state == "sunk" or (tgt and o.group != tgt and o.id != tgt) or w.t - c.t > fresh:
+            continue
+        st = w.catalog.ships[o.type_id]
+        if best is None or st.rcs_m2 > best[0]:
+            best = (st.rcs_m2, c)
+    if best is None:
+        if a.get("need_fix", True):
+            if not w.vars.get(f"salvo_hold_{sh.id}"):
+                w.vars[f"salvo_hold_{sh.id}"] = 1.0
+                event(w, "salvo_hold", f"{sh.name} holds her missiles: no fresh fix on the target", sh.id, sh.x,
+                      sh.y, sh.side, 1 if sh.side == w.own_side else -1)
+            return 0
+        aim = tuple(w.battle.red_plan.get("brief", [sh.x, sh.y]))
+    else:
+        c = best[1]
+        age = w.t - c.t
+        aim = (c.x + c.vx * age, c.y + c.vy * age)
+    wt = w.catalog.weapons[a["weapon"]]
+    n = int(a.get("n", 8))
+    shooter = SimpleNamespace(x=sh.x, y=sh.y, alt=200.0, spd=250.0, nationality="", side=sh.side)
+    for k in range(n):
+        j = w.rng.gauss(0.0, 3.0)
+        launch_asm(w, shooter, wt.id, (aim[0] + j, aim[1] - j), sh.id)
+    counter(w, f"salvo_{sh.id}")
+    lvl = 3 if sh.side != w.own_side else 2
+    txt = f"{sh.name} fires {n} {wt.name.split(' (')[0]}" if sh.side == w.own_side else \
+        f"ESM: missile launches from the {sh.name} group — {n} {wt.name.split(' (')[0]} inbound"
+    event(w, "ship_salvo", txt, sh.id, sh.x, sh.y, w.own_side if sh.side != w.own_side else sh.side, lvl)
+    return n
+
+
 def _dive_km(mt) -> float:
     """Distance a high-flying missile covers while it dives onto the target."""
     t_dive = mt.cruise_alt_m / max(mt.climb_mps * 0.6, 50.0)
@@ -208,6 +252,11 @@ def asm_guidance(w: "World", dt: float) -> None:
             ax, ay = m.aim
             if math.hypot(ax - m.x, ay - m.y) < mt.seeker_km * 1.4:
                 best, bs = None, 0.0
+                taken: dict[str, int] = {}
+                if mt.seeker_share:
+                    for o in w.aircraft.values():
+                        if o.state == "airborne" and o.homing and o.launcher == m.launcher:
+                            taken[o.homing] = taken.get(o.homing, 0) + 1
                 for sh in w.ships.values():
                     if sh.side == m.side or sh.state == "sunk":
                         continue
@@ -217,7 +266,7 @@ def asm_guidance(w: "World", dt: float) -> None:
                         continue
                     da = math.hypot(sh.x - ax, sh.y - ay)            # the seeker searches around its aim point
                     score = cat.ships[sh.type_id].rcs_m2 * (0.3 if w.t - sh.t_chaff < 50.0 else 1.0) / \
-                        (1.0 + (da / 25.0) ** 2)
+                        (1.0 + (da / 25.0) ** 2) / (1.0 + taken.get(sh.id, 0) / 2.0)
                     if score > bs:
                         best, bs = sh, score
                 if best is not None:

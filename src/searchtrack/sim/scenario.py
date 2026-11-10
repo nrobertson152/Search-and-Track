@@ -17,10 +17,43 @@ def scenario_dir() -> Path:
     return catalog().data_dir / "scenarios"
 
 
+PATCHABLE = ("group", "ship", "objective", "trigger", "squadron", "sam", "radar")
+
+
+def resolve(d: dict[str, Any]) -> dict[str, Any]:
+    """A scenario may be written as changes to another one (`base = "<id>"`): its keys replace the
+    base's, the [battle] table is merged key by key, and lists of tables can be edited in place
+    with `<name>_patch` (by id), `<name>_add` and `<name>_drop` -- e.g. the second night of a battle."""
+    if "base" not in d:
+        return d
+    out = dict(resolve(load_toml(scenario_dir() / f"{d['base']}.toml")))
+    for k, v in d.items():
+        if k == "base" or any(k.startswith(f"{n}_") and k[len(n) + 1:] in ("patch", "add", "drop") for n in PATCHABLE):
+            continue
+        if k == "battle" and isinstance(v, dict):
+            out["battle"] = {**out.get("battle", {}), **v}
+        else:
+            out[k] = v
+    for n in PATCHABLE:
+        key = "site" if n in ("sam", "radar") else "id"
+        items = [dict(x) for x in out.get(n, [])]
+        drop = set(d.get(f"{n}_drop", []))
+        items = [x for x in items if x.get(key) not in drop]
+        for patch in d.get(f"{n}_patch", []):
+            for x in items:
+                if x.get(key) == patch[key]:
+                    x.update(patch)
+        items += [dict(x) for x in d.get(f"{n}_add", [])]
+        if items or n in out:
+            out[n] = items
+    out.pop("base", None)
+    return out
+
+
 def list_scenarios() -> list[dict[str, Any]]:
     out = []
     for p in sorted(scenario_dir().glob("*.toml")):
-        d = load_toml(p)
+        d = resolve(load_toml(p))
         out.append({"id": d["id"], "title": d["title"], "faction": d["faction"], "kind": d.get("kind", "scenario"),
                     "subtitle": d.get("subtitle", ""), "summary": d.get("summary", ""), "order": d.get("order", 50),
                     "path": str(p), "start": d.get("start", ""), "theater": d.get("theater", ""),
@@ -49,14 +82,24 @@ def load_scenario(path_or_id: str) -> dict[str, Any]:
     p = Path(path_or_id)
     if not p.exists():
         p = scenario_dir() / f"{path_or_id}.toml"
-    return load_toml(p)
+    return resolve(load_toml(p))
 
 
-def build_world(path_or_id: str, seed: Optional[int] = None) -> World:
-    return build_world_from(load_scenario(path_or_id), seed)
+def build_world(path_or_id: str, seed: Optional[int] = None, assumed: bool = True) -> World:
+    return build_world_from(load_scenario(path_or_id), seed, assumed)
 
 
-def build_world_from(sc: dict[str, Any], seed: Optional[int] = None) -> World:
+def build_world_from(sc: dict[str, Any], seed: Optional[int] = None, assumed: bool = True) -> World:
+    """`assumed`: a later battle of a war played on its own starts from the losses its scenario
+    assumes (`assumed_oob`); inside a war, the war's own order of battle is applied instead."""
+    w = _build_world_from(sc, seed)
+    if assumed and sc.get("assumed_oob"):
+        from .war import apply
+        apply(w, sc["assumed_oob"])
+    return w
+
+
+def _build_world_from(sc: dict[str, Any], seed: Optional[int] = None) -> World:
     th = theater(sc["theater"])
     w = World(scenario_id=sc["id"], title=sc["title"], faction=sc["faction"], theater_id=sc["theater"],
               duration=sc.get("duration_min", 120) * 60.0, start_clock=sc.get("start", "1962-10-24T22:00:00"),

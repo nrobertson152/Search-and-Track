@@ -42,6 +42,8 @@ class Scene:
 
 # ====================================================================== TITLE
 MENU_ITEMS = [
+    ("THE WAR", "Night after night with the same forces: what you lose stays lost, what you destroy does not "
+                "come back. A short war in the north."),
     ("BATTLES", "The Cold War turned hot: whole air battles fought out by both sides. Command the defence — "
                 "or sit back and watch it unfold."),
     ("CAMPAIGN", "A career at the scopes: the historical watches of your service, 1956–1987, in order."),
@@ -123,7 +125,7 @@ class TitleScene(Scene):
         screen.fill((0, 0, 0))
         screen.blit(f, (ox, oy))
         # ---- menu card
-        card = R(1120, 70, 440, 640)
+        card = R(1120, 50, 440, 790)
         sh = pygame.Surface(card.size, pygame.SRCALPHA)
         sh.fill((0, 0, 0, 214))
         screen.blit(sh, card.topleft)
@@ -145,13 +147,13 @@ class TitleScene(Scene):
         y += 14
         note = ""
         for key, desc in MENU_ITEMS:
-            r = R(card.x + 20, y, card.w - 40, 44)
+            r = R(card.x + 20, y, card.w - 40, 42)
             enabled = key != "CONTINUE" or self.app.has_save()
             if gui.hover(r):
                 note = desc
-            if film_item(gui, r, key, key, 28, enabled=enabled):
+            if film_item(gui, r, key, key, 27, enabled=enabled):
                 self._choose(key)
-            y += 50
+            y += 48
         if note:
             for i, ln in enumerate(TEXT.wrap(note, card.w - 50, 13, "eng_r")[:3]):
                 gui.label((card.x + 24, card.bottom - 62 + i * 17), ln, 13, (176, 176, 170), "eng_r")
@@ -161,7 +163,11 @@ class TitleScene(Scene):
         app = self.app
         from .campaign import AlertDutyScene, CampaignScene
         app.campaign = None
-        if key == "BATTLES":
+        app.war = None
+        if key == "THE WAR":
+            from .war import WarScene
+            app.push(WarScene(app, self.faction))
+        elif key == "BATTLES":
             app.push(OperationsScene(app, self.faction, "battle"))
         elif key == "SCENARIOS":
             app.push(OperationsScene(app, self.faction, "scenario"))

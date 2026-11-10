@@ -108,12 +108,13 @@ def own_correlation(w: "World", trk, own: list) -> Optional[str]:
     from ..flight import ground_velocity
     px, py = predicted(trk, w.t)
     spd = math.hypot(trk.vx, trk.vy)
+    wild = spd > 1.0                         # no aircraft does 1000 m/s: the velocity is bad data, not a fast mover
     for a in own:
-        d = math.hypot(a.x - px, a.y - py)
+        d = min(math.hypot(a.x - px, a.y - py), math.hypot(a.x - trk.x, a.y - trk.y))
         if d > 6.0:
             continue
         vx, vy = ground_velocity(w, a)
-        if abs(math.hypot(vx, vy) - spd) > 0.2 and w.t - trk.t_init > 8.0:
+        if abs(math.hypot(vx, vy) - spd) > 0.2 and w.t - trk.t_init > 8.0 and not wild:
             continue                         # something much faster (or slower) passing close by
         if d < 3.0 or math.hypot(vx - trk.vx, vy - trk.vy) < 0.25 or w.t - trk.t_init < 15.0:
             return a.callsign
@@ -386,10 +387,15 @@ def _self_defense(w: "World") -> None:
         lead = gci.lead_of(w, fl)
         if lead is None or not any(n > 0 for n in lead.weapons.values()):
             continue
+        if cur is not None and not cur.lost and classify(w, cur) in ("strike", "bomber", "recon", "ew") and \
+                math.hypot(cur.x - lead.x, cur.y - lead.y) < 90.0:
+            continue                         # nearly in range of the archer: shoot it, let others take the escort
         near = min(fighters, key=lambda t: math.hypot(t.x - lead.x, t.y - lead.y))
         px, py = predicted(near, w.t)
         if math.hypot(px - lead.x, py - lead.y) > 55.0:
             continue
+        if _assigned_strength(w, near.id) >= 4:
+            continue                         # two flights on one pair of fighters is enough
         w.vars[f"selfdef_{fl.id}"] = w.t
         ok, _ = commands.run(w, "assign", flight=fl.id, track=near.id, task="intercept", geometry="lead")
         if ok:

@@ -23,7 +23,8 @@ How work gets done on Search and Track. One page; keep it that way.
 - **Save files are the simulation state.** New state goes in dataclass fields (serialized automatically); caches are `transient()`.
 - **Data-driven.** Equipment, theaters, scenarios, lessons and the manual live in `data/`. Tag equipment numbers with their provenance.
 - **Physics, not scripts.** Detections, kills and failures are computed; triggers only start events and set the scene.
-- **Cosmetic localization only.** Soviet consoles show Russian legends (optional English strip); orders, radio, tooltips and the manual stay English. Buttons are keyed by their English label (`gui.drawn`), which tests and the instructor's highlights rely on.
+- **English everywhere but the PVO plotting board.** The Soviet plotting board (grid, place names, plot annotations) is lettered in Russian, switchable to English in the settings; every console, order, radio call, tooltip and the manual is in English on both sides. Buttons are keyed by their English label (`gui.drawn`), which tests and the instructor's highlights rely on.
+- **Battles are simulation, not script.** A battle's director only opens phases, launches groups and poses decisions; who finds whom and who gets through is computed from each side's own picture. Every battle must run to an end in spectator mode (`tests/test_scenarios.py`).
 - **Every training lesson must be completable by `sim/student.py`**; every new lesson condition needs a student rule.
 
 ## Commands

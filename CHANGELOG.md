@@ -2,6 +2,36 @@
 
 All notable changes to Search and Track. Versions follow [Semantic Versioning](https://semver.org/).
 
+## [Unreleased] — feature/fun-and-pvo
+
+The Cold War turned hot: whole air battles fought by both sides, a war that remembers, music.
+
+### Battles
+- Battle missions: autonomous air groups (strike, escort, sweep, intercept, defence suppression, recon, jammers, radar aircraft) that fly on their own side's picture, watch their fuel, defend against missiles, abort when cut up and go home empty.
+- Ships: formations, station keeping, evasive turns, chaff, close-in guns, damage states down to sinking; shipborne radars and missile channels on the picture; carriers as moving airfields.
+- Missiles as aircraft: anti-ship (sea-skimming and high-diving, seekers that lock the strongest return; Granit salvos that share their targets), land-attack cruise missiles that follow the terrain, glide bombs, and anti-radiation missiles that home on radars that radiate.
+- The ground war: radars knocked off the air or destroyed, missile battalions losing their fire-control radar, cratered runways and their repair; battalions switch off when an anti-radiation missile is inbound.
+- Sensing for both sides: the radar horizon, cross-section, jamming, passive interception of radiating ships; emission control as a real choice.
+- The battle staff: identification by battle rules, commitment by posture with a reserve, patrols manned and relieved, self-defence, missile channel assignment, radar aircraft that run from closing fighters.
+- The director: phases opened by the situation, decisions with a timer and a default, reinforcements, objectives, a definitive end and VICTORY/DRAW/DEFEAT.
+- The battle display: NATO-style frames, raid grouping, own flights and groups with their state, weapons in flight with trails, explosions, splash and hit markers, damage marks on the ground, a status plate, banners, decision cards, unit cards with each unit's story, follow, an umpire's view, auto-slowdown on hot events, ADVANCE.
+- The BATTLE console: standing orders, reserve, priority targets (right-click PRIORITY), reinforcements, forces, objectives, spectate/take command, the battle log.
+- Tactical replay from the debrief; the debrief's battle summary, decisions and newspaper.
+- Four battles: The Outer Air Battle and The Second Raid (US), The Northern Bastion and The Second Strike (PVO).
+
+### The war
+- Wars (`data/campaigns`): battles fought one after another by the same forces; losses, repairs and replacements carried over for both sides; branches on outcome; a war ends early if the force loses what it cannot fight without. The war room shows the diary, the order of battle and the next battle.
+- Scenarios can be written as changes to another scenario (`base`, `*_patch`, `*_add`, `*_drop`); a later battle played on its own starts from the losses it assumes.
+
+### The PVO command post
+- Its own room: the plotting board in the middle, the operator's desk on the left, a cabinet on the right with the wall clock, watch timer, time keys, lamps, a radar scope and the lines to every company, regiment and battalion.
+- English on every console; Russian only on the plotting board.
+
+### Orders, music, difficulty
+- One-click orders on both sides: right-click a track to send the nearest suitable interceptor, or a flight for its orders.
+- Synthesized adaptive music for each side (pad, pulse, drive, theme) cross-fading with the situation.
+- Difficulty: recruit, regular, veteran.
+
 ## [1.0.0] — unreleased (awaiting the owner's approval)
 
 The whole game: two services, thirty years, sixteen watches, a career, a manual.

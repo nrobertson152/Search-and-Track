@@ -29,7 +29,7 @@ All the while you keep the network healthy: radars fail, lines go down, the comp
 
 ## A shift, start to finish
 
-From the title screen choose a mode. **Campaign** is a career: the watches of your service, in historical order. **Scenarios** lets you take any historical watch. **Alert Duty** generates a fresh shift on a real order of battle. **Training** has three instructor-led lessons per side; start there.
+From the title screen choose a mode. **The War** and **Battles** are the Cold War turned hot: whole air battles fought by both sides, which you command or simply watch (see *Battles and the War*). **Campaign** is a career: the watches of your service, in historical order. **Scenarios** lets you take any historical watch. **Alert Duty** generates a fresh shift on a real order of battle. **Training** has three instructor-led lessons per side; start there.
 
 Every shift opens with a **briefing**: the situation, intelligence, forces and objectives, typed up on the duty officer's desk. Press TAKE THE WATCH when you are ready.
 

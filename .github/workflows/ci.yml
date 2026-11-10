@@ -37,6 +37,8 @@ jobs:
         run: |
           python -m searchtrack --screenshot shot.png --scenario us_training_intercept --seconds 120
           python -m searchtrack --screenshot shot_su.png --scenario su_may_day --seconds 600
+          python -m searchtrack --screenshot shot_battle.png --scenario us_battle_bering --seconds 1500 --console 5
+          python -m searchtrack --screenshot shot_battle_su.png --scenario su_battle_kola --seconds 1140 --console 5
       - uses: actions/upload-artifact@v6
         with:
           name: screenshots-py${{ matrix.python }}

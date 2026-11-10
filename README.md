@@ -12,10 +12,25 @@ Two services share one simulation and play nothing alike:
 | Control | Direction center vectors by voice, then by data link | Guidance points, each with its own radar, in real time |
 | Height | Nodding height finders, one track at a time | V-beam radars, every target, coarsely |
 | Identity | IFF/SIF and flight plans (±5 min, 10/20 nm) | Monthly IFF codes, Aeroflot schedules, eyes |
-| Consoles | Putty and olive, lens keys, cyan phosphor, English | Slate enamel, keycaps, amber phosphor, Russian (with an optional English strip) |
+| Consoles | Putty and olive, lens keys, cyan phosphor | Slate enamel, keycaps, amber phosphor; a plotting board lettered in Russian (everything else in English) |
 
 ![SAGE situation display](docs/images/sage.jpg)
 ![PVO plotting board](docs/images/pvo.jpg)
+
+## Battles and the war
+
+Then the Cold War turns hot. In a **battle** both sides fight on their own — bombers, jammers, shadowers, escorts, cruise missiles, ships that steam, turn and fire — and you command the air defense from the radar picture: standing orders, priority targets, decisions with a deadline, reinforcements, and any order you like by hand. Your staff runs the routine. Or **spectate** and watch it unfold; take command whenever you like. **The war** strings battles together: what you lose stays lost, what you destroy does not come back the next night.
+
+| Battle | Side | |
+|---|---|---|
+| The Outer Air Battle | US | BACKFIRE regiment against the Carl Vinson group in the Bering Sea |
+| The Second Raid | US | The regiment's survivors, a fresh squadron down the Strait, the FRUNZE closing with Granits |
+| The Northern Bastion | PVO | Tomahawks low over Finnmark, a carrier strike with HARM shooters, B-52s with Harpoons for the KIROV |
+| The Second Strike | PVO | ALCMs from the north, Tomcats sent deep for the A-50, the second carrier strike |
+
+![A battle at sea](docs/images/battle.jpg)
+![A battle over the Kola Peninsula](docs/images/battle_pvo.jpg)
+![The war room](docs/images/war.jpg)
 
 ## What is in it
 
@@ -26,7 +41,10 @@ Two services share one simulation and play nothing alike:
 - **Authority.** Weapons HOLD/TIGHT/FREE, requests to higher headquarters answered on evidence and after a delay, exercise rules with simulated kills, special-weapons release, consequences.
 - **A network that fails.** Data lines and telephone lines, the AN/FSQ-7 duplex and its switchover, radar faults and maintenance, alerts awaiting acknowledgement.
 - **Eras and content.** Ten historically inspired watches from Genetrix (1956) to Rust's flight to Red Square (1987); six instructor-led training lessons; procedurally generated Alert Duty on real orders of battle; a career campaign with a service record; a full operator's manual.
+- **Battles.** Autonomous air groups with missions, fuel, weapons and nerve; ships in formation with missile channels, close-in guns and chaff; anti-ship, land-attack and anti-radiation missiles; cratered runways and wrecked radars; a battle staff that identifies, commits and keeps the patrols manned; a director that paces each battle through its phases; spectator mode, an umpire's view, unit stories and a tactical replay.
+- **The war.** Battles fought one after another by the same forces, with losses, repairs and replacements carried over on both sides.
 - **Debrief.** A truth replay of the whole shift, detection and identification timings, why each miss was missed, grades, and the next morning's newspaper.
+- **Music** synthesized as you play, following the situation from a quiet watch to a raid; three difficulty levels.
 
 ![Instructor's card](docs/images/lesson.jpg)
 ![Radar scope with a jamming strobe](docs/images/scope.jpg)
@@ -66,8 +84,10 @@ Options: `--fullscreen`, `--no-sound`. The game is entirely offline and sends no
 | | |
 |---|---|
 | `Space` / `+` `-` | Pause / time compression up to 32× |
+| `Enter` | ADVANCE: run at 96× until something needs you |
+| Right click | Orders for a track or a flight (in battles: PRIORITY) |
 | `M` | Situation display, radar scope, network board |
-| `F1`–`F8` | Tracks, Weapons, Missiles, Radar, Comms, Intel, Status |
+| `F1`–`F8` | Tracks, Weapons, Missiles, Radar, Comms, Intel (Battle), Status |
 | `I` / `H` | Initiate a track at the light gun / height request |
 | `F5` / `F9` | Quick save / quick load |
 | `Esc` | Menu, manual, settings |
@@ -77,7 +97,9 @@ Options: `--fullscreen`, `--no-sound`. The game is entirely offline and sends no
 Everything the simulation knows is plain text in `data/`:
 
 - `aircraft.toml`, `radars.toml`, `sams.toml`, `weapons.toml`, `jammers.toml`, `factions.toml`: equipment, each entry tagged with its provenance.
-- `scenarios/*.toml`: forces, flights and routes, triggers, objectives, intelligence, briefings, newspaper headlines. Training lessons are `[[lesson]]` steps, each with a `done` condition; see `data/scenarios/us_training_intercept.toml`.
+- `scenarios/*.toml`: forces, flights and routes, triggers, objectives, intelligence, briefings, newspaper headlines. Training lessons are `[[lesson]]` steps, each with a `done` condition; see `data/scenarios/us_training_intercept.toml`. Battles add `[battle]`, `[[ship]]` and `[[group]]` tables and phases; a scenario can be written as changes to another (`base = "..."` with `group_patch`, `group_add`, `objective_drop`…), see `data/scenarios/us_battle_bering_2.toml`.
+- `campaigns/*.toml`: the wars — which battles, in what order, with what replacements and repairs between them.
+- `ships.toml`: warships with their radars, missile channels and close-in guns.
 - `theaters/*`: coastlines, borders, cities, sites and terrain, built by `tools/build_theater.py` from Natural Earth and ETOPO1.
 - `manual/*.md`: the operator's manual; run `python tools/sync_manual.py` to refresh `docs/manual`.
 
